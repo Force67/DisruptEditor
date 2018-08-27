@@ -128,6 +128,9 @@
     <ClCompile Include="Adpcm.cpp">
       <Filter>Externals</Filter>
     </ClCompile>
+    <ClCompile Include="mabFile.cpp">
+      <Filter>Source Files\File Formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -273,6 +276,9 @@
     </ClInclude>
     <ClInclude Include="dr_wav.h">
       <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="mabFile.h">
+      <Filter>Source Files\File Formats</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

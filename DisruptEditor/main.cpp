@@ -368,8 +368,8 @@ int main(int argc, char **argv) {
 				for (auto it = wlus.begin(); it != wlus.end(); ++it) {
 					std::string xmlFileName = it->second.shortName + ".xml";
 					tinyxml2::XMLDocument doc;
-					doc.LoadFile(xmlFileName.c_str());
-					it->second.root.deserializeXML(doc.RootElement());
+					if(doc.LoadFile(xmlFileName.c_str()) == tinyxml2::XMLError::XML_SUCCESS)
+						it->second.root.deserializeXML(doc.RootElement());
 				}
 			}
 			if (ImGui::MenuItem("Export Wlu XML")) {

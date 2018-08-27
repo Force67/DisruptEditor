@@ -175,6 +175,7 @@
     <ClCompile Include="ImSequencer.cpp" />
     <ClCompile Include="LoadingScreen.cpp" />
     <ClCompile Include="locFile.cpp" />
+    <ClCompile Include="mabFile.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="materialFile.cpp" />
     <ClCompile Include="NBCF.cpp" />
@@ -218,6 +219,7 @@
     <ClInclude Include="khrplatform.h" />
     <ClInclude Include="LoadingScreen.h" />
     <ClInclude Include="locFile.h" />
+    <ClInclude Include="mabFile.h" />
     <ClInclude Include="materialFile.h" />
     <ClInclude Include="NBCF.h" />
     <ClInclude Include="noc_file_dialog.h" />

@@ -177,7 +177,7 @@ void sbaoFile::open(SDL_RWops *fp) {
 
 		SDL_assert_release(SDL_RWtell(fp) - 120 == infoTable[0]);
 
-		SDL_LogVerbose(SDL_LOG_CATEGORY_AUDIO, "Block data at %u", SDL_RWtell(fp));
+		SDL_Log("Block data at %u", SDL_RWtell(fp));
 
 		//Parse Blocks
 		uint32_t count = 0;
@@ -198,7 +198,7 @@ void sbaoFile::open(SDL_RWops *fp) {
 			count += unk;
 
 			for (unsigned long i = 0; i < numLayers; i++) {
-				SDL_LogVerbose(SDL_LOG_CATEGORY_AUDIO, "b = %u", SDL_RWtell(fp));
+				SDL_Log("b%u = %u", i, SDL_RWtell(fp));
 
 				// Feed it a block
 				Vector<uint8_t> block(BlockSizes[i]);

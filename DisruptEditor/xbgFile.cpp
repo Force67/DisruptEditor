@@ -77,18 +77,20 @@ void xbgFile::open(const char *file) {
 	SDL_RWseek(fp, (head.lodCount - a) * sizeof(float), RW_SEEK_CUR);
 
 	//Section A - Materials
+	SDL_Log("Materials Offset: %u\n", SDL_RWtell(fp));
 	{
 		uint32_t count = SDL_ReadLE32(fp);
 		for (uint32_t i = 0; i < count; ++i) {
-			Material mat;
+			Material &mat = materials.push_back();
 			mat.hash = SDL_ReadLE32(fp);
 			mat.file = readString(fp);
+			SDL_Log("Mat %u %s\n", mat.hash, mat.file.c_str());
 			seekpad(fp, 4);
-			materials.push_back(mat);
 		}
 	}
 
 	//Section B -
+	SDL_Log("Materials Slot to Index?: %u\n", SDL_RWtell(fp));
 	{
 		uint32_t matCount = SDL_ReadLE32(fp);
 		for (uint32_t i = 0; i < matCount; ++i) {
@@ -108,6 +110,7 @@ void xbgFile::open(const char *file) {
 	}
 
 	//Section C -
+	SDL_Log("Skin Names: %u\n", SDL_RWtell(fp));
 	{
 		uint32_t boneMapCount = SDL_ReadLE32(fp);
 		for (uint32_t i = 0; i < boneMapCount; ++i) {
