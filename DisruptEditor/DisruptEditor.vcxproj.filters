@@ -53,9 +53,6 @@
     <ClCompile Include="Implementation.cpp">
       <Filter>Externals</Filter>
     </ClCompile>
-    <ClCompile Include="imgui_impl_sdl_gl3.cpp">
-      <Filter>Externals</Filter>
-    </ClCompile>
     <ClCompile Include="imgui_draw.cpp">
       <Filter>Externals</Filter>
     </ClCompile>
@@ -128,6 +125,15 @@
     <ClCompile Include="FileHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imgui_impl_opengl3.cpp">
+      <Filter>Externals</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_impl_sdl.cpp">
+      <Filter>Externals</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_widgets.cpp">
+      <Filter>Externals</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -149,9 +155,6 @@
       <Filter>Externals</Filter>
     </ClInclude>
     <ClInclude Include="tinyxml2.h">
-      <Filter>Externals</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui_impl_sdl_gl3.h">
       <Filter>Externals</Filter>
     </ClInclude>
     <ClInclude Include="Implementation.h">
@@ -273,6 +276,30 @@
     </ClInclude>
     <ClInclude Include="FileHandler.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_sdl.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_impl_opengl3.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="imconfig.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_rectpack.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_textedit.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui\imstb_truetype.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_internal.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui.h">
+      <Filter>Externals</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

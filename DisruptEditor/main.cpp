@@ -14,7 +14,8 @@
 #include <unordered_map>
 #include "Hash.h"
 #include "imgui.h"
-#include "imgui_impl_sdl_gl3.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_sdl.h"
 #include "LoadingScreen.h"
 #include "Dialog.h"
 #include "Entity.h"
@@ -115,7 +116,11 @@ int main(int argc, char **argv) {
 	SDL_GL_SetSwapInterval(1);
 	gladLoadGL();
 	
-	ImGui_ImplSdlGL3_Init(window);
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
+	ImGui_ImplOpenGL3_Init("#version 130");
 
 	//Style
 	ImGui::StyleColorsDark(NULL);
@@ -289,7 +294,9 @@ int main(int argc, char **argv) {
 
 	bool windowOpen = true;
 	while (windowOpen) {
-		ImGui_ImplSdlGL3_NewFrame(window);
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplSDL2_NewFrame(window);
+		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
 		glClearColor(0.2f, 0.2f, 0.2f, 1.f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -790,13 +797,13 @@ int main(int argc, char **argv) {
 		glBindVertexArray(RenderInterface::instance().VertexArrayID);
 		dd::flush(0);
 		ImGui::Render();
-		ImGui_ImplSdlGL3_RenderDrawData(ImGui::GetDrawData());
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		SDL_GL_SwapWindow(window);
 		frameCount++;
 
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) {
-			ImGui_ImplSdlGL3_ProcessEvent(&event);
+			ImGui_ImplSDL2_ProcessEvent(&event);
 			switch (event.type) {
 				case SDL_WINDOWEVENT:
 					if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
