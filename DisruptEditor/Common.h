@@ -25,21 +25,7 @@ extern Settings settings;
 void reloadSettings();
 void saveSettings();
 
-struct FileInfo {
-	std::string fullPath;
-	std::string name;
-	std::string ext;
-};
-Vector<FileInfo> getFileList(const std::string &dir, const std::string &extFilter = std::string());
-Vector<FileInfo> getFileListFromAbsDir(const std::string &dir, const std::string &extFilter = std::string());
-
 std::string loadFile(const std::string &file);
-
-std::string getAbsoluteFilePath(const std::string &path);
-std::string getAbsoluteFilePath(uint32_t path);
-
-SDL_RWops* openFile(const std::string &path);
-SDL_RWops* openFile(uint32_t path);
 
 xbgFile& loadXBG(const std::string &path);
 xbgFile& loadXBG(uint32_t path);

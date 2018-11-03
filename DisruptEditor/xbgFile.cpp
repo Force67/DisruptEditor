@@ -54,8 +54,7 @@ static inline std::string readString(SDL_RWops *fp) {
 	return str;
 }
 
-void xbgFile::open(const char *file) {
-	SDL_RWops *fp = SDL_RWFromFile(file, "rb");
+void xbgFile::open(SDL_RWops *fp) {
 	if (!fp) {
 		SDL_Log("Failed\n");
 		return;

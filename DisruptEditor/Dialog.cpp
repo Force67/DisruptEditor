@@ -4,9 +4,10 @@
 #include <SDL_log.h>
 #include <SDL_rwops.h>
 #include "tinyfiles.h"
+#include "FileHandler.h"
 
 Dialog::Dialog() {
-	conversationtable = readFCB(getAbsoluteFilePath("dialog/conversationtable.dat").c_str());
+	/*conversationtable = readFCB(getAbsoluteFilePath("dialog/conversationtable.dat").c_str());
 	dialogmanagerindices = readFCB(getAbsoluteFilePath("dialog/dialogmanagerindices.dat").c_str());
 	speechLength = readFCB(getAbsoluteFilePath("generated/sound/speechlength.bin").c_str());
 
@@ -28,7 +29,7 @@ Dialog::Dialog() {
 	}
 	tfDirClose(&dir);
 
-	SDL_RWops *fp = openFile("soundbinary/soundidlinelinks.slid");
+	SDL_RWops *fp = FH::openFile("soundbinary/soundidlinelinks.slid");
 	uint32_t count = SDL_ReadLE32(fp);
 	for (uint32_t i = 0; i < count; ++i) {
 		uint32_t soundID = SDL_ReadLE32(fp);
@@ -45,7 +46,7 @@ Dialog::Dialog() {
 		const char* text = it->GetText();
 		if(text)
 			locStrings[lineID] = text;
-	}
+	}*/
 
 	//main.open("D:\\wd2\\common\\languages\\main_english.loc");
 	/*main.open("D:\\wiiu\\common\\languages\\main_english.loc");

@@ -68,9 +68,11 @@ struct matEntry {
 	std::string texture;
 };
 
+struct SDL_RWops;
+
 class materialFile {
 public:
-	bool open(const char *filename);
+	bool open(SDL_RWops *fp);
 	Vector< matEntry > entries;
 };
 

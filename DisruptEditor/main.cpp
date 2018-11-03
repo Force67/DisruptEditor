@@ -27,8 +27,8 @@
 #include "CSector.h"
 #include "batchFile.h"
 #include "Audio.h"
-#include "CommandHandler.h"
 #include "ImGuizmo.h"
+#include "FileHandler.h"
 
 struct BuildingEntity {
 	std::string wlu;
@@ -78,13 +78,6 @@ int main(int argc, char **argv) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	srand(time(NULL));
 
-	if (argc > 1) {
-		const char* filename = argv[1];
-		handleFile(filename);
-
-		return 0;
-	}
-
 	std::unordered_map<std::string, bool> windows;
 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -133,6 +126,8 @@ int main(int argc, char **argv) {
 	camera.far_plane = 6500.f;
 
 	dd::initialize(&RenderInterface::instance());
+
+	FH::Init();
 
 	//Debug
 	{
@@ -199,18 +194,10 @@ int main(int argc, char **argv) {
 		reloadSettings();
 
 		loadingScreen->setTitle("Loading WLUs");
-		Vector<FileInfo> files = getFileList("worlds/windy_city/generated/wlu", "xml.data.fcb");
+		Vector<FileInfo> files = FH::getFileList("worlds/windy_city/generated/wlu", "xml.data.fcb");
 		for (FileInfo &file : files) {
 			SDL_Log("Loading %s\n", file.name.c_str());
 			loadingScreen->setProgress(file.name, (&file - &files[0]) / (float)files.size());
-			wlus[file.name].shortName = file.name;
-			wlus[file.name].open(file.fullPath);
-			SDL_PumpEvents();
-		}
-		files = getFileList("worlds/san_francisco/generated/wlu", "wlu");
-		for (FileInfo &file : files) {
-			SDL_Log("Loading %s\n", file.name.c_str(), (&file - &files[0]) / (float)files.size());
-			loadingScreen->setProgress(file.name);
 			wlus[file.name].shortName = file.name;
 			wlus[file.name].open(file.fullPath);
 			SDL_PumpEvents();
@@ -231,9 +218,9 @@ int main(int argc, char **argv) {
 
 		SDL_PumpEvents();
 		loadingScreen->setTitle("Loading Particle Library");
-		std::unique_ptr<tinyxml2::XMLDocument> particles = loadRml(getAbsoluteFilePath(2646343311).c_str());
+		//std::unique_ptr<tinyxml2::XMLDocument> particles = loadRml(getAbsoluteFilePath(2646343311).c_str());
 
-		spawnPointList.LoadFile(getAbsoluteFilePath("worlds/windy_city/generated/spawnpointlist.xml").c_str());
+		//spawnPointList.LoadFile(getAbsoluteFilePath("worlds/windy_city/generated/spawnpointlist.xml").c_str());
 
 		SDL_PumpEvents();
 		loadingScreen->setTitle("Loading graphics");
@@ -591,8 +578,8 @@ int main(int argc, char **argv) {
 			ImGui::Text("%s", currentFile.c_str());
 			ImGui::SameLine();
 			if (ImGui::Button("Open")) {
-				currentFile = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "cseq\0*.cseq\0", getAbsoluteFilePath("sequences").c_str(), NULL);
-				file.open(currentFile.c_str());
+				//currentFile = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "cseq\0*.cseq\0", getAbsoluteFilePath("sequences").c_str(), NULL);
+				//file.open(currentFile.c_str());
 			}
 
 			ImGui::End();
@@ -816,9 +803,6 @@ int main(int argc, char **argv) {
 						windowOpen = false;
 						exit(0);
 					}
-					break;
-				case SDL_DROPFILE:
-					handleFile(event.drop.file);
 					break;
 			}
 		}

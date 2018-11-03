@@ -7,6 +7,7 @@
 #include "DDRenderInterface.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "xbgFile.h"
+#include "FileHandler.h"
 
 std::map<std::string, Node> entityLibrary;
 std::unordered_map<uint32_t, std::string> entityLibraryUID;
@@ -27,7 +28,7 @@ Node* findEntityByUID(uint32_t UID) {
 }
 
 void loadEntityLibrary() {
-	SDL_RWops *fp = SDL_RWFromFile(getAbsoluteFilePath("worlds\\windy_city\\generated\\entitylibrary_rt.fcb").c_str(), "rb");
+	SDL_RWops *fp = FH::openFile("worlds\\windy_city\\generated\\entitylibrary_rt.fcb");
 	size_t size = SDL_RWsize(fp);
 	Vector<uint8_t> data(size);
 	SDL_RWread(fp, data.data(), size, 1);

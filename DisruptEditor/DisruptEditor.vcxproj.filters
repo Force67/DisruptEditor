@@ -38,9 +38,6 @@
     <ClCompile Include="Entity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CommandHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DDRenderInterface.cpp">
       <Filter>Externals</Filter>
     </ClCompile>
@@ -51,9 +48,6 @@
       <Filter>Externals</Filter>
     </ClCompile>
     <ClCompile Include="stb_vorbis.c">
-      <Filter>Externals</Filter>
-    </ClCompile>
-    <ClCompile Include="nv_dds.cpp">
       <Filter>Externals</Filter>
     </ClCompile>
     <ClCompile Include="Implementation.cpp">
@@ -131,6 +125,9 @@
     <ClCompile Include="mabFile.cpp">
       <Filter>Source Files\File Formats</Filter>
     </ClCompile>
+    <ClCompile Include="FileHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -172,9 +169,6 @@
     <ClInclude Include="Vector.h">
       <Filter>Externals</Filter>
     </ClInclude>
-    <ClInclude Include="nv_dds.h">
-      <Filter>Externals</Filter>
-    </ClInclude>
     <ClInclude Include="noc_file_dialog.h">
       <Filter>Externals</Filter>
     </ClInclude>
@@ -194,9 +188,6 @@
       <Filter>Externals</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CommandHandler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Common.h">
@@ -279,6 +270,9 @@
     </ClInclude>
     <ClInclude Include="mabFile.h">
       <Filter>Source Files\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="FileHandler.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

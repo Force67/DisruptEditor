@@ -1,62 +1,39 @@
 #include "DatFat.h"
 
-#include <SDL_assert.h>
-#include <SDL_log.h>
-#include <algorithm>
-#include <SDL_endian.h>
-#include <Windows.h>
+#include <SDL.h>
 
-uint64_t fnv_64_str(const char *str) {
-	unsigned char *s = (unsigned char *) str;
-	uint64_t hval = 0xCBF29CE484222325ul;
-
-	while (*s) {
-		hval *= 0x100000001B3ul;
-		hval ^= (uint64_t) *s++;
-	}
-
-	return hval;
-}
-
-void DatFat::addFat(const std::string &filename) {
-	FILE *fp = fopen(filename.c_str(), "rb");
-	SDL_assert_release(fp);
+DatFat::DatFat(const std::string &filename) {
+	FILE *fat = fopen(filename.c_str(), "rb");
+	SDL_assert_release(fat);
 
 	uint32_t magic;
-	fread(&magic, sizeof(magic), 1, fp);
+	fread(&magic, sizeof(magic), 1, fat);
 	SDL_assert_release(magic == 1178686515);
 
 	int32_t version;
-	fread(&version, sizeof(version), 1, fp);
+	fread(&version, sizeof(version), 1, fat);
 	SDL_assert_release(version == 8);
 
 	uint32_t flags;
-	fread(&flags, sizeof(flags), 1, fp);
+	fread(&flags, sizeof(flags), 1, fat);
 	SDL_assert_release((flags & ~0xFFFFFF) == 0);
 
 	uint32_t entries;
-	fread(&entries, sizeof(entries), 1, fp);
+	fread(&entries, sizeof(entries), 1, fat);
 
 	std::string datFile = filename;
 	datFile[datFile.size() - 3] = 'd';
-	FILE *dat = fopen(datFile.c_str(), "rb");
+	dat = SDL_RWFromFile(datFile.c_str(), "rb");
 	SDL_assert_release(dat);
-	archives.push_back(dat);
-	int pos = archives.size() - 1;
-
-	FILE *out = fopen("out.txt", "w");
 
 	for (uint32_t i = 0; i < entries; ++i) {
 		uint32_t a, b, c, d;
-		fread(&a, sizeof(uint32_t), 1, fp);
-		fread(&b, sizeof(uint32_t), 1, fp);
-		fread(&c, sizeof(uint32_t), 1, fp);
-		fread(&d, sizeof(uint32_t), 1, fp);
-
-		fprintf(out, "%u\n", a);
+		fread(&a, sizeof(uint32_t), 1, fat);
+		fread(&b, sizeof(uint32_t), 1, fat);
+		fread(&c, sizeof(uint32_t), 1, fat);
+		fread(&d, sizeof(uint32_t), 1, fat);
 
 		FileEntry fe;
-		fe.archive = pos;
 		fe.realSize = (b >> 3) & 0x1FFFFFFFu;
 		fe.compression = (FileEntry::Compression) ((b >> 0) & 0x00000007u);
 		fe.offset = (long) d << 3;
@@ -65,11 +42,7 @@ void DatFat::addFat(const std::string &filename) {
 		files[a] = fe;
 	}
 
-	fclose(out);
-
-	//TODO: Parse Localization
-
-	fclose(fp);
+	fclose(fat);
 }
 
 struct CompressionSettings {
@@ -78,67 +51,40 @@ struct CompressionSettings {
 	uint32_t ChunkSize;
 };
 
-std::shared_ptr<FileP> DatFat::openRead(std::string filename) {
-	std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
-	std::replace(filename.begin(), filename.end(), '/', '\\');
-	if (filename[0] == '\\')
-		filename = filename.substr(1);
-	uint64_t hash = fnv_64_str(filename.c_str());
+Vector<uint8_t> DatFat::openRead(uint32_t hash) {
+	auto it = files.find(hash);
+	Vector<uint8_t> data;
+	if (it != files.end()) {
+		SDL_RWseek(dat, it->second.offset, RW_SEEK_SET);
 
-	if (files.count(hash)) {
-		auto &fe = files.at(hash);
-		FILE *ar = archives[fe.archive];
-
-		fseek(ar, fe.offset, SEEK_SET);
-
-		if (fe.compression == FileEntry::Compression::None) {
-			Vector<uint8_t> data(fe.size);
-			fread(data.data(), 1, fe.size, ar);
-			return std::make_shared<FileP>(data);
-		} else if (fe.compression == FileEntry::Compression::Xbox) {
-			uint32_t magic;
-			fread(&magic, sizeof(magic), 1, ar);
-			magic = SDL_Swap32(magic);
+		if (it->second.compression == FileEntry::Compression::None) {
+			data.resize(it->second.size);
+			SDL_RWread(dat, data.data(), 1, it->second.size);
+			return data;
+		} else if (it->second.compression == FileEntry::Compression::Xbox) {
+			uint32_t magic = SDL_ReadBE32(dat);
 			SDL_assert_release(magic == 0x0FF512EE);
 
-			uint32_t version;
-			fread(&version, sizeof(version), 1, ar);
-			version = SDL_Swap32(version);
+			uint32_t version = SDL_ReadBE32(dat);
 			SDL_assert_release(version == 0x01030000);
 
-			uint32_t unknown08;
-			fread(&unknown08, sizeof(unknown08), 1, ar);
-			unknown08 = SDL_Swap32(unknown08);
+			uint32_t unknown08 = SDL_ReadBE32(dat);
 			SDL_assert_release(unknown08 == 0);
 
-			uint32_t unknown0C;
-			fread(&unknown0C, sizeof(unknown0C), 1, ar);
-			unknown0C = SDL_Swap32(unknown0C);
+			uint32_t unknown0C = SDL_ReadBE32(dat);
 			SDL_assert_release(unknown0C == 0);
 
-			uint32_t windowSize;
-			fread(&windowSize, sizeof(windowSize), 1, ar);
-			windowSize = SDL_Swap32(windowSize);
+			uint32_t windowSize = SDL_ReadBE32(dat);
 
-			uint32_t chunkSize;
-			fread(&chunkSize, sizeof(chunkSize), 1, ar);
-			chunkSize = SDL_Swap32(chunkSize);
+			uint32_t chunkSize = SDL_ReadBE32(dat);
 
-			int64_t uncompressedSize;
-			fread(&uncompressedSize, sizeof(uncompressedSize), 1, ar);
-			uncompressedSize = SDL_Swap64(uncompressedSize);
+			int64_t uncompressedSize = SDL_ReadBE64(dat);
 
-			int64_t compressedSize;
-			fread(&compressedSize, sizeof(compressedSize), 1, ar);
-			compressedSize = SDL_Swap64(compressedSize);
+			int64_t compressedSize = SDL_ReadBE64(dat);
 
-			int32_t largestUncompressedChunkSize;
-			fread(&largestUncompressedChunkSize, sizeof(largestUncompressedChunkSize), 1, ar);
-			largestUncompressedChunkSize = SDL_Swap32(largestUncompressedChunkSize);
+			int32_t largestUncompressedChunkSize = SDL_ReadBE32(dat);
 
-			int32_t largestCompressedChunkSize;
-			fread(&largestCompressedChunkSize, sizeof(largestCompressedChunkSize), 1, ar);
-			largestCompressedChunkSize = SDL_Swap32(largestCompressedChunkSize);
+			int32_t largestCompressedChunkSize = SDL_ReadBE32(dat);
 
 			if (uncompressedSize < 0 ||
 				compressedSize < 0 ||
@@ -147,24 +93,14 @@ std::shared_ptr<FileP> DatFat::openRead(std::string filename) {
 				SDL_assert_release(false);
 			}
 
-			SDL_assert_release(uncompressedSize == fe.realSize);
+			SDL_assert_release(uncompressedSize == it->second.realSize);
 
 			Vector<uint8_t> uncompressedBytes(largestUncompressedChunkSize);
 			Vector<uint8_t> compressedBytes(largestCompressedChunkSize);
 
 			int64_t remaining = uncompressedSize;
 			while (remaining > 0) {
-				HMODULE lib = LoadLibraryA("C:\\Windows\\System32\\XnaNative.dll");
-				DWORD a = GetLastError();
-				//SDL_assert_release(lib);
-				
-				/*0x10197A1D,
-					0x101979A1,
-					0x101979F7*/
-
-				typedef int (*CDC)(int type, CompressionSettings settings, int flags, void* context);
-
-				CompressionSettings settings;
+				/*CompressionSettings settings;
 				settings.Flags = 0;
 				settings.WindowSize = windowSize;
 				settings.ChunkSize = chunkSize;
@@ -201,7 +137,7 @@ std::shared_ptr<FileP> DatFat::openRead(std::string filename) {
 
 				//output.Write(uncompressedBytes, 0, actualUncompressedChunkSize);
 
-				remaining -= actualUncompressedChunkSize;
+				remaining -= actualUncompressedChunkSize;*/
 			}
 		} else {
 			SDL_assert_release(false);
@@ -209,17 +145,5 @@ std::shared_ptr<FileP> DatFat::openRead(std::string filename) {
 
 	}
 
-	return std::shared_ptr<FileP>();
-}
-
-FileP::~FileP() {
-	if (fp)
-		fclose(fp);
-}
-
-void FileP::read(void *buf, size_t size, size_t count) {
-	SDL_assert_release(mode == READ);
-	SDL_assert_release(data.size() > offset + (size * count));
-
-	memcpy(buf, data.data() + offset, size * count);
+	return data;
 }

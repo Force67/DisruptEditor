@@ -3,20 +3,20 @@
 #include <stdio.h>
 #include <SDL_assert.h>
 #include <SDL_log.h>
+#include <SDL_rwops.h>
 
-static inline void seekpad(FILE *fp, long pad) {
+static inline void seekpad(SDL_RWops *fp, long pad) {
 	//16-byte chunk alignment
-	long size = ftell(fp);
+	long size = SDL_RWtell(fp);
 	long seek = (pad - (size % pad)) % pad;
-	fseek(fp, seek, SEEK_CUR);
+	SDL_RWseek(fp, seek, RW_SEEK_CUR);
 }
 
-bool materialFile::open(const char *filename) {
-	FILE *fp = fopen(filename, "rb");
+bool materialFile::open(SDL_RWops *fp) {
 	if (!fp) return false;
 
 	matHeader head;
-	fread(&head, sizeof(head), 1, fp);
+	SDL_RWread(fp, &head, sizeof(head), 1);
 
 	SDL_assert_release(head.magic == 5062996);
 	SDL_assert_release(head.unknum == 7);
@@ -32,44 +32,38 @@ bool materialFile::open(const char *filename) {
 	SDL_assert_release(head.size == head.size3);
 	SDL_assert_release(head.size == head.size4);
 
-	while (!feof(fp)) {
-		matEntry me;
+	matEntry me;
 
-		uint32_t size;
-		fread(&size, sizeof(size), 1, fp);
-		me.name.resize(size+1, '\0');
-		fread(&me.name[0], 1, size, fp);
-		seekpad(fp, 4);
+	uint32_t size = SDL_ReadLE32(fp);
+	me.name.resize(size+1, '\0');
+	SDL_RWread(fp, &me.name[0], 1, size);
+	seekpad(fp, 4);
 
-		fread(&size, sizeof(size), 1, fp);
-		me.shader.resize(size + 1, '\0');
-		fread(&me.shader[0], 1, size, fp);
-		seekpad(fp, 4);
+	size = SDL_ReadLE32(fp);
+	me.shader.resize(size + 1, '\0');
+	SDL_RWread(fp, &me.shader[0], 1, size);
+	seekpad(fp, 4);
 
-		//Skip 28 bytes and guess
-		fseek(fp, 28, SEEK_CUR);
+	//Skip 28 bytes and guess
+	SDL_RWseek(fp, 28, RW_SEEK_CUR);
 
-		fread(&size, sizeof(size), 1, fp);
-		if (size != 4183327151) {
-			fclose(fp);
-			return false;
-		}
-
-		fread(&size, sizeof(size), 1, fp);
-		me.texture.resize(size + 1, '\0');
-		fread(&me.texture[0], 1, size, fp);
-		seekpad(fp, 4);
-
-		SDL_Log("%s\n", me.name.c_str());
-		SDL_Log("%s\n", me.shader.c_str());
-		SDL_Log("%s\n", me.texture.c_str());
-
-		entries.push_back(me);
-
-		fclose(fp);
-		return true;
+	size = SDL_ReadLE32(fp);
+	if (size != 4183327151) {
+		SDL_RWclose(fp);
+		return false;
 	}
 
-	fclose(fp);
+	size = SDL_ReadLE32(fp);
+	me.texture.resize(size + 1, '\0');
+	SDL_RWread(fp, &me.texture[0], 1, size);
+	seekpad(fp, 4);
+
+	SDL_Log("%s\n", me.name.c_str());
+	SDL_Log("%s\n", me.shader.c_str());
+	SDL_Log("%s\n", me.texture.c_str());
+
+	entries.push_back(me);
+
+	SDL_RWclose(fp);
 	return true;
 }

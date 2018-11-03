@@ -23,6 +23,8 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DisruptEditor</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+    <TargetFrameworkVersion>
+    </TargetFrameworkVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -43,6 +45,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -50,6 +53,7 @@
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <CLRSupport>true</CLRSupport>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -155,7 +159,6 @@
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="batchFile.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="CommandHandler.cpp" />
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="CSector.cpp" />
     <ClCompile Include="cseqFile.cpp" />
@@ -164,6 +167,7 @@
     <ClCompile Include="Dialog.cpp" />
     <ClCompile Include="DominoBox.cpp" />
     <ClCompile Include="Entity.cpp" />
+    <ClCompile Include="FileHandler.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="Hash.cpp" />
     <ClCompile Include="hkxFile.cpp" />
@@ -179,7 +183,6 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="materialFile.cpp" />
     <ClCompile Include="NBCF.cpp" />
-    <ClCompile Include="nv_dds.cpp" />
     <ClCompile Include="RML.cpp" />
     <ClCompile Include="RoadNetwork.cpp" />
     <ClCompile Include="sbaoFile.cpp" />
@@ -197,7 +200,6 @@
     <ClInclude Include="bootSound.h" />
     <ClInclude Include="bootTvTex.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="CommandHandler.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="CSector.h" />
     <ClInclude Include="cseqFile.h" />
@@ -208,6 +210,7 @@
     <ClInclude Include="DominoBox.h" />
     <ClInclude Include="dr_wav.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="FileHandler.h" />
     <ClInclude Include="glad.h" />
     <ClInclude Include="GLHelper.h" />
     <ClInclude Include="Hash.h" />
@@ -223,7 +226,6 @@
     <ClInclude Include="materialFile.h" />
     <ClInclude Include="NBCF.h" />
     <ClInclude Include="noc_file_dialog.h" />
-    <ClInclude Include="nv_dds.h" />
     <ClInclude Include="RML.h" />
     <ClInclude Include="RoadNetwork.h" />
     <ClInclude Include="sbaoFile.h" />

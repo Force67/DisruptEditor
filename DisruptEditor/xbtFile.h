@@ -1,11 +1,11 @@
 #pragma once
 
-#include "nv_dds.h"
+#include "glad.h"
+struct SDL_RWops;
 
 class xbtFile {
 public:
-	bool open(const char* file);
-	nv_dds::CDDSImage image;
+	bool open(SDL_RWops* fp);
 	GLuint id;
 };
 

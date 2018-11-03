@@ -38,9 +38,11 @@ For stride 44 theres a blank unknown if i can recall but yeah thats the basic fo
 
 */
 
+struct SDL_RWops;
+
 class xbgFile {
 public:
-	void open(const char* file);
+	void open(SDL_RWops* fp);
 
 	struct Mesh {
 		uint16_t vertexStride, matID, vertexCount, totalVertexCount, faceCount, UVFlag, scaleFlag, boneMapID;

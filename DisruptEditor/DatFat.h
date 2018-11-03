@@ -5,40 +5,15 @@
 #include "Vector.h"
 #include <stdio.h>
 #include <memory>
-#include <mutex>
 
-class FileP {
-public:
-	//Read Constructor
-	FileP(Vector<uint8_t> &_data) : data(_data), mode(READ) {};
-
-	~FileP();
-
-	void read(void* buf, size_t size, size_t count);
-	void seekSet(long offset) { this->offset = offset; }
-	void seekCur(long offset) { this->offset += offset; }
-
-	enum Mode { READ, WRITE };
-private:
-	Mode mode;
-
-	//Write Mode
-	FILE *fp = nullptr;
-
-	//Read Mode
-	Vector<uint8_t> data;
-	long offset = 0;
-};
+struct SDL_RWops;
 
 class DatFat {
 public:
-	void addFat(const std::string &filename);
-	std::shared_ptr<FileP> openRead(std::string filename);
-	std::shared_ptr<FileP> openWrite(std::string filename);
-	std::string modDir;
+	DatFat(const std::string &filename);
+	Vector<uint8_t> openRead(uint32_t hash);
 
 	struct FileEntry {
-		int archive;
 		uint64_t offset;
 		uint32_t realSize;
 		uint32_t size;
@@ -50,8 +25,7 @@ public:
 		};
 		Compression compression;
 	};
-	Vector<FILE*> archives;
-	std::map<uint32_t, FileEntry> files;
-	std::mutex mutex;
+	SDL_RWops* dat;
+	std::map<uint64_t, FileEntry> files;
 };
 
