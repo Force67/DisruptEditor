@@ -6,15 +6,17 @@
 #include <string.h>
 #include <string>
 
+//Game stores ptr in 0x20 of r3, size in 0x24
+
 #pragma pack(push, 1)
 struct batchHeader {
 	uint32_t magic;
-	uint32_t unk1; //32
+	uint32_t unk1; //32, checks
 	uint32_t type; //0 for compound, 1 for phys
 	uint32_t size;
 	uint32_t unk3;
 	uint32_t unk4;//0
-	uint32_t unk5;//0
+	uint32_t unk5;//0, Game Checks
 	uint32_t unk6;//0
 };
 struct compoundHeader {
@@ -45,8 +47,7 @@ std::string readString(SDL_RWops *fp, bool bigEndian) {
 	return str;
 }
 
-bool batchFile::open(const char * filename) {
-	SDL_RWops *fp = SDL_RWFromFile(filename, "rb");
+bool batchFile::open(SDL_RWops *fp) {
 	if (!fp) return false;
 
 	bool bigEndian = false;
@@ -66,7 +67,7 @@ bool batchFile::open(const char * filename) {
 	//SDL_assert_release(head.unk10 == 0);
 
 	if (head.type == 0) {
-		SDL_assert_release(strstr(filename, "_compound.cbatch"));
+		//SDL_assert_release(strstr(filename, "_compound.cbatch"));
 		SDL_assert_release(head.size + sizeof(head) == SDL_RWsize(fp));
 
 		compoundHeader compound;
@@ -76,10 +77,23 @@ bool batchFile::open(const char * filename) {
 
 		std::string srcFilename = readString(fp, bigEndian);
 		seekpad(fp, 4);
-
 		SDL_Log("%s\n", srcFilename.c_str());
+
+		//Materials?
+		uint32_t CResourceContainerCount = SDL_ReadLE32(fp);
+		for (uint32_t i = 0; i < CResourceContainerCount; ++i) {
+			//Read CStringId
+			uint32_t CStringID = SDL_ReadLE32(fp);
+			uint32_t CPathID = SDL_ReadLE32(fp);
+
+			//CResourceManager::GetResource((CPathID const &,CStringID const &))
+			SDL_Log("CRes #%u string=%08X path=%08X", i, CStringID, CPathID);
+		}
+
+		uint32_t CPhysBatchResourceID = SDL_ReadLE32(fp);
+		SDL_Log("Phys: %08X\n\n", CPhysBatchResourceID);
 	} else if (head.type == 1) {
-		SDL_assert_release(strstr(filename, "_phys.cbatch"));
+		//SDL_assert_release(strstr(filename, "_phys.cbatch"));
 	}
 
 	SDL_RWclose(fp);
