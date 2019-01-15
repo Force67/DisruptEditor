@@ -137,21 +137,21 @@ int main(int argc, char **argv) {
 	//Debug
 	{
 		tfDIR dir;
-		/*tfDirOpen(&dir, "D:\\Desktop\\bin\\windy_city\\worlds\\windy_city\\generated\\batchmeshentity");
+		tfDirOpen(&dir, "C:\\Program Files\\Ubisoft\\WATCH_DOGS\\bin\\patch\\worlds\\windy_city\\generated\\batchmeshentity");
 		while (dir.has_next) {
 			tfFILE file;
 			tfReadFile(&dir, &file);
 
-			if (!file.is_dir && strstr(file.name, ".cbatch") != NULL) {
+			if (!file.is_dir && strstr(file.name, "_compound.cbatch") != NULL) {
 				SDL_Log("Loading %s", file.name);
 
 				batchFile bf;
-				bf.open(file.path);
+				bf.open(SDL_RWFromFile(file.path, "rb+"));
 			}
 
 			tfDirNext(&dir);
 		}
-		tfDirClose(&dir);*/
+		tfDirClose(&dir);
 
 		//tfDirOpen(&dir, "D:\\Desktop\\bin\\sound\\soundbinary");
 		//tfDirOpen(&dir, "D:\\Desktop\\bin\\sound\\__UNKNOWN/sfx");
@@ -455,7 +455,7 @@ int main(int argc, char **argv) {
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Add Layer")) {
-				sbaoLayer &layer = file.layers.push_back();
+				sbaoLayer &layer = file.layers.emplace_back();
 				layer.replace( noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "ogg\0*.ogg\0", NULL, NULL) );
 			}
 			ImGui::SameLine();
@@ -469,7 +469,7 @@ int main(int argc, char **argv) {
 
 			int layerNum = 1;
 			for (auto it = file.layers.begin(); it != file.layers.end(); ++it) {
-				ImGui::PushID(it);
+				ImGui::PushID(it._Ptr);
 				ImGui::Text("%u", layerNum);
 				ImGui::SameLine();
 				if (ImGui::Button("Play")) {

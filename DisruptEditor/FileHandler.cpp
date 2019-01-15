@@ -80,6 +80,16 @@ SDL_RWops * FH::openFile(uint32_t path) {
 	return fp;
 }
 
+std::string FH::getReverseFilename(uint32_t hash) {
+	if (knownFiles.count(hash) == 0) {
+		char buffer[12];
+		snprintf(buffer, sizeof(buffer), "_%08x", hash);
+		return std::string(buffer);
+	}
+
+	return knownFiles[hash];
+}
+
 std::string FH::getAbsoluteFilePath(const std::string &path) {
 	for (const std::string &base : settings.searchPaths) {
 		std::string fullPath = base + path;
@@ -109,7 +119,8 @@ void FH::Init() {
 	char buffer[500];
 	while (fgets(buffer, sizeof(buffer), fp)) {
 		buffer[strlen(buffer) - 1] = '\0';
-		knownFiles[Hash::instance().getFilenameHash(buffer)] = buffer;
+		uint32_t hash = Hash::instance().getFilenameHash(buffer);
+		knownFiles[hash] = buffer;
 	}
 	fclose(fp);
 }

@@ -80,7 +80,7 @@ void xbgFile::open(SDL_RWops *fp) {
 	{
 		uint32_t count = SDL_ReadLE32(fp);
 		for (uint32_t i = 0; i < count; ++i) {
-			Material &mat = materials.push_back();
+			Material &mat = materials.emplace_back();
 			mat.hash = SDL_ReadLE32(fp);
 			mat.file = readString(fp);
 			SDL_Log("Mat %u %s\n", mat.hash, mat.file.c_str());

@@ -70,28 +70,28 @@ void loadConnectors() {
 		for (auto j = it->FirstChildElement(); j; j = j->NextSiblingElement()) {
 			std::string type = j->Name();
 			if (type == "control_in") {
-				DominoSlot &slot = c.in.push_back();
+				DominoSlot &slot = c.in.emplace_back();
 				slot.name = j->Attribute("name");
 				slot.type = CONTROL;
 				const char* desc = j->Attribute("desc");
 				if (desc)
 					slot.description = desc;
 			} else if (type == "control_out") {
-				DominoSlot &slot = c.out.push_back();
+				DominoSlot &slot = c.out.emplace_back();
 				slot.name = j->Attribute("name");
 				slot.type = CONTROL;
 				const char* desc = j->Attribute("desc");
 				if (desc)
 					slot.description = desc;
 			} else if (type == "data_in") {
-				DominoSlot &slot = c.in.push_back();
+				DominoSlot &slot = c.in.emplace_back();
 				slot.name = j->Attribute("name");
 				slot.type = DATA;
 				const char* desc = j->Attribute("desc");
 				if (desc)
 					slot.description = desc;
 			} else if (type == "data_out") {
-				DominoSlot &slot = c.out.push_back();
+				DominoSlot &slot = c.out.emplace_back();
 				slot.name = j->Attribute("name");
 				slot.type = DATA;
 				const char* desc = j->Attribute("desc");
@@ -191,7 +191,7 @@ void DominoBox::open(const char *filename) {
 				if (cm.size() == 2) {
 					if (toId != -1) {
 						//Save Boxes
-						DominoPtr &ptr = connections.push_back();
+						DominoPtr &ptr = connections.emplace_back();
 						ptr.from = fromId;
 						ptr.to = toId;
 						ptr.fromKey = controlFromName;
@@ -379,7 +379,7 @@ std::string DominoCBox::deserialize(FILE *fp) {
 
 	//Process local variables
 	for (auto &it : localVariables) {
-		/*DominoSlot &slot = out.push_back();
+		/*DominoSlot &slot = out.emplace_back()
 		slot.name = it.first;
 		slot.type = CONTROL;
 		slot.value = it.second;

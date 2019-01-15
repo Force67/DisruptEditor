@@ -156,7 +156,7 @@ std::string Attribute::getHashName() {
 }
 
 std::string Attribute::getHumanReadable() {
-	if (buffer.size() > 1 && *buffer.back() == '\0') {
+	if (buffer.size() > 1 && buffer.back() == '\0') {
 		//Iterate over string for any non-ascii chars
 		bool valid = true;
 		for (auto byte = buffer.begin(); byte != buffer.end() - 1; ++byte) {
@@ -321,13 +321,13 @@ void Node::deserializeXML(const tinyxml2::XMLElement *node) {
 	//Load Attributes
 	attributes.clear();
 	for (auto it = node->FirstAttribute(); it; it = it->Next()) {
-		attributes.push_back().deserializeXML(it);
+		attributes.emplace_back().deserializeXML(it);
 	}
 
 	//Load Children
 	children.clear();
 	for (auto it = node->FirstChildElement(); it; it = it->NextSiblingElement()) {
-		children.push_back().deserializeXML(it);
+		children.emplace_back().deserializeXML(it);
 	}
 }
 

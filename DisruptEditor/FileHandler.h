@@ -19,4 +19,6 @@ namespace FH {
 
 	SDL_RWops* openFile(const std::string &path);
 	SDL_RWops* openFile(uint32_t path);
+
+	std::string getReverseFilename(uint32_t hash);
 }

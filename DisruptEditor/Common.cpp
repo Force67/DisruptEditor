@@ -50,12 +50,15 @@ void reloadSettings() {
 	//Reload Filelist
 	knownFiles.clear();
 	FILE* fp = fopen("res/Watch Dogs.filelist", "r");
+	FILE *fp2 = fopen("filehashes.txt", "wb");
 	char buffer[500];
 	while(fgets(buffer, sizeof(buffer), fp)) {
 		buffer[strlen(buffer)-1] = '\0';
 		knownFiles[Hash::instance().getFilenameHash(buffer)] = buffer;
+		fprintf(fp2, "%u=%s\n", Hash::instance().getFilenameHash(buffer), buffer);
 	}
 	fclose(fp);
+	fclose(fp2);
 }
 
 template <typename T>
