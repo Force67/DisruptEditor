@@ -66,7 +66,7 @@ bool batchFile::open(SDL_RWops *fp) {
 			std::string path = FH::getReverseFilename(CPathID);
 
 			//CResourceManager::GetResource((CPathID const &,CStringID const &))
-			//SDL_Log("CRes #%u type=%s path=%s", i, type.c_str(), path.c_str());
+			SDL_Log("CRes #%u type=%s path=%s", i, type.c_str(), path.c_str());
 		}
 
 		uint32_t CPhysBatchResourceID = SDL_ReadLE32(fp);
@@ -77,8 +77,6 @@ bool batchFile::open(SDL_RWops *fp) {
 		//SDL_Log("Tell: %u\n\n", SDL_RWtell(fp));
 
 		readComponentMBP(fp);
-		
-
 	} else if (head.type == 1) {
 		//SDL_assert_release(strstr(filename, "_phys.cbatch"));
 	}
@@ -146,9 +144,10 @@ void batchFile::CBatchModelProcessorsAndResources::read(SDL_RWops * fp) {
 			uint32_t CStringID = SDL_ReadLE32(fp);
 			std::string type = Hash::instance().getReverseHash(CStringID);
 			SDL_Log("IBatchProcessor type=%s", type.c_str());
+			SDL_assert_release(type == "CGraphicBatchProcessor");
 
 			//Calls some vptr in IBinaryArchive (PreAllocateDynamicType)
-
+			//Calls CFactoryBase::PlacementeCreateObjectImpl(const CStringID &, void *)
 
 		}
 	}

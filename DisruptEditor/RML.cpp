@@ -74,15 +74,8 @@ tinyxml2::XMLElement* RmlNode::serializeXML(tinyxml2::XMLDocument *doc, tinyxml2
 	return me;
 }
 
-std::unique_ptr<tinyxml2::XMLDocument> loadRml(const char * filename) {
+std::unique_ptr<tinyxml2::XMLDocument> loadRml(SDL_RWops *fp) {
 	std::unique_ptr<tinyxml2::XMLDocument> doc = std::make_unique<tinyxml2::XMLDocument>();
-
-	SDL_RWops *fp = SDL_RWFromFile(filename, "rb");
-	if (!fp) return NULL;
-	Vector<uint8_t> data(SDL_RWsize(fp));
-	SDL_RWread(fp, data.data(), data.size(), 1);
-	SDL_RWclose(fp);
-	fp = SDL_RWFromConstMem(data.data(), data.size());
 
 	RmlHeader head;
 	head.magic = SDL_ReadU8(fp);
@@ -99,6 +92,18 @@ std::unique_ptr<tinyxml2::XMLDocument> loadRml(const char * filename) {
 	SDL_RWclose(fp);
 
 	doc->InsertFirstChild(root.serializeXML(doc.get(), NULL, stringTableData));
+
+	return doc;
+}
+
+std::unique_ptr<tinyxml2::XMLDocument> loadXml(SDL_RWops * fp) {
+	std::unique_ptr<tinyxml2::XMLDocument> doc = std::make_unique<tinyxml2::XMLDocument>();
+
+	Vector<char> contents(SDL_RWsize(fp));
+	SDL_RWread(fp, contents.data(), 1, contents.size());
+	SDL_RWclose(fp);
+	contents.push_back('\0');
+	doc->Parse(contents.data());
 
 	return doc;
 }

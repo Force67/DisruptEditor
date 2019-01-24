@@ -106,7 +106,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>GLM_FORCE_LEFT_HANDED;WIN32_LEAN_AND_MEAN;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLM_FORCE_LEFT_HANDED;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -143,7 +143,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>GLM_FORCE_LEFT_HANDED;WIN32_LEAN_AND_MEAN;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLM_FORCE_LEFT_HANDED;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -157,6 +157,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DAREWindow.cpp" />
+    <ClCompile Include="DominoWindow.cpp" />
+    <ClCompile Include="ImguiWindows.cpp" />
     <ClCompile Include="imgui_widgets.cpp" />
     <ClCompile Include="Adpcm.cpp" />
     <ClCompile Include="Audio.cpp" />
@@ -190,16 +193,19 @@
     <ClCompile Include="RML.cpp" />
     <ClCompile Include="RoadNetwork.cpp" />
     <ClCompile Include="sbaoFile.cpp" />
+    <ClCompile Include="Serialization.cpp" />
     <ClCompile Include="spkFile.cpp" />
     <ClCompile Include="stb_vorbis.c" />
     <ClCompile Include="tinyxml2.cpp" />
     <ClCompile Include="wluFile.cpp" />
+    <ClCompile Include="World.cpp" />
     <ClCompile Include="xbgFile.cpp" />
     <ClCompile Include="xbtFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imconfig.h" />
     <ClInclude Include="imgui.h" />
+    <ClInclude Include="ImguiWindows.h" />
     <ClInclude Include="imgui_internal.h" />
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
@@ -207,8 +213,6 @@
     <ClInclude Include="Adpcm.h" />
     <ClInclude Include="Audio.h" />
     <ClInclude Include="batchFile.h" />
-    <ClInclude Include="bootSound.h" />
-    <ClInclude Include="bootTvTex.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="CSector.h" />
@@ -240,6 +244,7 @@
     <ClInclude Include="RML.h" />
     <ClInclude Include="RoadNetwork.h" />
     <ClInclude Include="sbaoFile.h" />
+    <ClInclude Include="Serialization.h" />
     <ClInclude Include="spkFile.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="stb_image_write.h" />
@@ -249,8 +254,8 @@
     <ClInclude Include="tinyfiles.h" />
     <ClInclude Include="tinyxml2.h" />
     <ClInclude Include="Vector.h" />
-    <ClInclude Include="WDTechPlain-Plain.h" />
     <ClInclude Include="wluFile.h" />
+    <ClInclude Include="World.h" />
     <ClInclude Include="xbgFile.h" />
     <ClInclude Include="xbtFile.h" />
   </ItemGroup>
@@ -262,6 +267,9 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Windows.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -6,7 +6,6 @@
 #include <Shlwapi.h>
 
 static std::unordered_map<uint32_t, std::string> knownFiles;
-static std::set<std::string> allFiles;
 
 Vector<FileInfo> FH::getFileList(const std::string &dir, const std::string &extFilter) {
 	std::map<std::string, tfFILE> files;
@@ -29,7 +28,6 @@ Vector<FileInfo> FH::getFileList(const std::string &dir, const std::string &extF
 			tfDirNext(&dir);
 		}
 		tfDirClose(&dir);
-
 	}
 
 	Vector<FileInfo> outFiles;
@@ -91,30 +89,32 @@ std::string FH::getReverseFilename(uint32_t hash) {
 }
 
 std::string FH::getAbsoluteFilePath(const std::string &path) {
+	std::string fullPath = settings.patchDir + path;
+	if (PathFileExistsA(fullPath.c_str()))
+		return fullPath;
 	for (const std::string &base : settings.searchPaths) {
-		std::string fullPath = base + path;
+		fullPath = base + path;
 		if (PathFileExistsA(fullPath.c_str()))
 			return fullPath;
 	}
 
+	//Search Unknown Files
 	uint32_t hash = Hash::instance().getFilenameHash(path);
-	//if (unknownFiles.count(hash))
-		//return unknownFiles[hash];
 
 	return std::string();
 }
 
 std::string FH::getAbsoluteFilePath(uint32_t path) {
-	//if (unknownFiles.count(path))
-		//return unknownFiles[path];
 	if (knownFiles.count(path))
 		return getAbsoluteFilePath(knownFiles[path]);
+
+
+
 	return "";
 }
 
 void FH::Init() {
 	knownFiles.clear();
-	allFiles.clear();
 	FILE* fp = fopen("res/Watch Dogs.filelist", "r");
 	char buffer[500];
 	while (fgets(buffer, sizeof(buffer), fp)) {

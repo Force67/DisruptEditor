@@ -1,5 +1,6 @@
 #include "Camera.h"
 
+#include "Common.h"
 #include <SDL_keyboard.h>
 #include <SDL_mouse.h>
 
@@ -15,17 +16,17 @@ void Camera::update(float delta) {
 		case FLYCAM:
 		{
 			const Uint8 *state = SDL_GetKeyboardState(NULL);
-			bool moveForward = state[SDL_SCANCODE_W];
-			bool moveBackward = state[SDL_SCANCODE_S];
-			bool moveLeft = state[SDL_SCANCODE_A];
-			bool moveRight = state[SDL_SCANCODE_D];
-			bool moveUp = state[SDL_SCANCODE_R];
-			bool moveDown = state[SDL_SCANCODE_F];
+			bool moveForward = state[settings.keyForward];
+			bool moveBackward = state[settings.keyBackward];
+			bool moveLeft = state[settings.keyLeft];
+			bool moveRight = state[settings.keyRight];
+			bool moveUp = state[settings.keyAscend];
+			bool moveDown = state[settings.keyDescend];
 
-			float actualMoveSpeed = delta * 10.f * flyMultiplier;
-			if (SDL_GetModState() & KMOD_LCTRL)
+			float actualMoveSpeed = delta * 10.f * settings.flyMultiplier;
+			if (SDL_GetModState() & settings.keySlow)
 				actualMoveSpeed /= 10.f;
-			if (SDL_GetModState() & KMOD_LSHIFT)
+			if (SDL_GetModState() & settings.keyFast)
 				actualMoveSpeed *= 20.f;
 
 			float dx = sinf(phi) * cosf(theta) * actualMoveSpeed;

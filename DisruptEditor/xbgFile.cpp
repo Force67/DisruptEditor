@@ -59,10 +59,6 @@ void xbgFile::open(SDL_RWops *fp) {
 		SDL_Log("Failed\n");
 		return;
 	}
-	Vector<uint8_t> data(SDL_RWsize(fp));
-	SDL_RWread(fp, data.data(), data.size(), 1);
-	SDL_RWclose(fp);
-	fp = SDL_RWFromConstMem(data.data(), data.size());
 
 	XBGHead head;
 	SDL_RWread(fp, &head, sizeof(head), 1);

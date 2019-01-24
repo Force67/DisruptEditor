@@ -7,6 +7,7 @@
 #include <Shlwapi.h>
 #include <stdio.h>
 #include <SDL_log.h>
+#include <fstream>
 #include "NBCF.h"
 #include "xbgFile.h"
 #include "materialFile.h"
@@ -14,104 +15,53 @@
 #include "tinyfiles.h"
 #include "stb_image.h"
 #include "FileHandler.h"
+#include "Serialization.h"
+#include <SDL_messagebox.h>
 
 Settings settings;
 std::unordered_map<std::string, materialFile> materials;
 std::unordered_map<std::string, xbtFile> textures;
-std::unordered_map<uint32_t, std::string> knownFiles;
 
 void reloadSettings() {
-	tinyxml2::XMLDocument doc;
-	doc.LoadFile("settings.xml");
-
-	//Search Path
-	settings.searchPaths.clear();
-
-	if (doc.RootElement()->FirstChildElement("patchDir")) {
-		settings.patchDir = doc.RootElement()->FirstChildElement("patchDir")->Attribute("src");
-		if (settings.patchDir.back() != '/' && settings.patchDir.back() != '\\')
-			settings.patchDir.push_back('/');
-		settings.searchPaths.push_back(settings.patchDir);
+	std::string contents = readFile("settings.json");
+	unserializeFromJSON(settings, contents.c_str());
+	if (settings.searchPaths.empty() || settings.patchDir.empty()) {
+		//Fill with sample files
+		saveSettings();
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Disrupt Editor is not configured", "You must first setup Disrupt Editor by editing settings.json\nPlease see the readme for more details.", NULL);
+		exit(0);
 	}
 
-	for (auto it = doc.RootElement()->FirstChildElement("PackFolder"); it; it = it->NextSiblingElement("PackFolder")) {
-		std::string packPath = it->Attribute("src");
-		if (packPath.back() != '/' && packPath.back() != '\\')
-			packPath.push_back('/');
-		settings.searchPaths.push_back(packPath);
+	//Check to make sure searchPaths have trailing slash
+	for (std::string &path : settings.searchPaths) {
+		if (path.back() != '/' && path.back() != '\\')
+			path.push_back('/');
 	}
 
-	if (doc.RootElement()->FirstChildElement("textDrawDistance"))
-		settings.textDrawDistance = doc.RootElement()->FirstChildElement("textDrawDistance")->FloatAttribute("src");
-
-	if (doc.RootElement()->FirstChildElement("drawBuildings"))
-		settings.drawBuildings = doc.RootElement()->FirstChildElement("drawBuildings")->BoolAttribute("src");
-
-	//Reload Filelist
-	knownFiles.clear();
-	FILE* fp = fopen("res/Watch Dogs.filelist", "r");
-	FILE *fp2 = fopen("filehashes.txt", "wb");
-	char buffer[500];
-	while(fgets(buffer, sizeof(buffer), fp)) {
-		buffer[strlen(buffer)-1] = '\0';
-		knownFiles[Hash::instance().getFilenameHash(buffer)] = buffer;
-		fprintf(fp2, "%u=%s\n", Hash::instance().getFilenameHash(buffer), buffer);
-	}
-	fclose(fp);
-	fclose(fp2);
+	if (settings.patchDir.back() != '/' && settings.patchDir.back() != '\\')
+		settings.patchDir.push_back('/');
 }
-
-template <typename T>
-void pushXMLSetting(tinyxml2::XMLPrinter &printer, const char *name, const T &value) {
-	printer.OpenElement(name);
-	printer.PushAttribute("src", value);
-	printer.CloseElement();
-}
-
-template <>
-void pushXMLSetting<std::string>(tinyxml2::XMLPrinter &printer, const char *name, const std::string &value) {
-	printer.OpenElement(name);
-	printer.PushAttribute("src", value.c_str());
-	printer.CloseElement();
-}
-
-#define pushXMLSetting(p, x) pushXMLSetting(p, #x, settings.x)
 
 void saveSettings() {
-	FILE *fp = fopen("settings.xml", "w");
-	tinyxml2::XMLPrinter printer(fp);
-	printer.OpenElement("Settings");
-
-	for (const std::string &base : settings.searchPaths) {
-		if (base == settings.patchDir) continue;
-
-		printer.OpenElement("PackFolder");
-		printer.PushAttribute("src", base.c_str());
-		printer.CloseElement();
-	}
-
-	pushXMLSetting(printer, patchDir);
-	pushXMLSetting(printer, textDrawDistance);
-	pushXMLSetting(printer, drawBuildings);
-
-	printer.CloseElement();
-	fclose(fp);
+	bool ret = writeFile("settings.json", serializeToJSON(settings));
+	SDL_assert_release(ret);
 }
 
-std::string loadFile(const std::string & file) {
-	FILE* fp = fopen(file.c_str(), "r");
+std::string readFile(const std::string & file) {
+	std::ifstream t(file);
+	if (!t.is_open())
+		return std::string();
+	return std::string(std::istreambuf_iterator<char>(t), std::istreambuf_iterator<char>());
+}
+
+bool writeFile(const std::string & file, const std::string &contents) {
+	SDL_RWops *fp = SDL_RWFromFile(file.c_str(), "w");
 	if (fp) {
-		fseek(fp, 0, SEEK_END);
-		size_t size = ftell(fp);
-		fseek(fp, 0, SEEK_SET);
-		char data[1024 * 5];
-		SDL_assert_release(size < sizeof(data) - 1);
-		fread(data, 1, size, fp);
-		data[size] = '\0';
-		fclose(fp);
-		return data;
+		SDL_RWwrite(fp, contents.c_str(), 1, contents.size());
+		SDL_RWclose(fp);
+		return true;
 	}
-	return std::string();
+	return false;
 }
 
 std::unordered_map<uint32_t, xbgFile> xbgs;
@@ -125,8 +75,8 @@ xbgFile &loadXBG(uint32_t path) {
 		auto &model = xbgs[path];
 		SDL_Log("Loading %u.xbg\n", path);
 		SDL_RWops *fp = FH::openFile(path);
-		model.open(fp);
-		SDL_RWclose(fp);
+		if (fp)
+			model.open(fp);
 	}
 	return xbgs[path];
 }
@@ -136,8 +86,8 @@ materialFile &loadMaterial(const std::string & path) {
 		auto &model = materials[path];
 		SDL_Log("Loading %s...\n", path.c_str());
 		SDL_RWops *fp = FH::openFile(path);
-		model.open(fp);
-		SDL_RWclose(fp);
+		if (fp)
+			model.open(fp);
 	}
 	return materials[path];
 }
@@ -147,14 +97,14 @@ xbtFile & loadTexture(const std::string & path) {
 		auto &model = textures[path];
 		SDL_Log("Loading %s...\n", path.c_str());
 		SDL_RWops *fp = FH::openFile(path);
-		model.open(fp);
-		SDL_RWclose(fp);
+		if (fp)
+			model.open(fp);
 	}
 	return textures[path];
 }
 
 std::unordered_map<std::string, GLuint> texturesRes;
-GLuint loadResTexture(const std::string & path) {
+GLuint loadResTexture(const std::string &path) {
 	if (texturesRes.count(path) == 0) {
 		int width, height, bpc;
 		uint8_t *pixels = stbi_load(("res/" + path).c_str(), &width, &height, &bpc, 0);
@@ -184,3 +134,22 @@ GLuint loadResTexture(const std::string & path) {
 	return texturesRes[path];
 }
 
+void Settings::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(searchPaths);
+	REGISTER_MEMBER(patchDir);
+
+	REGISTER_MEMBER(textDrawDistance);
+
+	REGISTER_MEMBER(windowSize);
+	REGISTER_MEMBER(maximized);
+	REGISTER_MEMBER(openWindows);
+
+	REGISTER_MEMBER(keyForward);
+	REGISTER_MEMBER(keyBackward);
+	REGISTER_MEMBER(keyLeft);
+	REGISTER_MEMBER(keyRight);
+	REGISTER_MEMBER(keyAscend);
+	REGISTER_MEMBER(keyDescend);
+	REGISTER_MEMBER(keyFast);
+	REGISTER_MEMBER(keySlow);
+}

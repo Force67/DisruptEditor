@@ -13,20 +13,16 @@ static int LSThread(void *ptr) {
 	return 0;
 }
 
-#include "bootTvTex.h"
-#include "bootSound.h"
-#include "WDTechPlain-Plain.h"
-#include "Hash.h"
-
 LoadingScreen::LoadingScreen() {
 	title = "Loading the Grid...";
 	cdata.resize(96);
 
-	//SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
-
 	int x, y;
-	stbi_uc *ptr = stbi_load_from_memory(bootTvTex_png, sizeof(bootTvTex_png), &x, &y, NULL, 3);
-	SDL_assert_release(ptr);
+	stbi_uc *ptr = stbi_load("res/splash.png", &x, &y, NULL, 3);
+	if (!ptr) {
+		SDL_ShowSimpleMessageBox(0, "Missing res/ folder", "You are missing the res folder, please unpack the lastest zip and try again", NULL);
+		exit(0);
+	}
 
 	window = SDL_CreateWindow(
 		"Loading Disrupt Editor",                  // window title
@@ -44,8 +40,16 @@ LoadingScreen::LoadingScreen() {
 	free(ptr);
 
 	//Load Font
-	Vector<unsigned char> temp_bitmap(FONTTEXSIZE * FONTTEXSIZE);
-	int ret = stbtt_BakeFontBitmap(WDTechPlain_Plain_ttf, 0, 16.f, temp_bitmap.data(), FONTTEXSIZE, FONTTEXSIZE, 32, 96, cdata.data()); // no guarantee this fits!
+	Vector<uint8_t> fontData;
+	SDL_RWops *fp = SDL_RWFromFile("res/WDTechPlain-Plain.ttf", "rb");
+	SDL_assert_release(fp);
+	fontData.resize(SDL_RWsize(fp));
+	SDL_RWread(fp, fontData.data(), fontData.size(), 1);
+	SDL_RWclose(fp);
+
+	Vector<uint8_t> temp_bitmap(FONTTEXSIZE * FONTTEXSIZE);
+	
+	int ret = stbtt_BakeFontBitmap(fontData.data(), 0, 16.f, temp_bitmap.data(), FONTTEXSIZE, FONTTEXSIZE, 32, 96, cdata.data()); // no guarantee this fits!
 	Vector<unsigned char> bitmap(FONTTEXSIZE * FONTTEXSIZE * 4);
 	for (int i = 0; i < temp_bitmap.size(); ++i) {
 		bitmap[(i * 4)] = 255;
@@ -59,9 +63,9 @@ LoadingScreen::LoadingScreen() {
 	SDL_FreeSurface(surface);
 
 	int sample_rate;
-	audioSize = stb_vorbis_decode_memory(bootSound_ogg, sizeof(bootSound_ogg), &channels, &sample_rate, &audioData);
+	audioSize = stb_vorbis_decode_filename("res/splash.ogg", &channels, &sample_rate, &audioData);
 
-	if (audioSize) {
+	if (audioSize > 0) {
 		//Quiet the volume
 		for (int i = 0; i < audioSize * channels; ++i)
 			audioData[i] /= 20;

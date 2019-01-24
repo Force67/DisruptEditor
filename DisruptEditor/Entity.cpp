@@ -8,6 +8,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "xbgFile.h"
 #include "FileHandler.h"
+#include "imgui.h"
 
 std::map<std::string, Node> entityLibrary;
 std::unordered_map<uint32_t, std::string> entityLibraryUID;

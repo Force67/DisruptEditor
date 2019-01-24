@@ -2849,13 +2849,13 @@ void xzSquareGrid(const float mins, const float maxs, const float y, const float
     for (float i = mins; i <= maxs; i += step)
     {
         // Horizontal line (along the X)
-        vecSet(from, mins, y, i);
-        vecSet(to,   maxs, y, i);
+        vecSet(from, mins, i, y);
+        vecSet(to,   maxs, i, y);
         line(from, to, color, durationMillis, depthEnabled);
 
         // Vertical line (along the Z)
-        vecSet(from, i, y, mins);
-        vecSet(to,   i, y, maxs);
+        vecSet(from, i, mins, y);
+        vecSet(to,   i, maxs, y);
         line(from, to, color, durationMillis, depthEnabled);
     }
 }

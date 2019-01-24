@@ -91,7 +91,8 @@ inline Shader loadShaders(const char *program) {
 
 	// Create the shaders
 	tinyxml2::XMLDocument doc;
-	doc.LoadFile(program);
+	tinyxml2::XMLError ret = doc.LoadFile(program);
+	SDL_assert_release(ret == tinyxml2::XMLError::XML_SUCCESS);
 
 	tinyxml2::XMLElement *root = doc.RootElement();
 

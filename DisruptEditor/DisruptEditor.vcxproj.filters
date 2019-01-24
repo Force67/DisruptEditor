@@ -15,6 +15,9 @@
     <Filter Include="Source Files\File Formats">
       <UniqueIdentifier>{687ff245-5975-45f1-96c2-bad3c1344bb2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Windows">
+      <UniqueIdentifier>{68039922-194d-43ec-a465-136e2393e925}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -39,9 +42,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DDRenderInterface.cpp">
-      <Filter>Externals</Filter>
-    </ClCompile>
-    <ClCompile Include="Audio.cpp">
       <Filter>Externals</Filter>
     </ClCompile>
     <ClCompile Include="tinyxml2.cpp">
@@ -134,6 +134,24 @@
     <ClCompile Include="imgui_widgets.cpp">
       <Filter>Externals</Filter>
     </ClCompile>
+    <ClCompile Include="Serialization.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="World.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImguiWindows.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DAREWindow.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="DominoWindow.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -166,22 +184,10 @@
     <ClInclude Include="glad.h">
       <Filter>Externals</Filter>
     </ClInclude>
-    <ClInclude Include="WDTechPlain-Plain.h">
-      <Filter>Externals</Filter>
-    </ClInclude>
     <ClInclude Include="Vector.h">
       <Filter>Externals</Filter>
     </ClInclude>
     <ClInclude Include="noc_file_dialog.h">
-      <Filter>Externals</Filter>
-    </ClInclude>
-    <ClInclude Include="bootSound.h">
-      <Filter>Externals</Filter>
-    </ClInclude>
-    <ClInclude Include="bootTvTex.h">
-      <Filter>Externals</Filter>
-    </ClInclude>
-    <ClInclude Include="Audio.h">
       <Filter>Externals</Filter>
     </ClInclude>
     <ClInclude Include="DDRenderInterface.h">
@@ -301,6 +307,18 @@
     <ClInclude Include="imgui.h">
       <Filter>Externals</Filter>
     </ClInclude>
+    <ClInclude Include="Serialization.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Audio.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImguiWindows.h">
+      <Filter>Source Files\Windows</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Res.rc">
@@ -314,5 +332,10 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Windows.def">
+      <Filter>Source Files\Windows</Filter>
+    </None>
   </ItemGroup>
 </Project>

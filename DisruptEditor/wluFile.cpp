@@ -340,7 +340,7 @@ void wluFile::draw(bool drawImgui, bool draw3D) {
 		if (PatrolDescription && ImGui::TreeNode("PatrolDescription")) {
 			Node* PatrolPointList = PatrolDescription->findFirstChild("PatrolPointList");
 			for (Node &PatrolPoint : PatrolPointList->children) {
-				snprintf(imGuiBuffer, sizeof(imGuiBuffer), "##%p", PatrolPoint);
+				snprintf(imGuiBuffer, sizeof(imGuiBuffer), "##%p", &PatrolPoint);
 				ImGui::DragFloat3(imGuiBuffer, (float*)PatrolPoint.getAttribute("vecPos")->buffer.data());
 			}
 			ImGui::TreePop();

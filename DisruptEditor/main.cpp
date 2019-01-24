@@ -30,6 +30,12 @@
 #include "Audio.h"
 #include "ImGuizmo.h"
 #include "FileHandler.h"
+#include "World.h"
+#include "ImguiWindows.h"
+
+#ifndef DE_VERSION
+#define DE_VERSION "GIT"
+#endif
 
 struct BuildingEntity {
 	std::string wlu;
@@ -38,11 +44,10 @@ struct BuildingEntity {
 	glm::vec3 min, max;
 };
 Vector<BuildingEntity> buildingEntities;
-std::map<std::string, wluFile> wlus;
 
 void reloadBuildingEntities() {
 	buildingEntities.clear();
-	for (auto it = wlus.begin(); it != wlus.end(); ++it) {
+	for (auto it = world.wlus.begin(); it != world.wlus.end(); ++it) {
 		Node *Entities = it->second.root.findFirstChild("Entities");
 		if (Entities) {
 			for (Node &Entity : Entities->children) {
@@ -77,10 +82,6 @@ void reloadBuildingEntities() {
 
 int main(int argc, char **argv) {
 	SDL_Init(SDL_INIT_EVERYTHING);
-	srand(time(NULL));
-
-	std::unordered_map<std::string, bool> windows;
-
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -92,14 +93,10 @@ int main(int argc, char **argv) {
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-	SDL_Window* window = SDL_CreateWindow(
-		"Disrupt Editor",                  // window title
-		SDL_WINDOWPOS_CENTERED,           // initial x position
-		SDL_WINDOWPOS_CENTERED,           // initial y position
-		1600,                               // width, in pixels
-		900,                               // height, in pixels
-		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN // flags - see below
-	);
+
+	reloadSettings();
+
+	SDL_Window* window = SDL_CreateWindow("Disrupt Editor (" DE_VERSION ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, settings.windowSize.x, settings.windowSize.y, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
 	if (window == NULL) {
 		SDL_Log("Could not create window: %s\n", SDL_GetError());
 		return 1;
@@ -115,14 +112,11 @@ int main(int argc, char **argv) {
 	}
 	SDL_GL_SetSwapInterval(1);
 	gladLoadGL();
-	
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
 	ImGui_ImplOpenGL3_Init("#version 130");
-
-	//Style
 	ImGui::StyleColorsDark(NULL);
 
 	Camera camera;
@@ -130,13 +124,9 @@ int main(int argc, char **argv) {
 	camera.near_plane = 0.25f;
 	camera.far_plane = 6500.f;
 
-	dd::initialize(&RenderInterface::instance());
-
-	FH::Init();
-
 	//Debug
 	{
-		tfDIR dir;
+		/*tfDIR dir;
 		tfDirOpen(&dir, "C:\\Program Files\\Ubisoft\\WATCH_DOGS\\bin\\patch\\worlds\\windy_city\\generated\\batchmeshentity");
 		while (dir.has_next) {
 			tfFILE file;
@@ -151,7 +141,7 @@ int main(int argc, char **argv) {
 
 			tfDirNext(&dir);
 		}
-		tfDirClose(&dir);
+		tfDirClose(&dir);*/
 
 		//tfDirOpen(&dir, "D:\\Desktop\\bin\\sound\\soundbinary");
 		//tfDirOpen(&dir, "D:\\Desktop\\bin\\sound\\__UNKNOWN/sfx");
@@ -190,42 +180,34 @@ int main(int argc, char **argv) {
 		tfDirClose(&dir);*/
 	}
 
-	tinyxml2::XMLDocument spawnPointList;
-
 	LoadingScreen *loadingScreen = new LoadingScreen;
-
 	{
 		loadingScreen->setTitle("Scanning Files");
-		reloadSettings();
+		FH::Init();
+
+		SDL_PumpEvents();
+		loadingScreen->setTitle("Loading Entity Library");
+		loadEntityLibrary();
+
+		SDL_PumpEvents();
+		loadingScreen->setTitle("Loading Language Files");
+		//Dialog::instance();
+
+		SDL_PumpEvents();
+		loadingScreen->setTitle("Loading Particle Library");
+		//world.particles = loadRml(FH::openFile(2646343311));
+
+		world.spawnPointList = loadXml(FH::openFile("worlds/windy_city/generated/spawnpointlist.xml"));
 
 		loadingScreen->setTitle("Loading WLUs");
 		Vector<FileInfo> files = FH::getFileList("worlds/windy_city/generated/wlu", "xml.data.fcb");
 		for (FileInfo &file : files) {
 			SDL_Log("Loading %s\n", file.name.c_str());
 			loadingScreen->setProgress(file.name, (&file - &files[0]) / (float)files.size());
-			wlus[file.name].shortName = file.name;
-			wlus[file.name].open(file.fullPath);
+			world.wlus[file.name].shortName = file.name;
+			world.wlus[file.name].open(file.fullPath);
 			SDL_PumpEvents();
 		}
-
-		if (wlus.empty()) {
-			SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Disrupt Editor is not configured", "You have not properly setup paths in settings.xml, please see the readme", loadingScreen->getWindow());
-			return 0;
-		}
-
-		SDL_PumpEvents();
-		loadingScreen->setTitle("Loading Entity Library");
-		loadEntityLibrary();
-
-		/*SDL_PumpEvents();
-		loadingScreen->setTitle("Loading Language Files");
-		Dialog::instance();*/
-
-		SDL_PumpEvents();
-		loadingScreen->setTitle("Loading Particle Library");
-		//std::unique_ptr<tinyxml2::XMLDocument> particles = loadRml(getAbsoluteFilePath(2646343311).c_str());
-
-		//spawnPointList.LoadFile(getAbsoluteFilePath("worlds/windy_city/generated/spawnpointlist.xml").c_str());
 
 		SDL_PumpEvents();
 		loadingScreen->setTitle("Loading graphics");
@@ -286,8 +268,11 @@ int main(int argc, char **argv) {
 
 	Uint32 ticks = SDL_GetTicks();
 	uint64_t frameCount = 0;
-	std::string currentWlu = wlus.begin()->first;
+	std::string currentWlu = world.wlus.begin()->first;
 
+	dd::initialize(&RenderInterface::instance());
+	if (settings.maximized)
+		SDL_MaximizeWindow(window);
 	SDL_ShowWindow(window);
 	delete loadingScreen;
 	loadingScreen = NULL;
@@ -316,94 +301,11 @@ int main(int argc, char **argv) {
 		renderInterface.Projection = glm::perspective(camera.fov, (float)renderInterface.windowSize.x / renderInterface.windowSize.y, camera.near_plane, camera.far_plane);
 		renderInterface.VP = renderInterface.Projection * renderInterface.View;
 
-		ImGui::BeginMainMenuBar();
-		if (ImGui::MenuItem("Entity Library")) {
-			windows["EntityLibrary"] ^= true;
-		}
-		if (ImGui::MenuItem("Terrain")) {
-			windows["Terrain"] ^= true;
-		}
-		if (ImGui::MenuItem("Domino")) {
-			windows["Domino"] ^= true;
-		}
-		if (ImGui::MenuItem("DARE")) {
-			windows["DARE"] ^= true;
-		}
-		if (ImGui::MenuItem("Sequence")) {
-			windows["CSequence"] ^= true;
-		}
-		if (ImGui::MenuItem("Move")) {
-			windows["Move"] ^= true;
-		}
-		if (ImGui::MenuItem("LocString")) {
-			windows["LocString"] ^= true;
-		}
-		if (ImGui::MenuItem("SpawnPoint")) {
-			windows["SpawnPoint"] ^= true;
-		}
-		if (ImGui::BeginMenu("Hasher")) {
-			static char buffer[255] = { '\0' };
-			ImGui::InputText("##UID", buffer, sizeof(buffer));
-			uint32_t fnv = Hash::instance().getFilenameHash(buffer);
-			uint64_t fnv64 = Hash::instance().getFilenameHash64(buffer);
-			uint32_t crc = Hash::instance().getHash(buffer);
-
-			char outbuffer[255];
-			snprintf(outbuffer, sizeof(outbuffer), "%u", fnv);
-			ImGui::InputText("FNV##UIDOUT", outbuffer, sizeof(buffer), ImGuiInputTextFlags_ReadOnly);
-			snprintf(outbuffer, sizeof(outbuffer), "%u", crc);
-			ImGui::InputText("CRC##UIDOUT", outbuffer, sizeof(buffer), ImGuiInputTextFlags_ReadOnly);
-			snprintf(outbuffer, sizeof(outbuffer), "%llu", fnv64);
-			ImGui::InputText("FNV64##UIDOUT", outbuffer, sizeof(buffer), ImGuiInputTextFlags_ReadOnly);
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Batch")) {
-			if (ImGui::MenuItem("Import Wlu XML")) {
-				for (auto it = wlus.begin(); it != wlus.end(); ++it) {
-					std::string xmlFileName = it->second.shortName + ".xml";
-					tinyxml2::XMLDocument doc;
-					if(doc.LoadFile(xmlFileName.c_str()) == tinyxml2::XMLError::XML_SUCCESS)
-						it->second.root.deserializeXML(doc.RootElement());
-				}
-			}
-			if (ImGui::MenuItem("Export Wlu XML")) {
-				for (auto it = wlus.begin(); it != wlus.end(); ++it) {
-					std::string xmlFileName = it->second.shortName + ".xml";
-					FILE *fp = fopen(xmlFileName.c_str(), "wb");
-					tinyxml2::XMLPrinter printer(fp);
-					it->second.root.serializeXML(printer);
-					fclose(fp);
-				}
-			}
-			if (ImGui::MenuItem("Save Wlu")) {
-				for (auto it = wlus.begin(); it != wlus.end(); ++it) {
-					std::string backup = it->second.origFilename;
-					backup += ".bak";
-					CopyFileA(it->second.origFilename.c_str(), backup.c_str(), TRUE);
-
-					/*it->second.root.findFirstChild("Entities")->children.clear();//DEBUG
-					for (auto a = it->second.root.children.begin(); a != it->second.root.children.end();) {
-						if (a->getHashName() != "Entities")
-							a = it->second.root.children.erase(a);
-						else
-							++a;
-					}*/
-
-					it->second.serialize(it->second.origFilename.c_str());
-				}
-			}
-			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Settings")) {
-			ImGui::DragFloat("Camera Fly Multiplier", &camera.flyMultiplier, 0.02f, 1.f, 10.f);
-			ImGui::DragFloat("Label Draw Distance", &settings.textDrawDistance, 0.05f, 0.f, 4096.f);
-			ImGui::Checkbox("Draw Buildings", &settings.drawBuildings);
-			ImGui::EndMenu();
-		}
-		ImGui::EndMainMenuBar();
+		UI::displayTopMenu();
+		UI::displayTempWindows();
+		UI::displayWindows();
 		
-		ImGui::SetNextWindowSize(ImVec2(1000, 360), ImGuiCond_FirstUseEver);
+		/*ImGui::SetNextWindowSize(ImVec2(1000, 360), ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowPos(ImVec2(7.f, 537.f), ImGuiCond_FirstUseEver);
 		if (windows["EntityLibrary"] && ImGui::Begin("Entity Library", &windows["EntityLibrary"], 0)) {
 			//ImGui::PushItemWidth(-1.f);
@@ -438,159 +340,7 @@ int main(int argc, char **argv) {
 			//ImGui::ListBoxFooter();
 			//ImGui::PopItemWidth();
 			ImGui::End();
-		}
-
-		if (windows["DARE"] && ImGui::Begin("DARE Converter", &windows["DARE"], 0)) {
-			static sbaoFile file;
-			static spkFile spkFile;
-			static int currentSound = 0;
-			if (ImGui::Button("Open")) {
-				//spkFile.open(noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "spk\0*.spk\0sbao\0*.sbao\0", NULL, NULL));
-				//file = spkFile.sbao;
-				file.open(noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "sbao\0*.sbao\0", NULL, NULL));
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Save")) {
-				file.save(noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "sbao\0*.sbao\0", NULL, NULL));
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Add Layer")) {
-				sbaoLayer &layer = file.layers.emplace_back();
-				layer.replace( noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "ogg\0*.ogg\0", NULL, NULL) );
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Clear Layers")) {
-				file.layers.clear();
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Stop All")) {
-				Audio::instance().stopAll();
-			}
-
-			int layerNum = 1;
-			for (auto it = file.layers.begin(); it != file.layers.end(); ++it) {
-				ImGui::PushID(it._Ptr);
-				ImGui::Text("%u", layerNum);
-				ImGui::SameLine();
-				if (ImGui::Button("Play")) {
-					Audio::instance().stopSound(currentSound);
-					currentSound = it->play(false);
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Loop")) {
-					Audio::instance().stopSound(currentSound);
-					currentSound = it->play(true);
-				}
-				ImGui::SameLine();
-				ImGui::Text("Raw Size: %u, Samples: %i, Channels: %i, Sample Rate: %i", it->data.size(), it->samples, it->channels, it->sampleRate);
-				ImGui::SameLine();
-				if (ImGui::Button("Replace")) {
-					it->replace( noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "ogg\0*.ogg\0", NULL, NULL) );
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Save")) {
-					it->save(noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "ogg\0*.ogg\0", NULL, NULL));
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Delete")) {
-					file.layers.erase(it);
-					ImGui::PopID();
-					break;
-				}
-
-				ImGui::PopID();
-				layerNum++;
-			}
-
-			ImGui::End();
-		}
-
-		if (windows["Domino"] && ImGui::Begin("Domino!", &windows["Domino"], ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
-			static DominoBox db;
-			ImGui::BeginMenuBar();
-			if (ImGui::MenuItem("Open")) {
-			}
-			if (ImGui::MenuItem("Save")) {
-			}
-			if (ImGui::MenuItem("Save As")) {
-			}
-			if (ImGui::MenuItem("Import Lua")) {
-				const char *currentFile = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, NULL, NULL, NULL);
-				db.open(currentFile);
-			}
-			if (ImGui::MenuItem("Export Lua")) {
-				const char *currentFile = noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, NULL, NULL, NULL);
-			}
-			ImGui::EndMenuBar();
-
-			db.draw();
-
-			ImGui::End();
-		}
-
-		/*ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowPos(ImVec2(80.f, 80.f), ImGuiCond_FirstUseEver);
-		if (windows["LocString"] && ImGui::Begin("LocString", &windows["LocString"], 0)) {
-			auto &locStrings = Dialog::instance().locStrings;
-			auto &soundidlinelinks = Dialog::instance().soundidlinelinks;
-
-			static spkFile file;
-			char search[500] = {0};
-			ImGui::InputText("Search", search, sizeof(search));
-
-			for (auto it : locStrings) {
-				//ImGui::Text("%i %s", it.first, it.second.c_str());
-
-				if (it.second.find(search) == std::string::npos && strlen(search) != 0)
-					continue;
-
-				if (soundidlinelinks.count(it.first)) {
-					char imguiline[500];
-					char buffer[500];
-					snprintf(imguiline, sizeof(imguiline), "%i %08x %s", it.first, soundidlinelinks[it.first], it.second.c_str());
-					snprintf(buffer, sizeof(buffer), "soundbinary\\%08x.spk", soundidlinelinks[it.first]);
-					if (getAbsoluteFilePath(buffer).empty()) {
-						soundidlinelinks.erase(it.first);
-						continue;
-					}
-					if (ImGui::Selectable(imguiline)) {
-						file.sbao.layers.clear();
-
-						Audio::instance().stopAll();
-						file.open(getAbsoluteFilePath(buffer).c_str());
-						if(!file.sbao.layers.empty())
-							file.sbao.layers[0].play(false);
-					}
-				}
-			}
-
-			ImGui::End();
 		}*/
-
-		ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowPos(ImVec2(80.f, 80.f), ImGuiCond_FirstUseEver);
-		if (windows["SpawnPoint"] && ImGui::Begin("SpawnPoint List", &windows["SpawnPoint"], 0)) {
-			for (tinyxml2::XMLElement *SpawnPoint = spawnPointList.RootElement()->FirstChildElement(); SpawnPoint; SpawnPoint = SpawnPoint->NextSiblingElement()) {
-				//glm::vec3 Position = SpawnPoint->Attribute("Position");
-			}
-
-			ImGui::End();
-		}
-
-		ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowPos(ImVec2(80.f, 80.f), ImGuiCond_FirstUseEver);
-		if (windows["CSequence"] && ImGui::Begin("CSequence", &windows["CSequence"], 0)) {
-			static std::string currentFile;
-			static cseqFile file;
-			ImGui::Text("%s", currentFile.c_str());
-			ImGui::SameLine();
-			if (ImGui::Button("Open")) {
-				//currentFile = noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "cseq\0*.cseq\0", getAbsoluteFilePath("sequences").c_str(), NULL);
-				//file.open(currentFile.c_str());
-			}
-
-			ImGui::End();
-		}
 
 		//Draw Layer Window
 		ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
@@ -605,7 +355,7 @@ int main(int argc, char **argv) {
 			size.y -= 75;
 			size.x -= 5;
 			ImGui::ListBoxHeader("##WLU List", size);
-			for (auto it = wlus.begin(); it != wlus.end(); ++it) {
+			for (auto it = world.wlus.begin(); it != world.wlus.end(); ++it) {
 				if (it->first.find(searchWluBuffer) != std::string::npos) {
 					bool selected = currentWlu == it->first;
 					if (ImGui::Selectable(it->first.c_str(), selected))
@@ -615,7 +365,7 @@ int main(int argc, char **argv) {
 			ImGui::ListBoxFooter();
 			ImGui::PopItemWidth();
 
-			wluFile &wlu = wlus[currentWlu];
+			wluFile &wlu = world.wlus[currentWlu];
 
 			if (ImGui::Button("Save")) {
 				std::string backup = wlu.origFilename;
@@ -688,7 +438,7 @@ int main(int argc, char **argv) {
 				if (CGraphicComponent) {
 					Attribute* XBG = CGraphicComponent->getAttribute(0x3182766C);
 
-					if (XBG && XBG->buffer.size() > 5) {
+					/*if (XBG && XBG->buffer.size() > 5) {
 						auto &model = loadXBG((char*)XBG->buffer.data());
 						renderInterface.model.use();
 
@@ -700,7 +450,7 @@ int main(int argc, char **argv) {
 						glm::mat4 MVP = renderInterface.VP * modelMatrix;
 						glUniformMatrix4fv(renderInterface.model.uniforms["MVP"], 1, GL_FALSE, &MVP[0][0]);
 						model.draw();
-					}
+					}*/
 				}
 
 				Node *CProximityTriggerComponent = Components->findFirstChild("CProximityTriggerComponent");
@@ -764,7 +514,7 @@ int main(int argc, char **argv) {
 		}
 
 		//Render Buildings
-		if (settings.drawBuildings) {
+		/*if (settings.drawBuildings) {
 			renderInterface.model.use();
 			for (const BuildingEntity &Entity : buildingEntities) {
 				dd::aabb(&Entity.min.x, &Entity.max.x, blue);
@@ -789,12 +539,13 @@ int main(int argc, char **argv) {
 					model.draw();
 				}
 			}
-		}
+		}*/
 
 		if (!ImGui::IsAnyWindowHovered())
 			camera.update(delta);
 
 		glBindVertexArray(RenderInterface::instance().VertexArrayID);
+		dd::xzSquareGrid(-50.0f, 50.0f, -1.0f, 1.7f, green);
 		dd::flush(0);
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -805,12 +556,27 @@ int main(int argc, char **argv) {
 		while (SDL_PollEvent(&event)) {
 			ImGui_ImplSDL2_ProcessEvent(&event);
 			switch (event.type) {
-				case SDL_WINDOWEVENT:
-					if (event.window.event == SDL_WINDOWEVENT_CLOSE) {
-						windowOpen = false;
-						exit(0);
-					}
+			case SDL_WINDOWEVENT: {
+				switch(event.window.event) {
+				case SDL_WINDOWEVENT_CLOSE:
+					windowOpen = false;
+					saveSettings();
+					exit(0);
+				case SDL_WINDOWEVENT_RESIZED:
+					settings.windowSize = glm::ivec2(event.window.data1, event.window.data2);
+					saveSettings();
 					break;
+				case SDL_WINDOWEVENT_MAXIMIZED:
+					settings.maximized = true;
+					saveSettings();
+					break;
+				case SDL_WINDOWEVENT_RESTORED:
+					settings.maximized = false;
+					saveSettings();
+					break;
+				}
+				break;
+			}
 			}
 		}
 	}

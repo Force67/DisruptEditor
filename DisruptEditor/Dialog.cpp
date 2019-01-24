@@ -7,12 +7,12 @@
 #include "FileHandler.h"
 
 Dialog::Dialog() {
-	/*conversationtable = readFCB(getAbsoluteFilePath("dialog/conversationtable.dat").c_str());
-	dialogmanagerindices = readFCB(getAbsoluteFilePath("dialog/dialogmanagerindices.dat").c_str());
-	speechLength = readFCB(getAbsoluteFilePath("generated/sound/speechlength.bin").c_str());
+	conversationtable = readFCB(FH::openFile("dialog/conversationtable.dat"));
+	dialogmanagerindices = readFCB(FH::openFile("dialog/dialogmanagerindices.dat"));
+	speechLength = readFCB(FH::openFile("generated/sound/speechlength.bin"));
 
 	tfDIR dir;
-	tfDirOpen(&dir, getAbsoluteFilePath("dialog/behaviortrees").c_str());
+	tfDirOpen(&dir, FH::getAbsoluteFilePath("dialog/behaviortrees").c_str());
 	while (dir.has_next) {
 		tfFILE file;
 		tfReadFile(&dir, &file);
@@ -39,7 +39,7 @@ Dialog::Dialog() {
 	SDL_assert_release(SDL_RWtell(fp) == SDL_RWsize(fp));
 	SDL_RWclose(fp);
 
-	tinyxml2::XMLDocument doc;
+	/*tinyxml2::XMLDocument doc;
 	doc.LoadFile("res/loc.xml");
 	for (auto it = doc.RootElement()->FirstChildElement(); it; it = it->NextSiblingElement()) {
 		int32_t lineID = it->IntAttribute("id");
