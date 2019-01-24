@@ -1,8 +1,8 @@
 ## Disrupt Editor
 
-[![Build status](https://ci.appveyor.com/api/projects/status/tpcpf00rbkk8i1n0?svg=true)](https://ci.appveyor.com/project/30jon/disrupteditor) [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
+[![Build status](https://ci.appveyor.com/api/projects/status/tpcpf00rbkk8i1n0?svg=true)](https://ci.appveyor.com/project/j301scott/disrupteditor) [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 
-Latest Build: https://ci.appveyor.com/project/30jon/disrupteditor/build/artifacts
+Latest Build: https://ci.appveyor.com/project/j301scott/disrupteditor/build/artifacts
 
 # Setup
 
