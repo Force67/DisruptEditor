@@ -159,6 +159,7 @@
   <ItemGroup>
     <ClCompile Include="DAREWindow.cpp" />
     <ClCompile Include="DominoWindow.cpp" />
+    <ClCompile Include="EntityLibraryWindow.cpp" />
     <ClCompile Include="ImguiWindows.cpp" />
     <ClCompile Include="imgui_widgets.cpp" />
     <ClCompile Include="Adpcm.cpp" />

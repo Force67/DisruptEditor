@@ -37,49 +37,6 @@
 #define DE_VERSION "GIT"
 #endif
 
-struct BuildingEntity {
-	std::string wlu;
-	std::string CBatchPath;
-	glm::vec3 pos;
-	glm::vec3 min, max;
-};
-Vector<BuildingEntity> buildingEntities;
-
-void reloadBuildingEntities() {
-	buildingEntities.clear();
-	for (auto it = world.wlus.begin(); it != world.wlus.end(); ++it) {
-		Node *Entities = it->second.root.findFirstChild("Entities");
-		if (Entities) {
-			for (Node &Entity : Entities->children) {
-				//CBatchMeshEntity
-				Attribute *hidEntityClass = Entity.getAttribute("hidEntityClass");
-				if (!hidEntityClass) continue;
-
-				if (*(uint32_t*)hidEntityClass->buffer.data() == 138694286) {
-					BuildingEntity be;
-					be.wlu = it->first;
-					be.CBatchPath = (char*)Entity.getAttribute("ExportPath")->buffer.data();
-
-					//Cut off .batch
-					be.CBatchPath = be.CBatchPath.substr(0, be.CBatchPath.size() - 6);
-
-					Attribute *hidPos = Entity.getAttribute("hidPos");
-					if (!hidPos) continue;
-					be.pos = *(glm::vec3*)hidPos->buffer.data();
-
-					Node *hidBBox = Entity.findFirstChild("hidBBox");
-					be.min = *(glm::vec3*)hidBBox->getAttribute("vectorBBoxMin")->buffer.data();
-					be.min += be.pos;
-					be.max = *(glm::vec3*)hidBBox->getAttribute("vectorBBoxMax")->buffer.data();
-					be.max += be.pos;
-
-					buildingEntities.push_back(be);
-				}
-			}
-		}
-	}
-}
-
 int main(int argc, char **argv) {
 	SDL_Init(SDL_INIT_EVERYTHING);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -208,10 +165,6 @@ int main(int argc, char **argv) {
 			world.wlus[file.name].open(file.fullPath);
 			SDL_PumpEvents();
 		}
-
-		SDL_PumpEvents();
-		loadingScreen->setTitle("Loading graphics");
-		reloadBuildingEntities();
 	}
 
 	/*{
@@ -304,43 +257,6 @@ int main(int argc, char **argv) {
 		UI::displayTopMenu();
 		UI::displayTempWindows();
 		UI::displayWindows();
-		
-		/*ImGui::SetNextWindowSize(ImVec2(1000, 360), ImGuiCond_FirstUseEver);
-		ImGui::SetNextWindowPos(ImVec2(7.f, 537.f), ImGuiCond_FirstUseEver);
-		if (windows["EntityLibrary"] && ImGui::Begin("Entity Library", &windows["EntityLibrary"], 0)) {
-			//ImGui::PushItemWidth(-1.f);
-			static char searchBuffer[255] = { '\0' };
-			ImGui::InputText("##Search", searchBuffer, sizeof(searchBuffer));
-
-			ImVec2 resSize = ImGui::GetContentRegionAvail();
-			float left = resSize.x;
-
-			//ImGui::ListBoxHeader("##Entity List", resSize);
-			for (auto it = entityLibrary.begin(); it != entityLibrary.end(); ++it) {
-				Node &entity = it->second;
-
-				int i = entity.children.size();
-
-				std::string name = (const char*)entity.getAttribute("hidName")->buffer.data();
-				if (name.find(searchBuffer) != std::string::npos) {
-					ImGui::PushID(name.c_str());
-					ImGui::Image((ImTextureID)generateEntityIcon(&entity), ImVec2(128.f, 128.f));
-					ImGui::PopID();
-
-					if(ImGui::IsItemHovered())
-						ImGui::SetTooltip("%s", name.c_str());
-
-					left -= ImGui::GetItemRectSize().x;
-					if (left > ImGui::GetItemRectSize().x + 60.f)
-						ImGui::SameLine();
-					else
-						left = resSize.x;
-				}
-			}
-			//ImGui::ListBoxFooter();
-			//ImGui::PopItemWidth();
-			ImGui::End();
-		}*/
 
 		//Draw Layer Window
 		ImGui::SetNextWindowSize(ImVec2(400, 200), ImGuiCond_FirstUseEver);
@@ -512,34 +428,6 @@ int main(int argc, char **argv) {
 			}
 			ImGui::End();
 		}
-
-		//Render Buildings
-		/*if (settings.drawBuildings) {
-			renderInterface.model.use();
-			for (const BuildingEntity &Entity : buildingEntities) {
-				dd::aabb(&Entity.min.x, &Entity.max.x, blue);
-				if (glm::distance(Entity.pos, camera.location) < 256)
-					dd::projectedText(Entity.wlu.c_str(), &Entity.pos.x, white, &renderInterface.VP[0][0], 0, 0, renderInterface.windowSize.x, renderInterface.windowSize.y, 0.5f);
-
-				glm::mat4 translate = glm::translate(glm::mat4(), Entity.pos + glm::vec3(0.f, 64.f, 0.f));
-				glm::mat4 MVP = renderInterface.VP * glm::scale(translate, glm::vec3(128.f));
-				glUniformMatrix4fv(renderInterface.model.uniforms["MVP"], 1, GL_FALSE, &MVP[0][0]);
-
-				{
-					std::string CBatchXbgPath = Entity.CBatchPath + "_building_low.xbg";
-					auto &model = loadXBG(CBatchXbgPath);
-					if (model.meshes.empty()) continue;
-					model.draw();
-				}
-
-				//Draw roof
-				{
-					std::string CBatchXbgPath = Entity.CBatchPath + "_building_roofs.xbg";
-					auto &model = loadXBG(CBatchXbgPath);
-					model.draw();
-				}
-			}
-		}*/
 
 		if (!ImGui::IsAnyWindowHovered())
 			camera.update(delta);

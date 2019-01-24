@@ -84,6 +84,10 @@ GLuint generateEntityIcon(Node *entity) {
 	char path[500];
 	snprintf(path, sizeof(path), "elcache/%s.png", entity->getAttribute("hidName")->buffer.data());
 	if (eiBroken.count(path)) return loadResTexture("loading.png");
+
+	//TODO:
+	return loadResTexture("loading.png");
+
 	GLuint image = loadResTexture(path);
 	if (image != 0) return image;
 
