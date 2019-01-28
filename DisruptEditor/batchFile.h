@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "DisruptTypes.h"
 #include "Vector.h"
+#include "Pair.h"
 
 struct SDL_RWops;
 class MemberStructure;
@@ -36,6 +37,30 @@ public:
 
 	//Component MultiBatch Classes
 	struct CGraphicBatchProcessor {
+		float unk1;
+		bool unk2;
+		bool unk3;
+	private:
+		uint8_t pad[2];
+	public:
+		uint32_t unk4;
+		bool unk5;
+		bool unk6;
+		bool unk7;
+		uint8_t unk8;
+		bool unk9;
+		bool unk10;
+	private:
+		uint8_t pad2[2];
+	public:
+		CGeometryResource xbg;
+		//Data before this comment is assumed to be 28 bytes
+		CMaterialSlotsMap materialSlots;
+		uint16_t unk11;
+		Vector<CProjectedDecalInfo> decals;
+		bool unk12;
+		uint32_t unk13;
+
 		void read(SDL_RWops *fp);
 		void registerMembers(MemberStructure &ms);
 	};
@@ -43,6 +68,7 @@ public:
 	struct IBatchProcessor {
 		uint32_t unk1;
 		CStringID type;
+		uint32_t unk2;
 
 		CGraphicBatchProcessor graphicBatch;
 

@@ -255,14 +255,14 @@ void MemberStructure::registerMember(const char *name, std::string &value) {
 		case TOJSON:
 		{
 			rapidjson::Value *ref = getRef(name, it, doc, true);
-			ref->SetString(value.c_str(), doc->GetAllocator());
+			ref->SetString(value.c_str(), value.size(), doc->GetAllocator());
 			return;
 		}
 		case FROMJSON:
 		{
 			rapidjson::Value *ref = getRef(name, it, doc, false);
 			if (!ref) return;
-			value = ref->GetString();
+			value = std::string(ref->GetString(), ref->GetStringLength());
 			return;
 		}
 		case IMGUI:

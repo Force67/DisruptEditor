@@ -9,6 +9,7 @@
 #include "glm/glm.hpp"
 #include <SDL_log.h>
 #include <SDL_rwops.h>
+#include "FileHandler.h"
 
 #pragma pack(push, 1)
 struct XBGHead {
@@ -39,13 +40,6 @@ struct MeshData {
 	uint32_t u3[2];
 };
 #pragma pack(pop)
-
-static inline void seekpad(SDL_RWops *fp, long pad) {
-	//16-byte chunk alignment
-	long size = SDL_RWtell(fp);
-	long seek = (pad - (size % pad)) % pad;
-	SDL_RWseek(fp, seek, RW_SEEK_CUR);
-}
 
 static inline std::string readString(SDL_RWops *fp) {
 	uint32_t size = SDL_ReadLE32(fp);

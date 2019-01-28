@@ -14,22 +14,7 @@
 #include "Entity.h"
 #include "ImGuizmo.h"
 #include "DDRenderInterface.h"
-
-static inline void seekpad(SDL_RWops *fp, long pad) {
-	//16-byte chunk alignment
-	long size = SDL_RWtell(fp);
-	long seek = (pad - (size % pad)) % pad;
-	SDL_RWseek(fp, seek, RW_SEEK_CUR);
-}
-
-static inline void writepad(SDL_RWops *fp, long pad) {
-	//16-byte chunk alignment
-	long size = SDL_RWtell(fp);
-	long seek = (pad - (size % pad)) % pad;
-
-	uint8_t zero[32] = { 0 };
-	SDL_RWwrite(fp, zero, 1, seek);
-}
+#include "FileHandler.h"
 
 bool wluFile::open(std::string filename) {
 	origFilename = filename;

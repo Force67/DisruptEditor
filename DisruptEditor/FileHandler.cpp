@@ -123,3 +123,18 @@ void FH::Init() {
 	}
 	fclose(fp);
 }
+
+void seekpad(SDL_RWops *fp, long pad) {
+	//16-byte chunk alignment
+	long size = SDL_RWtell(fp);
+	long seek = (pad - (size % pad)) % pad;
+	SDL_RWseek(fp, seek, RW_SEEK_CUR);
+}
+
+void writepad(SDL_RWops *fp, long pad) {
+	char padding[32] = { 0 };
+	//16-byte chunk alignment
+	long size = SDL_RWtell(fp);
+	long seek = (pad - (size % pad)) % pad;
+	SDL_RWwrite(fp, padding, 1, seek);
+}

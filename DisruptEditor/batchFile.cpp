@@ -11,21 +11,6 @@
 
 //Game stores ptr in 0x20 of r3, size in 0x24
 
-static inline void seekpad(SDL_RWops *fp, long pad) {
-	//16-byte chunk alignment
-	long size = SDL_RWtell(fp);
-	long seek = (pad - (size % pad)) % pad;
-	SDL_RWseek(fp, seek, RW_SEEK_CUR);
-}
-
-static inline void writepad(SDL_RWops *fp, long pad) {
-	char padding[32] = { 0 };
-	//16-byte chunk alignment
-	long size = SDL_RWtell(fp);
-	long seek = (pad - (size % pad)) % pad;
-	SDL_RWwrite(fp, padding, 1, seek);
-}
-
 std::string readString(SDL_RWops *fp, bool bigEndian) {
 	uint32_t len = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
 
@@ -150,6 +135,7 @@ void batchFile::CComponentMultiBatchProcessor::read(SDL_RWops * fp) {
 		std::string typeName = batch.type.getReverseName();
 		if (typeName == "CBatchModelProcessorsAndResources") {
 			batch.batchModel.read(fp);
+			return;
 		} else {
 			SDL_assert_release(false && "BatchProcessorAndResources not implemented");
 			return;
@@ -178,6 +164,8 @@ void batchFile::CBatchModelProcessorsAndResources::read(SDL_RWops * fp) {
 
 		batch.unk1 = SDL_ReadLE32(fp);
 		batch.type = SDL_ReadLE32(fp);
+		batch.unk2 = SDL_ReadLE32(fp);
+
 		std::string typeName = batch.type.getReverseName();
 		SDL_Log("IBatchProcessor type=%s", typeName.c_str());
 
@@ -188,7 +176,6 @@ void batchFile::CBatchModelProcessorsAndResources::read(SDL_RWops * fp) {
 			return;
 		}
 
-		uint32_t unk2 = SDL_ReadLE32(fp);
 
 		//Calls some vptr in IBinaryArchive (PreAllocateDynamicType)
 		//Calls CFactoryBase::PlacementCreateObjectImpl(const CStringID &, void *)
@@ -197,8 +184,39 @@ void batchFile::CBatchModelProcessorsAndResources::read(SDL_RWops * fp) {
 }
 
 void batchFile::CGraphicBatchProcessor::read(SDL_RWops * fp) {
+	//CGraphicBatchProcessor::Serialize((IBinaryArchive &))
+
+	SDL_RWread(fp, this, 28, 1);
+
 	SDL_Log("Tell: %u\n\n", SDL_RWtell(fp));
 
+	materialSlots.read(fp);
+
+	SDL_Log("Tell2: %u\n\n", SDL_RWtell(fp));
+
+	unk11 = SDL_ReadLE16(fp);
+
+	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CProjectedDecalInfo, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
+	seekpad(fp, 4);
+	uint32_t count = SDL_ReadLE32(fp);
+	for (uint32_t i = 0; i < count; ++i) {
+		CProjectedDecalInfo &decal = decals.emplace_back();
+		decal.read(fp);
+	}
+
+	unk12 = SDL_ReadU8(fp);
+	seekpad(fp, 4);
+	unk13 = SDL_ReadLE32(fp);
+
+	SDL_Log("Tell3: %u\n\n", SDL_RWtell(fp));
+
+	//CClusterHelper
+	CStringID type;
+	type.id = SDL_ReadLE32(fp);
+	SDL_assert_release(type.id == 0x2C9D950A);
+
+	uint32_t chunk1 = SDL_ReadLE32(fp);
+	uint8_t chunk2 = SDL_ReadU8(fp);
 }
 
 void batchFile::registerMembers(MemberStructure & ms) {
@@ -253,8 +271,23 @@ void batchFile::CBatchProcessorAndResources::registerMembers(MemberStructure & m
 void batchFile::IBatchProcessor::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(type);
+	REGISTER_MEMBER(unk2);
 	REGISTER_MEMBER(graphicBatch);
 }
 
 void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
+	REGISTER_MEMBER(unk8);
+	REGISTER_MEMBER(unk9);
+	REGISTER_MEMBER(unk10);
+	REGISTER_MEMBER(xbg);
+	REGISTER_MEMBER(materialSlots);
+	REGISTER_MEMBER(unk11);
+	REGISTER_MEMBER(decals);
 }

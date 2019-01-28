@@ -343,6 +343,9 @@
     <ClInclude Include="DisruptTypes.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Pair.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Res.rc">

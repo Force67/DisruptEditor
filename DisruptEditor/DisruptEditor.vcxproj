@@ -249,6 +249,7 @@
     <ClInclude Include="materialFile.h" />
     <ClInclude Include="NBCF.h" />
     <ClInclude Include="noc_file_dialog.h" />
+    <ClInclude Include="Pair.h" />
     <ClInclude Include="RML.h" />
     <ClInclude Include="RoadNetwork.h" />
     <ClInclude Include="sbaoFile.h" />

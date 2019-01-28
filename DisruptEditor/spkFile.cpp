@@ -6,23 +6,9 @@
 #include <SDL_log.h>
 #include "Vector.h"
 #include "Common.h"
+#include "FileHandler.h"
 
 const uint32_t spkMagic = 1397771010;
-
-static inline void seekpad(SDL_RWops *fp, long pad) {
-	//16-byte chunk alignment
-	long size = SDL_RWtell(fp);
-	long seek = (pad - (size % pad)) % pad;
-	SDL_RWseek(fp, seek, RW_SEEK_CUR);
-}
-
-static inline void writepad(SDL_RWops *fp, long pad) {
-	//16-byte chunk alignment
-	uint8_t buffer[16] = { 0 };
-	long size = SDL_RWtell(fp);
-	long seek = (pad - (size % pad)) % pad;
-	SDL_RWwrite(fp, buffer, 1, seek);
-}
 
 void spkFile::open(const char * filename) {
 	if (!filename) return;

@@ -4,13 +4,7 @@
 #include <SDL_assert.h>
 #include <SDL_log.h>
 #include <SDL_rwops.h>
-
-static inline void seekpad(SDL_RWops *fp, long pad) {
-	//16-byte chunk alignment
-	long size = SDL_RWtell(fp);
-	long seek = (pad - (size % pad)) % pad;
-	SDL_RWseek(fp, seek, RW_SEEK_CUR);
-}
+#include "FileHandler.h"
 
 bool materialFile::open(SDL_RWops *fp) {
 	if (!fp) return false;
