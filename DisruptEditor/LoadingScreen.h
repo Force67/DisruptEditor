@@ -24,7 +24,7 @@ public:
 	void setProgress(const std::string &message, float percentage = -1.f);
 	SDL_Window* getWindow() { return window; }
 private:
-	float percentage;
+	float percentage = 0.f;
 	short *audioData;
 	int channels, audioSize;
 	Vector<stbtt_bakedchar> cdata;

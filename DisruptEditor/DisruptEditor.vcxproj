@@ -157,7 +157,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CBATCHWindow.cpp" />
+    <ClCompile Include="CPathID.cpp" />
+    <ClCompile Include="CStringID.cpp" />
     <ClCompile Include="DAREWindow.cpp" />
+    <ClCompile Include="DisruptTypes.cpp" />
     <ClCompile Include="DominoWindow.cpp" />
     <ClCompile Include="EntityLibraryWindow.cpp" />
     <ClCompile Include="ImguiWindows.cpp" />
@@ -204,6 +208,9 @@
     <ClCompile Include="xbtFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CPathID.h" />
+    <ClInclude Include="CStringID.h" />
+    <ClInclude Include="DisruptTypes.h" />
     <ClInclude Include="imconfig.h" />
     <ClInclude Include="imgui.h" />
     <ClInclude Include="ImguiWindows.h" />

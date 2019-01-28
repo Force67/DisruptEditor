@@ -4,6 +4,7 @@
 #include "Common.h"
 #include "Hash.h"
 #include "World.h"
+#include <shellapi.h>
 
 void UI::displayTopMenu() {
 	std::map<std::string, bool> &windows = settings.openWindows;
@@ -11,6 +12,9 @@ void UI::displayTopMenu() {
 	ImGui::BeginMainMenuBar();
 	if (ImGui::MenuItem("Entity Library")) {
 		windows["EntityLibrary"] ^= true;
+	}
+	if (ImGui::MenuItem("CBatch")) {
+		windows["CBATCH"] ^= true;
 	}
 	if (ImGui::MenuItem("Terrain")) {
 		windows["Terrain"] ^= true;
@@ -90,6 +94,16 @@ void UI::displayTopMenu() {
 	if (ImGui::BeginMenu("Settings")) {
 		ImGui::DragFloat("Camera Fly Multiplier", &settings.flyMultiplier, 0.02f, 1.f, 10.f);
 		ImGui::DragFloat("Label Draw Distance", &settings.textDrawDistance, 0.05f, 0.f, 4096.f);
+		ImGui::EndMenu();
+	}
+	if (ImGui::BeginMenu("Credits")) {
+		if (ImGui::Selectable("Disrupt Editor - Jon"))
+			ShellExecute(0, 0, L"https://github.com/j301scott/DisruptEditor", 0, 0, SW_SHOW);
+		if (ImGui::Selectable("FCBastard - Fireboyd78"))
+			ShellExecute(0, 0, L"https://github.com/Fireboyd78/", 0, 0, SW_SHOW);
+		if (ImGui::Selectable("Gibbed.Disrupt - Gibbed"))
+			ShellExecute(0, 0, L"https://github.com/gibbed/", 0, 0, SW_SHOW);
+
 		ImGui::EndMenu();
 	}
 	ImGui::EndMainMenuBar();

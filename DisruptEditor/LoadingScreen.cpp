@@ -14,6 +14,7 @@ static int LSThread(void *ptr) {
 }
 
 LoadingScreen::LoadingScreen() {
+	srand(time(NULL));
 	title = "Loading the Grid...";
 	cdata.resize(96);
 
@@ -71,7 +72,7 @@ LoadingScreen::LoadingScreen() {
 			audioData[i] /= 20;
 
 		//Randomly reverse the audio
-		if (rand() % 10 == 0)
+		if (rand() % 4 == 0)
 			std::reverse(audioData, audioData + (channels*audioSize));
 
 		SDL_AudioSpec want, have;

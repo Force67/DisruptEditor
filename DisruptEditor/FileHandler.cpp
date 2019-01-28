@@ -105,10 +105,9 @@ std::string FH::getAbsoluteFilePath(const std::string &path) {
 }
 
 std::string FH::getAbsoluteFilePath(uint32_t path) {
-	if (knownFiles.count(path))
-		return getAbsoluteFilePath(knownFiles[path]);
-
-
+	auto it = knownFiles.find(path);
+	if (it != knownFiles.end())
+		return getAbsoluteFilePath(it->second);
 
 	return "";
 }

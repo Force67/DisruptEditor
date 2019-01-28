@@ -143,9 +143,6 @@
     <ClCompile Include="Audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ImguiWindows.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DAREWindow.cpp">
       <Filter>Source Files\Windows</Filter>
     </ClCompile>
@@ -153,6 +150,21 @@
       <Filter>Source Files\Windows</Filter>
     </ClCompile>
     <ClCompile Include="EntityLibraryWindow.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="CPathID.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CStringID.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DisruptTypes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImguiWindows.cpp">
+      <Filter>Source Files\Windows</Filter>
+    </ClCompile>
+    <ClCompile Include="CBATCHWindow.cpp">
       <Filter>Source Files\Windows</Filter>
     </ClCompile>
   </ItemGroup>
@@ -321,6 +333,15 @@
     </ClInclude>
     <ClInclude Include="ImguiWindows.h">
       <Filter>Source Files\Windows</Filter>
+    </ClInclude>
+    <ClInclude Include="CPathID.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CStringID.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DisruptTypes.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
