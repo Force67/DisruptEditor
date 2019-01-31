@@ -8,6 +8,7 @@
 class MemberStructure;
 struct SDL_RWops;
 
+#pragma pack(push, 1)
 struct CResourceContainer {
 	CStringID type;
 	CPathID file;
@@ -62,3 +63,22 @@ struct CArchetypeResource {
 	void read(SDL_RWops *fp);
 	void registerMembers(MemberStructure &ms);
 };
+
+struct SInstanceRange {
+	glm::vec3 unk1;
+	float unk2;
+	glm::vec3 unk3;
+	glm::vec3 unk4;
+	uint32_t unk5;
+	uint32_t unk6;
+	float unk7;
+	float unk8;
+	glm::vec3 unk9;
+	float unk10;
+	float unk11;
+	bool unk12;
+	void read(SDL_RWops *fp);
+	void registerMembers(MemberStructure &ms);
+};
+
+#pragma pack(pop)

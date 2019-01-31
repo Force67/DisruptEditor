@@ -125,22 +125,25 @@ void batchFile::CComponentMultiBatchProcessor::read(SDL_RWops * fp) {
 	uint32_t batchCount = SDL_ReadLE32(fp);
 	SDL_Log("batchCount=%u @%u", batchCount, SDL_RWtell(fp) - 4);
 
+	uint32_t unk2 = SDL_ReadLE32(fp);
+
 	//void SerializeArray<T1>(IBinaryArchive &, T1 *, unsigned long) [with T1=CBatchModelProcessorsAndResources *]
 	for (uint32_t i = 0; i < batchCount; ++i) {
 		CBatchProcessorAndResources &batch = batchProcessors.emplace_back();
 
-		batch.unk1 = SDL_ReadLE32(fp);
+		seekpad(fp, 4);
+		//batch.unk1 = 
 		batch.type.id = SDL_ReadLE32(fp);
 
 		std::string typeName = batch.type.getReverseName();
 		if (typeName == "CBatchModelProcessorsAndResources") {
 			batch.batchModel.read(fp);
-			return;
 		} else {
 			SDL_assert_release(false && "BatchProcessorAndResources not implemented");
 			return;
 		}
 
+		seekpad(fp, 4);
 		uint32_t unk2 = SDL_ReadLE32(fp);
 	}
 }
@@ -194,7 +197,7 @@ void batchFile::CGraphicBatchProcessor::read(SDL_RWops * fp) {
 
 	SDL_Log("Tell2: %u\n\n", SDL_RWtell(fp));
 
-	unk11 = SDL_ReadLE16(fp);
+	stride = SDL_ReadLE16(fp);
 
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CProjectedDecalInfo, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
 	seekpad(fp, 4);
@@ -206,17 +209,36 @@ void batchFile::CGraphicBatchProcessor::read(SDL_RWops * fp) {
 
 	unk12 = SDL_ReadU8(fp);
 	seekpad(fp, 4);
+
+	//Count for CClusterHelper?
 	unk13 = SDL_ReadLE32(fp);
 
-	SDL_Log("Tell3: %u\n\n", SDL_RWtell(fp));
+	for (uint32_t i = 0; i < unk13; ++i) {
+		//CClusterHelper
+		CStringID type;
+		type.id = SDL_ReadLE32(fp);
+		SDL_assert_release(type.id == 0x2C9D950A);
+		SDL_Log("Tell3: %u\n\n", SDL_RWtell(fp));
+		
+		//Ptr to data
+		//Calls ClusterDataSwapBytes(ptr, stride, type);
 
-	//CClusterHelper
-	CStringID type;
-	type.id = SDL_ReadLE32(fp);
-	SDL_assert_release(type.id == 0x2C9D950A);
+		uint32_t unkc1 = SDL_ReadLE32(fp);
+		uint32_t unkc2 = SDL_ReadLE32(fp);
+		uint32_t unkc3 = SDL_ReadLE32(fp);
+		uint32_t unkc4 = SDL_ReadLE32(fp);
+		uint32_t rangeCount = SDL_ReadLE32(fp);
 
-	uint32_t chunk1 = SDL_ReadLE32(fp);
-	uint8_t chunk2 = SDL_ReadU8(fp);
+		for (uint32_t j = 0; j < rangeCount; ++j) {
+			SInstanceRange &range = ranges.emplace_back();
+			range.read(fp);
+		}
+		
+
+
+	}
+
+	SDL_Log("Tell4: %u\n\n", SDL_RWtell(fp));
 }
 
 void batchFile::registerMembers(MemberStructure & ms) {
@@ -288,6 +310,9 @@ void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk10);
 	REGISTER_MEMBER(xbg);
 	REGISTER_MEMBER(materialSlots);
-	REGISTER_MEMBER(unk11);
+	REGISTER_MEMBER(stride);
 	REGISTER_MEMBER(decals);
+	REGISTER_MEMBER(unk12);
+	REGISTER_MEMBER(unk13);
+	REGISTER_MEMBER(ranges);
 }

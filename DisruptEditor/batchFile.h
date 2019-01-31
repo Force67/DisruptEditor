@@ -56,10 +56,12 @@ public:
 		CGeometryResource xbg;
 		//Data before this comment is assumed to be 28 bytes
 		CMaterialSlotsMap materialSlots;
-		uint16_t unk11;
+		uint16_t stride;
 		Vector<CProjectedDecalInfo> decals;
 		bool unk12;
 		uint32_t unk13;
+
+		Vector<SInstanceRange> ranges;
 
 		void read(SDL_RWops *fp);
 		void registerMembers(MemberStructure &ms);

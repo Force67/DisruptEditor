@@ -76,3 +76,23 @@ void CProjectedDecalInfo::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk7);
 	REGISTER_MEMBER(unk8);
 }
+
+void SInstanceRange::read(SDL_RWops * fp) {
+	seekpad(fp, 4);
+	SDL_RWread(fp, this, sizeof(*this), 1);
+}
+
+void SInstanceRange::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
+	REGISTER_MEMBER(unk8);
+	REGISTER_MEMBER(unk9);
+	REGISTER_MEMBER(unk10);
+	REGISTER_MEMBER(unk11);
+	REGISTER_MEMBER(unk12);
+}
