@@ -81,4 +81,12 @@ struct SInstanceRange {
 	void registerMembers(MemberStructure &ms);
 };
 
+struct STerrainSectorPackedData {
+	uint8_t unk[0x5ab0];
+};
+
+struct STerrainSectorPackedElementInfo {
+	uint8_t unk[0xc];
+};
+
 #pragma pack(pop)

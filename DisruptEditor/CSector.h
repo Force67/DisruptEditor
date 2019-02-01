@@ -1,6 +1,9 @@
 #pragma once
+
+struct SDL_RWops;
+
 class CSectorHighRes {
 public:
-	bool open(const char* filename);
+	bool open(SDL_RWops* fp);
 };
 

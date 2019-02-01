@@ -5,38 +5,30 @@
 #include "Hash.h"
 #include "World.h"
 #include <shellapi.h>
+#include "Version.h"
 
 void UI::displayTopMenu() {
 	std::map<std::string, bool> &windows = settings.openWindows;
 
 	ImGui::BeginMainMenuBar();
-	if (ImGui::MenuItem("Entity Library")) {
+	if (ImGui::MenuItem("Entity Library"))
 		windows["EntityLibrary"] ^= true;
-	}
-	if (ImGui::MenuItem("CBatch")) {
+	if (ImGui::MenuItem("CBatch"))
 		windows["CBATCH"] ^= true;
-	}
-	if (ImGui::MenuItem("Terrain")) {
+	/*if (ImGui::MenuItem("Terrain"))
 		windows["Terrain"] ^= true;
-	}
-	if (ImGui::MenuItem("Domino")) {
-		windows["Domino"] ^= true;
-	}
-	if (ImGui::MenuItem("DARE")) {
+	if (ImGui::MenuItem("Domino"))
+		windows["Domino"] ^= true;*/
+	if (ImGui::MenuItem("DARE"))
 		windows["DARE"] ^= true;
-	}
-	if (ImGui::MenuItem("Sequence")) {
+	/*if (ImGui::MenuItem("Sequence"))
 		windows["CSequence"] ^= true;
-	}
-	if (ImGui::MenuItem("Move")) {
+	if (ImGui::MenuItem("Move"))
 		windows["Move"] ^= true;
-	}
-	if (ImGui::MenuItem("LocString")) {
+	if (ImGui::MenuItem("LocString"))
 		windows["LocString"] ^= true;
-	}
-	if (ImGui::MenuItem("SpawnPoint")) {
-		windows["SpawnPoint"] ^= true;
-	}
+	if (ImGui::MenuItem("SpawnPoint"))
+		windows["SpawnPoint"] ^= true;*/
 	if (ImGui::BeginMenu("Hasher")) {
 		static char buffer[255] = { '\0' };
 		ImGui::InputText("##UID", buffer, sizeof(buffer));
@@ -97,6 +89,10 @@ void UI::displayTopMenu() {
 		ImGui::EndMenu();
 	}
 	if (ImGui::BeginMenu("Credits")) {
+		ImGui::Text("Disrupt Editor " DE_VERSION);
+		if (ImGui::Selectable("Check for updates"))
+			ShellExecute(0, 0, L"https://ci.appveyor.com/project/j301scott/disrupteditor/build/artifacts", 0, 0, SW_SHOW);
+		ImGui::Separator();
 		if (ImGui::Selectable("Disrupt Editor - Jon"))
 			ShellExecute(0, 0, L"https://github.com/j301scott/DisruptEditor", 0, 0, SW_SHOW);
 		if (ImGui::Selectable("FCBastard - Fireboyd78"))

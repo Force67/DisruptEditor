@@ -5,6 +5,8 @@
 #include <string>
 #include <regex>
 #include "imgui.h"
+#include "Serialization.h"
+#include "Common.h"
 
 /*
 
@@ -52,56 +54,17 @@ Globals
 
 */
 
-std::map<std::string, DominoConnectors> gConnectors;
+struct DominoGlobals {
+	std::map<std::string, DominoConnectors> connectors;
+	void registerMembers(MemberStructure& ms) {
+		REGISTER_MEMBER(connectors);
+	}
+};
+static DominoGlobals gGlobals;
 
 void loadConnectors() {
-	gConnectors.clear();
-	tinyxml2::XMLDocument doc;
-	doc.LoadFile("res/domino.xml");
-	for (auto it = doc.RootElement()->FirstChildElement(); it; it = it->NextSiblingElement()) {
-		std::string path = it->Attribute("path");
-		std::transform(path.begin(), path.end(), path.begin(), ::tolower);
-		const char* desc = it->Attribute("desc");
-
-		DominoConnectors &c = gConnectors[path];
-		if (desc)
-			c.description = desc;
-
-		for (auto j = it->FirstChildElement(); j; j = j->NextSiblingElement()) {
-			std::string type = j->Name();
-			if (type == "control_in") {
-				DominoSlot &slot = c.in.emplace_back();
-				slot.name = j->Attribute("name");
-				slot.type = CONTROL;
-				const char* desc = j->Attribute("desc");
-				if (desc)
-					slot.description = desc;
-			} else if (type == "control_out") {
-				DominoSlot &slot = c.out.emplace_back();
-				slot.name = j->Attribute("name");
-				slot.type = CONTROL;
-				const char* desc = j->Attribute("desc");
-				if (desc)
-					slot.description = desc;
-			} else if (type == "data_in") {
-				DominoSlot &slot = c.in.emplace_back();
-				slot.name = j->Attribute("name");
-				slot.type = DATA;
-				const char* desc = j->Attribute("desc");
-				if (desc)
-					slot.description = desc;
-			} else if (type == "data_out") {
-				DominoSlot &slot = c.out.emplace_back();
-				slot.name = j->Attribute("name");
-				slot.type = DATA;
-				const char* desc = j->Attribute("desc");
-				if (desc)
-					slot.description = desc;
-			}
-
-		}
-	}
-
+	std::string contents = readFile("res/domino.json");
+	unserializeFromJSON(gGlobals, contents.c_str());
 }
 
 void DominoBox::open(const char *filename) {
@@ -224,9 +187,6 @@ void DominoBox::open(const char *filename) {
 	autoOrganize();
 }
 
-void DominoBox::serialize(tinyxml2::XMLPrinter &printer) {
-}
-
 static inline ImVec2 operator+(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x + rhs.x, lhs.y + rhs.y); }
 static inline ImVec2 operator-(const ImVec2& lhs, const ImVec2& rhs) { return ImVec2(lhs.x - rhs.x, lhs.y - rhs.y); }
 
@@ -275,7 +235,7 @@ void DominoBox::draw() {
 
 		std::string path = it->second.boxClass;
 		std::transform(path.begin(), path.end(), path.begin(), ::tolower);
-		DominoConnectors &connectors = gConnectors[path];
+		DominoConnectors &connectors = gGlobals.connectors[path];
 
 		for (DominoSlot &slot : connectors.in) {
 			ImGui::Text("%s", slot.name.c_str());
@@ -337,6 +297,12 @@ void DominoBox::autoOrganize() {
 	}
 }
 
+void DominoBox::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(connections);
+	REGISTER_MEMBER(boxes);
+	REGISTER_MEMBER(localVariables);
+}
+
 std::string DominoCBox::deserialize(FILE *fp) {
 	//Skip First Line it's           l0 = self[15];
 	std::string line = readLuaLine(fp);
@@ -392,4 +358,31 @@ std::string DominoCBox::deserialize(FILE *fp) {
 
 std::string DominoCBox::getShortName() {
 	return boxClass.substr(boxClass.find_last_of('/') + 1);
+}
+
+void DominoCBox::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(pos);
+	REGISTER_MEMBER(size);
+	REGISTER_MEMBER(id);
+	REGISTER_MEMBER(boxClass);
+}
+
+void DominoPtr::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(from);
+	REGISTER_MEMBER(to);
+	//REGISTER_MEMBER(type);
+	REGISTER_MEMBER(fromKey);
+	REGISTER_MEMBER(toKey);
+}
+
+void DominoSlot::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(name);
+	REGISTER_MEMBER(description);
+	//REGISTER_MEMBER(type);
+}
+
+void DominoConnectors::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(description);
+	REGISTER_MEMBER(in);
+	REGISTER_MEMBER(out);
 }

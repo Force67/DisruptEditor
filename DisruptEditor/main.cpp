@@ -32,10 +32,7 @@
 #include "FileHandler.h"
 #include "World.h"
 #include "ImguiWindows.h"
-
-#ifndef DE_VERSION
-#define DE_VERSION "GIT"
-#endif
+#include "Version.h"
 
 int main(int argc, char **argv) {
 	SDL_Init(SDL_INIT_EVERYTHING);

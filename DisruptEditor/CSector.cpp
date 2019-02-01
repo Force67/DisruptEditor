@@ -17,16 +17,7 @@ struct CSectorHighResHeader {
 	uint32_t unk7;
 };
 
-bool CSectorHighRes::open(const char *filename) {
-	SDL_RWops *fp = SDL_RWFromFile(filename, "rb");
-	if (!fp) {
-		return false;
-	}
-	Vector<uint8_t> data(SDL_RWsize(fp));
-	SDL_RWread(fp, data.data(), data.size(), 1);
-	SDL_RWclose(fp);
-	fp = SDL_RWFromConstMem(data.data(), data.size());
-
+bool CSectorHighRes::open(SDL_RWops* fp) {
 	CSectorHighResHeader head;
 	SDL_RWread(fp, &head, sizeof(head), 1);
 	SDL_assert_release(head.magic == 1397901394);
