@@ -48,7 +48,7 @@ public:
 		bool unk6;
 		bool unk7;
 		uint8_t unk8;
-		bool unk9;
+		bool hasBatchInstanceID;
 		bool unk10;
 	private:
 		uint8_t pad2[2];
@@ -59,12 +59,25 @@ public:
 		uint16_t stride;
 		Vector<CProjectedDecalInfo> decals;
 		bool unk12;
-		uint32_t unk13;
 
 		Vector<SInstanceRange> ranges;
 
 		void read(SDL_RWops *fp);
 		void registerMembers(MemberStructure &ms);
+	};
+
+	struct CSoundPointBatchProcessor {
+		bool unk1;
+		//References library SoundPoint
+		uint32_t libraryObject;
+		uint16_t unk3;
+		uint32_t unk4;
+		uint32_t unk5;
+		uint32_t unk6;
+		uint32_t unk7;
+
+		void read(SDL_RWops* fp);
+		void registerMembers(MemberStructure& ms);
 	};
 
 	struct IBatchProcessor {
@@ -73,6 +86,7 @@ public:
 		uint32_t unk2;
 
 		CGraphicBatchProcessor graphicBatch;
+		CSoundPointBatchProcessor soundPointBatch;
 
 		void registerMembers(MemberStructure &ms);
 	};

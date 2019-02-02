@@ -125,14 +125,16 @@ void batchFile::CComponentMultiBatchProcessor::read(SDL_RWops * fp) {
 	uint32_t batchCount = SDL_ReadLE32(fp);
 	SDL_Log("batchCount=%u @%u", batchCount, SDL_RWtell(fp) - 4);
 
-	uint32_t unk2 = SDL_ReadLE32(fp);
-
 	//void SerializeArray<T1>(IBinaryArchive &, T1 *, unsigned long) [with T1=CBatchModelProcessorsAndResources *]
 	for (uint32_t i = 0; i < batchCount; ++i) {
 		CBatchProcessorAndResources &batch = batchProcessors.emplace_back();
 
 		seekpad(fp, 4);
-		//batch.unk1 = 
+		uint32_t unk2 = SDL_ReadLE32(fp);
+		SDL_assert_release(unk2 == 0);
+
+		seekpad(fp, 4);
+		SDL_Log("CBatchModelProcessorsAndResources %u", SDL_RWtell(fp));
 		batch.type.id = SDL_ReadLE32(fp);
 
 		std::string typeName = batch.type.getReverseName();
@@ -142,9 +144,6 @@ void batchFile::CComponentMultiBatchProcessor::read(SDL_RWops * fp) {
 			SDL_assert_release(false && "BatchProcessorAndResources not implemented");
 			return;
 		}
-
-		seekpad(fp, 4);
-		uint32_t unk2 = SDL_ReadLE32(fp);
 	}
 }
 
@@ -174,6 +173,9 @@ void batchFile::CBatchModelProcessorsAndResources::read(SDL_RWops * fp) {
 
 		if (typeName == "CGraphicBatchProcessor") {
 			batch.graphicBatch.read(fp);
+		}
+		else if (typeName == "CSoundPointBatchProcessor") {
+			batch.soundPointBatch.read(fp);
 		} else {
 			SDL_assert_release(false && "IBatchProcessor not implemented");
 			return;
@@ -211,31 +213,32 @@ void batchFile::CGraphicBatchProcessor::read(SDL_RWops * fp) {
 	seekpad(fp, 4);
 
 	//Count for CClusterHelper?
-	unk13 = SDL_ReadLE32(fp);
+	uint32_t rangeCount = SDL_ReadLE32(fp);
 
-	for (uint32_t i = 0; i < unk13; ++i) {
-		//CClusterHelper
-		CStringID type;
-		type.id = SDL_ReadLE32(fp);
-		SDL_assert_release(type.id == 0x2C9D950A);
-		SDL_Log("Tell3: %u\n\n", SDL_RWtell(fp));
+	//CClusterHelper
+	CStringID type;
+	type.id = SDL_ReadLE32(fp);
+	SDL_assert_release(type.id == 0x2C9D950A);
+	SDL_Log("Tell3: %u\n\n", SDL_RWtell(fp));
 		
-		//Ptr to data
-		//Calls ClusterDataSwapBytes(ptr, stride, type);
+	//Ptr to data
+	//Calls ClusterDataSwapBytes(ptr, stride, type);
 
+	SDL_assert_release(!hasBatchInstanceID);
+	/*if (hasBatchInstanceID) {
 		uint32_t unkc1 = SDL_ReadLE32(fp);
 		uint32_t unkc2 = SDL_ReadLE32(fp);
-		uint32_t unkc3 = SDL_ReadLE32(fp);
-		uint32_t unkc4 = SDL_ReadLE32(fp);
-		uint32_t rangeCount = SDL_ReadLE32(fp);
+	}*/
 
-		for (uint32_t j = 0; j < rangeCount; ++j) {
-			SInstanceRange &range = ranges.emplace_back();
-			range.read(fp);
-		}
-		
+	uint32_t unkc1 = SDL_ReadLE32(fp);
+	uint32_t unkc2 = SDL_ReadLE32(fp);
+	uint32_t unkc3 = SDL_ReadLE32(fp);
+	uint32_t unkc4 = SDL_ReadLE32(fp);
+	uint32_t unkc5 = SDL_ReadLE32(fp);
 
-
+	for (uint32_t j = 0; j < rangeCount; ++j) {
+		SInstanceRange &range = ranges.emplace_back();
+		range.read(fp);
 	}
 
 	SDL_Log("Tell4: %u\n\n", SDL_RWtell(fp));
@@ -306,13 +309,46 @@ void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk6);
 	REGISTER_MEMBER(unk7);
 	REGISTER_MEMBER(unk8);
-	REGISTER_MEMBER(unk9);
+	REGISTER_MEMBER(hasBatchInstanceID);
 	REGISTER_MEMBER(unk10);
 	REGISTER_MEMBER(xbg);
 	REGISTER_MEMBER(materialSlots);
 	REGISTER_MEMBER(stride);
 	REGISTER_MEMBER(decals);
 	REGISTER_MEMBER(unk12);
-	REGISTER_MEMBER(unk13);
 	REGISTER_MEMBER(ranges);
+}
+
+void batchFile::CSoundPointBatchProcessor::read(SDL_RWops* fp) {
+	unk1 = SDL_ReadU8(fp);
+	seekpad(fp, 4);
+	libraryObject = SDL_ReadLE32(fp);
+
+	//CNomadDb::GenRecoverLibraryObject(const(0x2E69D575, unk2))
+	//0x2E69D575 = SoundPoint is CStringID
+
+	unk3 = SDL_ReadLE16(fp);
+	seekpad(fp, 4);
+
+	uint32_t ndSoundHandleType = SDL_ReadLE32(fp);
+	SDL_assert_release(ndSoundHandleType == 0x36C7FB6A);
+
+	unk4 = SDL_ReadLE32(fp);
+	unk5 = SDL_ReadLE32(fp);
+
+	uint32_t SBatchedSoundPointType = SDL_ReadLE32(fp);
+	SDL_assert_release(SBatchedSoundPointType == 0xB29388DD);
+
+	unk6 = SDL_ReadLE32(fp);
+	unk7 = SDL_ReadLE32(fp);
+}
+
+void batchFile::CSoundPointBatchProcessor::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(libraryObject);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
 }
