@@ -4,6 +4,7 @@
 #include "DisruptTypes.h"
 #include "Vector.h"
 #include "Pair.h"
+#include <memory>
 
 struct SDL_RWops;
 class MemberStructure;
@@ -81,13 +82,34 @@ public:
 		void registerMembers(MemberStructure& ms);
 	};
 
+	struct CBlackoutEffectBatchProcessor {
+		struct SEffectPosAndAngle {
+			glm::vec3 pos;
+			glm::vec3 angle;
+			void read(IBinaryArchive& fp);
+			void registerMembers(MemberStructure& ms);
+		};
+		glm::vec2 unk1;
+		glm::vec2 unk2;
+		uint32_t unk3;
+		uint32_t unk4;
+		Vector<SEffectPosAndAngle> posAndAngles;
+		bool hasBatchInstanceIDs;
+		CBatchedInstanceID batchedInstanceID;
+		uint32_t libraryObject;
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
 	struct IBatchProcessor {
 		uint32_t unk1;
 		CStringID type;
 		uint32_t unk2;
 
-		CGraphicBatchProcessor graphicBatch;
-		CSoundPointBatchProcessor soundPointBatch;
+		std::unique_ptr<CGraphicBatchProcessor> graphicBatch;
+		std::unique_ptr<CSoundPointBatchProcessor> soundPointBatch;
+		std::unique_ptr<CBlackoutEffectBatchProcessor> blackoutEffectBatch;
 
 		void registerMembers(MemberStructure &ms);
 	};

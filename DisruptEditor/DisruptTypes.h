@@ -94,4 +94,6 @@ struct STerrainSectorPackedElementInfo {
 	uint8_t unk[0xc];
 };
 
+typedef uint32_t CBatchedInstanceID;
+
 #pragma pack(pop)

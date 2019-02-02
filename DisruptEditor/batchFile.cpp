@@ -168,11 +168,18 @@ void batchFile::CBatchModelProcessorsAndResources::read(IBinaryArchive& fp) {
 		SDL_Log("IBatchProcessor type=%s", typeName.c_str());
 
 		if (typeName == "CGraphicBatchProcessor") {
-			batch.graphicBatch.read(fp);
+			batch.graphicBatch = std::make_unique<CGraphicBatchProcessor>();
+			batch.graphicBatch->read(fp);
 		}
 		else if (typeName == "CSoundPointBatchProcessor") {
-			batch.soundPointBatch.read(fp);
-		} else {
+			batch.soundPointBatch = std::make_unique<CSoundPointBatchProcessor>();
+			batch.soundPointBatch->read(fp);
+		}
+		else if (typeName == "CBlackoutEffectBatchProcessor") {
+			batch.blackoutEffectBatch = std::make_unique<CBlackoutEffectBatchProcessor>();
+			batch.blackoutEffectBatch->read(fp);
+		}
+		else {
 			SDL_assert_release(false && "IBatchProcessor not implemented");
 			return;
 		}
@@ -302,7 +309,13 @@ void batchFile::IBatchProcessor::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(type);
 	REGISTER_MEMBER(unk2);
-	REGISTER_MEMBER(graphicBatch);
+
+	if(graphicBatch)
+		REGISTER_MEMBER(*graphicBatch);
+	if (soundPointBatch)
+		REGISTER_MEMBER(*soundPointBatch);
+	if (blackoutEffectBatch)
+		REGISTER_MEMBER(*blackoutEffectBatch);
 }
 
 void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
@@ -356,4 +369,56 @@ void batchFile::CSoundPointBatchProcessor::registerMembers(MemberStructure& ms) 
 	REGISTER_MEMBER(unk5);
 	REGISTER_MEMBER(unk6);
 	REGISTER_MEMBER(unk7);
+}
+
+void batchFile::CBlackoutEffectBatchProcessor::read(IBinaryArchive& fp) {
+	SDL_Log("Tell: %u", fp.tell());
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+
+	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBlackoutEffectBatchProcessor::SEffectPosAndAngle, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
+	uint32_t count;
+	fp.serialize(count);
+	posAndAngles.resize(count);
+
+	uint32_t SEffectPosAndAngleType;
+	fp.serialize(SEffectPosAndAngleType);
+	SDL_assert_release(SEffectPosAndAngleType == 495023964);
+
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+
+	for (uint32_t i = 0; i < count; ++i)
+		posAndAngles[i].read(fp);
+
+	fp.serialize(hasBatchInstanceIDs);
+	if (hasBatchInstanceIDs) {
+		//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchedInstanceID, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
+		fp.serialize(batchedInstanceID);
+		SDL_Log("Tell: %u", fp.tell());
+	}
+	SDL_assert_release(hasBatchInstanceIDs);
+
+	fp.serialize(libraryObject);
+	//CNomadDb::GenRecoverLibraryObject(const(CStringID,libraryObject))
+	//CStringID = 0xC9A01639 = BlackoutEffect
+}
+
+void batchFile::CBlackoutEffectBatchProcessor::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(posAndAngles);
+	REGISTER_MEMBER(hasBatchInstanceIDs);
+}
+
+void batchFile::CBlackoutEffectBatchProcessor::SEffectPosAndAngle::read(IBinaryArchive& fp) {
+	fp.serialize(pos);
+	fp.serialize(angle);
+}
+
+void batchFile::CBlackoutEffectBatchProcessor::SEffectPosAndAngle::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(pos);
+	REGISTER_MEMBER(angle);
 }
