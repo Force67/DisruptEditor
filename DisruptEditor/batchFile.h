@@ -7,6 +7,7 @@
 
 struct SDL_RWops;
 class MemberStructure;
+class IBinaryArchive;
 
 class batchFile {
 public:
@@ -40,9 +41,6 @@ public:
 		float unk1;
 		bool unk2;
 		bool unk3;
-	private:
-		uint8_t pad[2];
-	public:
 		uint32_t unk4;
 		bool unk5;
 		bool unk6;
@@ -50,9 +48,6 @@ public:
 		uint8_t unk8;
 		bool hasBatchInstanceID;
 		bool unk10;
-	private:
-		uint8_t pad2[2];
-	public:
 		CGeometryResource xbg;
 		//Data before this comment is assumed to be 28 bytes
 		CMaterialSlotsMap materialSlots;
@@ -60,9 +55,15 @@ public:
 		Vector<CProjectedDecalInfo> decals;
 		bool unk12;
 
+		uint32_t unkc1;
+		uint32_t unkc2;
+		uint32_t unkc3;
+		uint32_t unkc4;
+		uint32_t unkc5;
+
 		Vector<SInstanceRange> ranges;
 
-		void read(SDL_RWops *fp);
+		void read(IBinaryArchive &fp);
 		void registerMembers(MemberStructure &ms);
 	};
 
@@ -76,7 +77,7 @@ public:
 		uint32_t unk6;
 		uint32_t unk7;
 
-		void read(SDL_RWops* fp);
+		void read(IBinaryArchive& fp);
 		void registerMembers(MemberStructure& ms);
 	};
 
@@ -95,7 +96,7 @@ public:
 		CArchetypeResource arche;
 		uint32_t unk1;
 		Vector<IBatchProcessor> processors;
-		void read(SDL_RWops *fp);
+		void read(IBinaryArchive& fp);
 		void registerMembers(MemberStructure &ms);
 	};
 
@@ -111,7 +112,7 @@ public:
 	struct CComponentMultiBatchProcessor {
 		uint32_t unk1;
 		Vector<CBatchProcessorAndResources> batchProcessors;
-		void read(SDL_RWops *fp);
+		void read(IBinaryArchive& fp);
 		void registerMembers(MemberStructure &ms);
 	};
 

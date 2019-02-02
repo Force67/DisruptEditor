@@ -8,16 +8,9 @@
 #include "Hash.h"
 #include "FileHandler.h"
 #include "Serialization.h"
+#include "IBinaryArchive.h"
 
 //Game stores ptr in 0x20 of r3, size in 0x24
-
-std::string readString(SDL_RWops *fp, bool bigEndian) {
-	uint32_t len = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
-
-	std::string str(len + 1, '\0');
-	SDL_RWread(fp, &str[0], 1, len);
-	return str;
-}
 
 void writeString(SDL_RWops *fp, bool bigEndian, const std::string &str) {
 	uint32_t len = str.size();
@@ -28,10 +21,11 @@ void writeString(SDL_RWops *fp, bool bigEndian, const std::string &str) {
 bool batchFile::open(SDL_RWops *fp) {
 	if (!fp) return false;
 
-	bool bigEndian = false;
-	size_t size = SDL_RWsize(fp);
+	CBinaryArchiveReader reader;
+	reader.fp = fp;
+	size_t size = reader.size();
 
-	SDL_RWread(fp, &head, sizeof(head), 1);
+	reader.memBlock(&head, sizeof(head), 1);
 	SDL_assert_release(head.magic == 1112818504);
 	SDL_assert_release(head.unk1 == 32);
 	SDL_assert_release(head.type == 0 || head.type == 1);
@@ -46,29 +40,30 @@ bool batchFile::open(SDL_RWops *fp) {
 
 	if (head.type == 0) {
 		//SDL_assert_release(strstr(filename, "_compound.cbatch"));
-		SDL_assert_release(head.size + sizeof(head) == SDL_RWsize(fp));
+		SDL_assert_release(head.size + sizeof(head) == size);
 
-		SDL_RWread(fp, &compound, sizeof(compound), 1);
+		reader.memBlock(&compound, sizeof(compound), 1);
 
 		//SDL_assert_release(compound.unk3 == 0);
 
-		srcFilename = readString(fp, bigEndian);
+		reader.serialize(srcFilename);
 		seekpad(fp, 4);
 		//SDL_Log("%s\n", srcFilename.c_str());
 
 		//Resources
-		uint32_t CResourceContainerCount = SDL_ReadLE32(fp);
+		uint32_t CResourceContainerCount;
+		reader.serialize(CResourceContainerCount);
 		for (uint32_t i = 0; i < CResourceContainerCount; ++i) {
 			CResourceContainer &resource = resources.emplace_back();
-			resource.type.id = SDL_ReadLE32(fp);
-			resource.file.id = SDL_ReadLE32(fp);
+			reader.serialize(resource.type.id);
+			reader.serialize(resource.file.id);
 		}
 
-		physicsFile.id = SDL_ReadLE32(fp);
+		reader.serialize(physicsFile.id);
 
-		SDL_Log("CMBP Tell: %u\n\n", SDL_RWtell(fp));
+		SDL_Log("CMBP Tell: %u\n\n", reader.tell());
 
-		componentMBP.read(fp);
+		componentMBP.read(reader);
 	} else if (head.type == 1) {
 		//SDL_assert_release(strstr(filename, "_phys.cbatch"));
 	}
@@ -116,26 +111,26 @@ void batchFile::write(SDL_RWops * fp) {
 	SDL_RWclose(fp);
 }
 
-void batchFile::CComponentMultiBatchProcessor::read(SDL_RWops * fp) {
+void batchFile::CComponentMultiBatchProcessor::read(IBinaryArchive& fp) {
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchModelProcessorsAndResources *, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
 
-	unk1 = SDL_ReadLE32(fp);
+	fp.serialize(unk1);
 	SDL_assert_release(unk1 == 1);//If this is zero it looks like we should just skip the rest of this code, however none of the files contain 0 so I won't bother
 
-	uint32_t batchCount = SDL_ReadLE32(fp);
-	SDL_Log("batchCount=%u @%u", batchCount, SDL_RWtell(fp) - 4);
+	uint32_t batchCount;
+	fp.serialize(batchCount);
+	SDL_Log("batchCount=%u @%u", batchCount, fp.tell() - 4);
 
 	//void SerializeArray<T1>(IBinaryArchive &, T1 *, unsigned long) [with T1=CBatchModelProcessorsAndResources *]
 	for (uint32_t i = 0; i < batchCount; ++i) {
 		CBatchProcessorAndResources &batch = batchProcessors.emplace_back();
 
-		seekpad(fp, 4);
-		uint32_t unk2 = SDL_ReadLE32(fp);
+		uint32_t unk2;
+		fp.serialize(unk2);
 		SDL_assert_release(unk2 == 0);
 
-		seekpad(fp, 4);
-		SDL_Log("CBatchModelProcessorsAndResources %u", SDL_RWtell(fp));
-		batch.type.id = SDL_ReadLE32(fp);
+		SDL_Log("CBatchModelProcessorsAndResources %u", fp.tell());
+		fp.serialize(batch.type.id);
 
 		std::string typeName = batch.type.getReverseName();
 		if (typeName == "CBatchModelProcessorsAndResources") {
@@ -147,7 +142,7 @@ void batchFile::CComponentMultiBatchProcessor::read(SDL_RWops * fp) {
 	}
 }
 
-void batchFile::CBatchModelProcessorsAndResources::read(SDL_RWops * fp) {
+void batchFile::CBatchModelProcessorsAndResources::read(IBinaryArchive& fp) {
 	// void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=CSmartResourcePtr<CArchetypeResource>]
 	arche.read(fp);
 	//CResourceManager::GetResource((CPathID const &,CStringID const &))
@@ -157,16 +152,17 @@ void batchFile::CBatchModelProcessorsAndResources::read(SDL_RWops * fp) {
 	//unk1 = SDL_ReadLE32(fp);
 	//SDL_assert_release(unk1 == 1);
 	
-	uint32_t batchProcessorCount = SDL_ReadLE32(fp);
-	SDL_Log("batchProcessorCount=%u @%u", batchProcessorCount, SDL_RWtell(fp) - 4);
+	uint32_t batchProcessorCount;
+	fp.serialize(batchProcessorCount);
+	SDL_Log("batchProcessorCount=%u @%u", batchProcessorCount, fp.tell() - 4);
 
 	//void SerializeArray<T1>(IBinaryArchive &, T1 *, unsigned long) [with T1=IBatchProcessor *]
 	for (uint32_t i = 0; i < batchProcessorCount; ++i) {
 		IBatchProcessor &batch = processors.emplace_back();
 
-		batch.unk1 = SDL_ReadLE32(fp);
-		batch.type = SDL_ReadLE32(fp);
-		batch.unk2 = SDL_ReadLE32(fp);
+		fp.serialize(batch.unk1);
+		fp.serialize(batch.type.id);
+		fp.serialize(batch.unk2);
 
 		std::string typeName = batch.type.getReverseName();
 		SDL_Log("IBatchProcessor type=%s", typeName.c_str());
@@ -188,38 +184,47 @@ void batchFile::CBatchModelProcessorsAndResources::read(SDL_RWops * fp) {
 	}
 }
 
-void batchFile::CGraphicBatchProcessor::read(SDL_RWops * fp) {
+void batchFile::CGraphicBatchProcessor::read(IBinaryArchive& fp) {
 	//CGraphicBatchProcessor::Serialize((IBinaryArchive &))
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+	fp.serialize(unk6);
+	fp.serialize(unk7);
+	fp.serialize(unk8);
+	fp.serialize(hasBatchInstanceID);
+	fp.serialize(unk10);
+	xbg.read(fp);
 
-	SDL_RWread(fp, this, 28, 1);
-
-	SDL_Log("Tell: %u\n\n", SDL_RWtell(fp));
+	SDL_Log("Tell: %u\n\n", fp.tell());
 
 	materialSlots.read(fp);
 
-	SDL_Log("Tell2: %u\n\n", SDL_RWtell(fp));
+	SDL_Log("Tell2: %u\n\n", fp.tell());
 
-	stride = SDL_ReadLE16(fp);
+	fp.serialize(stride);
 
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CProjectedDecalInfo, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
-	seekpad(fp, 4);
-	uint32_t count = SDL_ReadLE32(fp);
+	uint32_t count;
+	fp.serialize(count);
 	for (uint32_t i = 0; i < count; ++i) {
 		CProjectedDecalInfo &decal = decals.emplace_back();
 		decal.read(fp);
 	}
 
-	unk12 = SDL_ReadU8(fp);
-	seekpad(fp, 4);
+	fp.serialize(unk12);
 
 	//Count for CClusterHelper?
-	uint32_t rangeCount = SDL_ReadLE32(fp);
+	uint32_t rangeCount;
+	fp.serialize(rangeCount);
 
 	//CClusterHelper
 	CStringID type;
-	type.id = SDL_ReadLE32(fp);
+	fp.serialize(type.id);
 	SDL_assert_release(type.id == 0x2C9D950A);
-	SDL_Log("Tell3: %u\n\n", SDL_RWtell(fp));
+	SDL_Log("Tell3: %u\n\n", fp.tell());
 		
 	//Ptr to data
 	//Calls ClusterDataSwapBytes(ptr, stride, type);
@@ -230,18 +235,18 @@ void batchFile::CGraphicBatchProcessor::read(SDL_RWops * fp) {
 		uint32_t unkc2 = SDL_ReadLE32(fp);
 	}*/
 
-	uint32_t unkc1 = SDL_ReadLE32(fp);
-	uint32_t unkc2 = SDL_ReadLE32(fp);
-	uint32_t unkc3 = SDL_ReadLE32(fp);
-	uint32_t unkc4 = SDL_ReadLE32(fp);
-	uint32_t unkc5 = SDL_ReadLE32(fp);
+	fp.serialize(unkc1);
+	fp.serialize(unkc2);
+	fp.serialize(unkc3);
+	fp.serialize(unkc4);
+	fp.serialize(unkc5);
 
 	for (uint32_t j = 0; j < rangeCount; ++j) {
 		SInstanceRange &range = ranges.emplace_back();
 		range.read(fp);
 	}
 
-	SDL_Log("Tell4: %u\n\n", SDL_RWtell(fp));
+	SDL_Log("Tell4: %u\n\n", fp.tell());
 }
 
 void batchFile::registerMembers(MemberStructure & ms) {
@@ -319,28 +324,28 @@ void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(ranges);
 }
 
-void batchFile::CSoundPointBatchProcessor::read(SDL_RWops* fp) {
-	unk1 = SDL_ReadU8(fp);
-	seekpad(fp, 4);
-	libraryObject = SDL_ReadLE32(fp);
+void batchFile::CSoundPointBatchProcessor::read(IBinaryArchive& fp) {
+	fp.serialize(unk1);
+	fp.serialize(libraryObject);
 
 	//CNomadDb::GenRecoverLibraryObject(const(0x2E69D575, unk2))
 	//0x2E69D575 = SoundPoint is CStringID
 
-	unk3 = SDL_ReadLE16(fp);
-	seekpad(fp, 4);
+	fp.serialize(unk3);
 
-	uint32_t ndSoundHandleType = SDL_ReadLE32(fp);
+	uint32_t ndSoundHandleType;
+	fp.serialize(ndSoundHandleType);
 	SDL_assert_release(ndSoundHandleType == 0x36C7FB6A);
 
-	unk4 = SDL_ReadLE32(fp);
-	unk5 = SDL_ReadLE32(fp);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
 
-	uint32_t SBatchedSoundPointType = SDL_ReadLE32(fp);
+	uint32_t SBatchedSoundPointType;
+	fp.serialize(SBatchedSoundPointType);
 	SDL_assert_release(SBatchedSoundPointType == 0xB29388DD);
 
-	unk6 = SDL_ReadLE32(fp);
-	unk7 = SDL_ReadLE32(fp);
+	fp.serialize(unk6);
+	fp.serialize(unk7);
 }
 
 void batchFile::CSoundPointBatchProcessor::registerMembers(MemberStructure& ms) {

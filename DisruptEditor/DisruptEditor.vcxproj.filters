@@ -167,6 +167,9 @@
     <ClCompile Include="CBATCHWindow.cpp">
       <Filter>Source Files\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="IBinaryArchive.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -347,6 +350,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Version.h" />
+    <ClInclude Include="IBinaryArchive.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Res.rc">
