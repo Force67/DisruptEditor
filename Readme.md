@@ -9,21 +9,21 @@ Latest Build: https://ci.appveyor.com/project/j301scott/disrupteditor/build/arti
 1. Run Disrupt Editor, it will automatically create a settings.json for you to fill in
 2. Assuming Z:/scratch/bin is where you extracted each of the fat/dat files, add them to searchPaths like so:
 patchDir is where modified files like wlu and cbatch are written. Files in the patchDir will always take precedence
-```javascript
-"searchPaths": [
-    "Z:/scratch/bin/patch_unpack/",
-    "Z:/scratch/bin/dlc_solo_unpack/",
-    "Z:/scratch/bin/dlc_solo_english_unpack/",
-    "Z:/scratch/bin/dlc_pill_people_unpack/",
-    "Z:/scratch/bin/windy_city_unpack/",
-    "Z:/scratch/bin/windy_city_english_unpack/",
-    "Z:/scratch/bin/shaders_unpack/",
-    "Z:/scratch/bin/shadersobj_unpack/",
-    "Z:/scratch/bin/sound_unpack/",
-    "Z:/scratch/bin/sound_english_unpack/",
-    "Z:/scratch/bin/common_unpack/"
-],
-"patchDir": "C:/Program Files/Ubisoft/WATCH_DOGS/bin/patch/",
+```xml
+<searchPaths>
+    <Elem>Z:/scratch/bin/patch_unpack/</Elem>
+    <Elem>Z:/scratch/bin/dlc_solo_unpack/</Elem>
+    <Elem>Z:/scratch/bin/dlc_solo_english_unpack/</Elem>
+    <Elem>Z:/scratch/bin/dlc_pill_people_unpack/</Elem>
+    <Elem>Z:/scratch/bin/windy_city_unpack/</Elem>
+    <Elem>Z:/scratch/bin/windy_city_english_unpack/</Elem>
+    <Elem>Z:/scratch/bin/shaders_unpack/</Elem>
+    <Elem>Z:/scratch/bin/shadersobj_unpack/</Elem>
+    <Elem>Z:/scratch/bin/sound_unpack/</Elem>
+    <Elem>Z:/scratch/bin/sound_english_unpack/</Elem>
+    <Elem>Z:/scratch/bin/common_unpack/</Elem>
+</searchPaths>
+<patchDir>C:/Program Files/Ubisoft/WATCH_DOGS/bin/patch/</patchDir>
 ```
 3. Configure camera keyboard settings keyForward, keyBackward, etc. with https://wiki.libsdl.org/SDLScancodeLookup
 keyFast, keySlow with

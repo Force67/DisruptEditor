@@ -14,10 +14,10 @@ std::string CPathID::getReverseFilename() {
 
 void CPathID::registerMembers(MemberStructure & ms) {
 	switch (ms.type) {
-	case MemberStructure::TOJSON:
+	case MemberStructure::TOXML:
 		ms.registerMember(NULL, getReverseFilename());
 		break;
-	case MemberStructure::FROMJSON: {
+	case MemberStructure::FROMXML: {
 		std::string temp;
 		ms.registerMember(NULL, temp);
 		if (temp[0] == '_')

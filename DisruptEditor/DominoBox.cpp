@@ -63,8 +63,8 @@ struct DominoGlobals {
 static DominoGlobals gGlobals;
 
 void loadConnectors() {
-	std::string contents = readFile("res/domino.json");
-	unserializeFromJSON(gGlobals, contents.c_str());
+	//std::string contents = readFile("res/domino.json");
+	//unserializeFromJSON(gGlobals, contents.c_str());
 }
 
 void DominoBox::open(const char *filename) {

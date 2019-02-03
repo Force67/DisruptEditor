@@ -23,12 +23,12 @@ std::unordered_map<std::string, materialFile> materials;
 std::unordered_map<std::string, xbtFile> textures;
 
 void reloadSettings() {
-	std::string contents = readFile("settings.json");
-	unserializeFromJSON(settings, contents.c_str());
+	std::string contents = readFile("settings.xml");
+	unserializeFromXML(settings, contents.c_str());
 	if (settings.searchPaths.empty() || settings.patchDir.empty()) {
 		//Fill with sample files
 		saveSettings();
-		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Disrupt Editor is not configured", "You must first setup Disrupt Editor by editing settings.json\nPlease see the readme for more details.", NULL);
+		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Disrupt Editor is not configured", "You must first setup Disrupt Editor by editing settings.xml\nPlease see the readme for more details.", NULL);
 		exit(0);
 	}
 
@@ -43,7 +43,7 @@ void reloadSettings() {
 }
 
 void saveSettings() {
-	bool ret = writeFile("settings.json", serializeToJSON(settings));
+	bool ret = writeFile("settings.xml", serializeToXML(settings));
 	SDL_assert_release(ret);
 }
 

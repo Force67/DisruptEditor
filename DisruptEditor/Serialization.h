@@ -1,8 +1,6 @@
 #pragma once
 
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/prettywriter.h"
+#include "tinyxml2.h"
 #include <string>
 #include <vector>
 #include <map>
@@ -12,21 +10,21 @@
 
 #define REGISTER_MEMBER(x) ms.registerMember(#x, x)
 
-rapidjson::Value* getRef(const char* name, rapidjson::Value *it, rapidjson::Document *doc, bool create);
-
 template <typename T>
 void toString(char *buf, size_t bufSize, T value);
 
 template<typename T>
 inline std::string toString(T value) {
 	std::string str;
-	str.reserve(128);
-	toString(str.data(), 128, value);
+	str.resize(65535, '\0');
+	toString(str.data(), 65535, value);
 	return str;
 }
 
 template <typename T>
-T fromString(const char *buf);
+void fromString(const char *buf, T &value);
+
+size_t XMLNumChildren(tinyxml2::XMLElement* it);
 
 class MemberStructure {
 public:
@@ -60,10 +58,10 @@ public:
 	REG_MEMBER(std::string)
 #undef REG_MEMBER
 
-	enum Type { TOJSON, FROMJSON, IMGUI };
+	enum Type { TOXML, FROMXML, IMGUI };
 	Type type;
-	rapidjson::Document *doc;
-	rapidjson::Value *it;
+	tinyxml2::XMLElement *it;
+	tinyxml2::XMLPrinter* printer;
 
 	//In your class you need
 	//void registerMembers(MemberStructure &ms);
@@ -72,31 +70,26 @@ public:
 template<typename T>
 inline void MemberStructure::registerMember(const char * name, std::vector<T>& value) {
 	switch (type) {
-		case TOJSON:
+		case TOXML:
 		{
-			rapidjson::Value *itBack = it;
-			itBack->AddMember(rapidjson::Value(name, doc->GetAllocator()).Move(), rapidjson::Value(rapidjson::kArrayType).Move(), doc->GetAllocator());
-			rapidjson::Value &arr = (*itBack)[name];
+			printer->OpenElement(name);
 			for (int i = 0; i < value.size(); ++i) {
-				arr.PushBack(rapidjson::Value(rapidjson::kObjectType).Move(), doc->GetAllocator());
-				it = &arr[i];
-				registerMember(NULL, value[i]);
+				registerMember("Elem", value[i]);
 			}
-			it = itBack;
+			printer->CloseElement();
 			return;
 		}
-		case FROMJSON:
+		case FROMXML:
 		{
-			if (!it->HasMember(name))
-				return;
-
-			rapidjson::Value *itBack = it;
-
-			rapidjson::Value &arr = (*it)[name];
-			value.resize(arr.Size());
-			for (rapidjson::SizeType i = 0; i < arr.Size(); ++i) {
-				it = &arr[i];
-				registerMember(NULL, value[i]);
+			tinyxml2::XMLElement* itBack = it;
+			it = it->FirstChildElement(name);
+			if (it) {
+				value.clear();
+				it = it->FirstChildElement();
+				while (it) {
+					registerMember(NULL, value.emplace_back());
+					it = it->NextSiblingElement();
+				}
 			}
 			it = itBack;
 			return;
@@ -130,26 +123,18 @@ inline void MemberStructure::registerMember(const char * name, std::vector<T>& v
 template<typename T>
 inline void MemberStructure::registerMember(const char *name, T &value) {
 	switch (type) {
-		case TOJSON:
+		case TOXML:
 		{
-			rapidjson::Value *ref = it;
-			if (name) {
-				it->AddMember(rapidjson::Value(name, doc->GetAllocator()).Move(), rapidjson::Value().Move(), doc->GetAllocator());
-				ref = &(*it)[name];
-			}
-			ref->SetObject();
-			serializeToJSON(value, ref, doc);
+			printer->OpenElement(name);
+			value.registerMembers(*this);
+			printer->CloseElement();
 			return;
 		}
-		case FROMJSON:
+		case FROMXML:
 		{
-			rapidjson::Value *ref = it;
-			if (name) {
-				if (!it->HasMember(name))
-					return;
-				ref = &(*it)[name];
-			}
-			unserializeFromJSON(value, ref);
+			tinyxml2::XMLElement* ref = it->FirstChildElement(name);
+			if (ref)
+				unserializeFromXML(value, ref);
 			return;
 		}
 		case IMGUI:
@@ -163,30 +148,27 @@ inline void MemberStructure::registerMember(const char *name, T &value) {
 template<typename K, typename V>
 inline void MemberStructure::registerMember(const char * name, std::map<K, V>& value) {
 	switch (type) {
-		case TOJSON:
+		case TOXML:
 		{
-			rapidjson::Value *itBack = it;
-			itBack->AddMember(rapidjson::Value(name, doc->GetAllocator()).Move(), rapidjson::Value(rapidjson::kObjectType).Move(), doc->GetAllocator());
-			rapidjson::Value &arr = (*itBack)[name];
-			it = &arr;
+			printer->OpenElement(name);
 			for (typename std::map<K, V>::iterator v = value.begin(); v != value.end(); ++v) {
 				registerMember(toString(v->first).c_str(), v->second);
 			}
-			it = itBack;
+			printer->CloseElement();
 			return;
 		}
-		case FROMJSON:
+		case FROMXML:
 		{
-			if (!it->HasMember(name))
-				return;
-
-			rapidjson::Value *itBack = it;
-
-			rapidjson::Value &arr = (*it)[name];
-			it = &arr;
-			value.clear();
-			for (rapidjson::Value::ConstMemberIterator itr = arr.MemberBegin(); itr != arr.MemberEnd(); ++itr) {
-				registerMember(itr->name.GetString(), value[fromString<K>(itr->name.GetString())]);
+			tinyxml2::XMLElement* itBack = it;
+			it = it->FirstChildElement(name);
+			if (it) {
+				value.clear();
+				while (it) {
+					K key;
+					fromString(it->Name(), key);
+					registerMember(it->Name(), value[key]);
+					it = it->NextSiblingElement();
+				}
 			}
 			it = itBack;
 			return;
@@ -203,40 +185,37 @@ inline void MemberStructure::registerMember(const char * name, std::map<K, V>& v
 }
 
 template<typename T>
-inline void serializeToJSON(T & value, rapidjson::Value *it, rapidjson::Document *doc) {
+inline void serializeToXML(T & value, tinyxml2::XMLPrinter *printer) {
 	MemberStructure ms;
-	ms.type = MemberStructure::TOJSON;
-	ms.it = it;
-	ms.doc = doc;
+	ms.type = MemberStructure::TOXML;
+	ms.printer = printer;
 	value.registerMembers(ms);
 }
 
 template<typename T>
-inline std::string serializeToJSON(T & value) {
-	rapidjson::Document doc;
-	doc.SetObject();
-	serializeToJSON(value, &doc, &doc);
-	
-	rapidjson::StringBuffer buffer;
-	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
-	doc.Accept(writer);
-	return buffer.GetString();
+inline std::string serializeToXML(T & value) {
+	tinyxml2::XMLPrinter printer;
+	printer.OpenElement("Root");
+	serializeToXML(value, &printer);
+	printer.CloseElement();
+	return std::string(printer.CStr());
 }
 
 template <typename T>
-inline void unserializeFromJSON(T& value, rapidjson::Value *it) {
+inline void unserializeFromXML(T& value, tinyxml2::XMLElement *it) {
 	MemberStructure ms;
-	ms.type = MemberStructure::FROMJSON;
+	ms.type = MemberStructure::FROMXML;
 	ms.it = it;
 	value.registerMembers(ms);
 }
 
 template <typename T>
-inline void unserializeFromJSON(T& value, const char* str) {
+inline void unserializeFromXML(T& value, const char* str) {
 	if (!str || *str == '\0') return;
-	rapidjson::Document doc;
-	doc.Parse(str);
-	unserializeFromJSON(value, &doc);
+	tinyxml2::XMLDocument doc;
+	tinyxml2::XMLError ret = doc.Parse(str);
+	if(ret == tinyxml2::XML_SUCCESS)
+		unserializeFromXML(value, doc.RootElement());
 }
 
 template <typename T>

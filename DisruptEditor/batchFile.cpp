@@ -313,14 +313,14 @@ void batchFile::IBatchProcessor::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(type);
 	REGISTER_MEMBER(unk2);
 
-	if(graphicBatch)
-		REGISTER_MEMBER(*graphicBatch);
+	if (graphicBatch)
+		ms.registerMember("graphicBatch", *graphicBatch);
 	if (soundPointBatch)
-		REGISTER_MEMBER(*soundPointBatch);
+		ms.registerMember("soundPointBatch", *soundPointBatch);
 	if (blackoutEffectBatch)
-		REGISTER_MEMBER(*blackoutEffectBatch);
+		ms.registerMember("blackoutEffectBatch", *blackoutEffectBatch);
 	if (particlesBatch)
-		REGISTER_MEMBER(*particlesBatch);
+		ms.registerMember("particlesBatch", *particlesBatch);
 }
 
 void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
