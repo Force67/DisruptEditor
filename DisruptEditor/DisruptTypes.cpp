@@ -60,7 +60,8 @@ void CMaterialSlotValue::registerMembers(MemberStructure & ms) {
 
 void CMaterialResource::read(IBinaryArchive& fp) {
 	fp.serialize(file.id);
-	fp.serialize(type.id);
+	if(file.id != -1)
+		fp.serialize(type.id);
 }
 
 void CMaterialResource::registerMembers(MemberStructure & ms) {

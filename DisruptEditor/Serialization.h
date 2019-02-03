@@ -163,6 +163,7 @@ inline void MemberStructure::registerMember(const char * name, std::map<K, V>& v
 			it = it->FirstChildElement(name);
 			if (it) {
 				value.clear();
+				it = it->FirstChildElement();
 				while (it) {
 					K key;
 					fromString(it->Name(), key);

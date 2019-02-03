@@ -231,10 +231,10 @@ void batchFile::CGraphicBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(rangeCount);
 
 	//CClusterHelper
+	SDL_Log("Tell3: %u\n\n", fp.tell());
 	CStringID type;
 	fp.serialize(type.id);
 	assert_file_crash(type.id == 0x2C9D950A);
-	SDL_Log("Tell3: %u\n\n", fp.tell());
 		
 	//Ptr to data
 	//Calls ClusterDataSwapBytes(ptr, stride, type);
