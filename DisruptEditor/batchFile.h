@@ -102,6 +102,18 @@ public:
 		void registerMembers(MemberStructure& ms);
 	};
 
+	struct CParticlesBatchProcessor {
+		CParticlesSystemParamResource paramFile;
+		bool hasBatchInstanceIDs;
+		uint32_t unk2;
+		CBatchedInstanceID batchedInstanceID;
+		uint32_t unk3;
+		Vector<CParticlesSystemHdl> hdls;
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
 	struct IBatchProcessor {
 		uint32_t unk1;
 		CStringID type;
@@ -110,6 +122,7 @@ public:
 		std::unique_ptr<CGraphicBatchProcessor> graphicBatch;
 		std::unique_ptr<CSoundPointBatchProcessor> soundPointBatch;
 		std::unique_ptr<CBlackoutEffectBatchProcessor> blackoutEffectBatch;
+		std::unique_ptr<CParticlesBatchProcessor> particlesBatch;
 
 		void registerMembers(MemberStructure &ms);
 	};

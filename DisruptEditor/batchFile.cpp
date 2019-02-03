@@ -11,12 +11,11 @@
 #include "IBinaryArchive.h"
 
 //Game stores ptr in 0x20 of r3, size in 0x24
-
-void writeString(SDL_RWops *fp, bool bigEndian, const std::string &str) {
-	uint32_t len = str.size();
-	bigEndian ? SDL_WriteBE32(fp, len) : SDL_WriteLE32(fp, len);
-	SDL_RWwrite(fp, &str[0], 1, len);
+void crashFileHandler() {
+	throw 0;
 }
+
+#define assert_file_crash(x) { SDL_assert_release(x); if(!(x)) crashFileHandler(); }
 
 bool batchFile::open(SDL_RWops *fp) {
 	if (!fp) return false;
@@ -26,25 +25,25 @@ bool batchFile::open(SDL_RWops *fp) {
 	size_t size = reader.size();
 
 	reader.memBlock(&head, sizeof(head), 1);
-	SDL_assert_release(head.magic == 1112818504);
-	SDL_assert_release(head.unk1 == 32);
-	SDL_assert_release(head.type == 0 || head.type == 1);
-	SDL_assert_release(head.size == size - sizeof(head));
-	SDL_assert_release(head.unk4 == 0);
-	SDL_assert_release(head.unk5 == 0);
-	SDL_assert_release(head.unk6 == 0);
-	//SDL_assert_release(head.unk7 == 0);
-	//SDL_assert_release(head.unk8 == 0);
-	//SDL_assert_release(head.unk9 == 0);
-	//SDL_assert_release(head.unk10 == 0);
+	assert_file_crash(head.magic == 1112818504);
+	assert_file_crash(head.unk1 == 32);
+	assert_file_crash(head.type == 0 || head.type == 1);
+	assert_file_crash(head.size == size - sizeof(head));
+	assert_file_crash(head.unk4 == 0);
+	assert_file_crash(head.unk5 == 0);
+	assert_file_crash(head.unk6 == 0);
+	//assert_file_crash(head.unk7 == 0);
+	//assert_file_crash(head.unk8 == 0);
+	//assert_file_crash(head.unk9 == 0);
+	//assert_file_crash(head.unk10 == 0);
 
 	if (head.type == 0) {
-		//SDL_assert_release(strstr(filename, "_compound.cbatch"));
-		SDL_assert_release(head.size + sizeof(head) == size);
+		//assert_file_crash(strstr(filename, "_compound.cbatch"));
+		assert_file_crash(head.size + sizeof(head) == size);
 
 		reader.memBlock(&compound, sizeof(compound), 1);
 
-		//SDL_assert_release(compound.unk3 == 0);
+		//assert_file_crash(compound.unk3 == 0);
 
 		reader.serialize(srcFilename);
 		seekpad(fp, 4);
@@ -65,7 +64,7 @@ bool batchFile::open(SDL_RWops *fp) {
 
 		componentMBP.read(reader);
 	} else if (head.type == 1) {
-		//SDL_assert_release(strstr(filename, "_phys.cbatch"));
+		//assert_file_crash(strstr(filename, "_phys.cbatch"));
 	}
 
 	/*
@@ -91,7 +90,7 @@ void batchFile::write(SDL_RWops * fp) {
 
 	SDL_RWwrite(fp, &head, sizeof(head), 1);
 	SDL_RWwrite(fp, &compound, sizeof(compound), 1);
-	writeString(fp, false, srcFilename);
+	//writeString(fp, false, srcFilename);
 	writepad(fp, 4);
 
 	SDL_WriteLE32(fp, resources.size());
@@ -115,7 +114,7 @@ void batchFile::CComponentMultiBatchProcessor::read(IBinaryArchive& fp) {
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchModelProcessorsAndResources *, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
 
 	fp.serialize(unk1);
-	SDL_assert_release(unk1 == 1);//If this is zero it looks like we should just skip the rest of this code, however none of the files contain 0 so I won't bother
+	assert_file_crash(unk1 == 1);//If this is zero it looks like we should just skip the rest of this code, however none of the files contain 0 so I won't bother
 
 	uint32_t batchCount;
 	fp.serialize(batchCount);
@@ -127,7 +126,7 @@ void batchFile::CComponentMultiBatchProcessor::read(IBinaryArchive& fp) {
 
 		uint32_t unk2;
 		fp.serialize(unk2);
-		SDL_assert_release(unk2 == 0);
+		assert_file_crash(unk2 == 0);
 
 		SDL_Log("CBatchModelProcessorsAndResources %u", fp.tell());
 		fp.serialize(batch.type.id);
@@ -136,7 +135,7 @@ void batchFile::CComponentMultiBatchProcessor::read(IBinaryArchive& fp) {
 		if (typeName == "CBatchModelProcessorsAndResources") {
 			batch.batchModel.read(fp);
 		} else {
-			SDL_assert_release(false && "BatchProcessorAndResources not implemented");
+			assert_file_crash(false && "BatchProcessorAndResources not implemented");
 			return;
 		}
 	}
@@ -150,7 +149,7 @@ void batchFile::CBatchModelProcessorsAndResources::read(IBinaryArchive& fp) {
 
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<IBatchProcessor *, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
 	//unk1 = SDL_ReadLE32(fp);
-	//SDL_assert_release(unk1 == 1);
+	//assert_file_crash(unk1 == 1);
 	
 	uint32_t batchProcessorCount;
 	fp.serialize(batchProcessorCount);
@@ -179,8 +178,12 @@ void batchFile::CBatchModelProcessorsAndResources::read(IBinaryArchive& fp) {
 			batch.blackoutEffectBatch = std::make_unique<CBlackoutEffectBatchProcessor>();
 			batch.blackoutEffectBatch->read(fp);
 		}
+		else if (typeName == "CParticlesBatchProcessor") {
+			batch.particlesBatch = std::make_unique<CParticlesBatchProcessor>();
+			batch.particlesBatch->read(fp);
+		}
 		else {
-			SDL_assert_release(false && "IBatchProcessor not implemented");
+			assert_file_crash(false && "IBatchProcessor not implemented");
 			return;
 		}
 
@@ -230,13 +233,13 @@ void batchFile::CGraphicBatchProcessor::read(IBinaryArchive& fp) {
 	//CClusterHelper
 	CStringID type;
 	fp.serialize(type.id);
-	SDL_assert_release(type.id == 0x2C9D950A);
+	assert_file_crash(type.id == 0x2C9D950A);
 	SDL_Log("Tell3: %u\n\n", fp.tell());
 		
 	//Ptr to data
 	//Calls ClusterDataSwapBytes(ptr, stride, type);
 
-	SDL_assert_release(!hasBatchInstanceID);
+	assert_file_crash(!hasBatchInstanceID);
 	/*if (hasBatchInstanceID) {
 		uint32_t unkc1 = SDL_ReadLE32(fp);
 		uint32_t unkc2 = SDL_ReadLE32(fp);
@@ -316,6 +319,8 @@ void batchFile::IBatchProcessor::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*soundPointBatch);
 	if (blackoutEffectBatch)
 		REGISTER_MEMBER(*blackoutEffectBatch);
+	if (particlesBatch)
+		REGISTER_MEMBER(*particlesBatch);
 }
 
 void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
@@ -348,14 +353,14 @@ void batchFile::CSoundPointBatchProcessor::read(IBinaryArchive& fp) {
 
 	uint32_t ndSoundHandleType;
 	fp.serialize(ndSoundHandleType);
-	SDL_assert_release(ndSoundHandleType == 0x36C7FB6A);
+	assert_file_crash(ndSoundHandleType == 0x36C7FB6A);
 
 	fp.serialize(unk4);
 	fp.serialize(unk5);
 
 	uint32_t SBatchedSoundPointType;
 	fp.serialize(SBatchedSoundPointType);
-	SDL_assert_release(SBatchedSoundPointType == 0xB29388DD);
+	assert_file_crash(SBatchedSoundPointType == 0xB29388DD);
 
 	fp.serialize(unk6);
 	fp.serialize(unk7);
@@ -383,7 +388,7 @@ void batchFile::CBlackoutEffectBatchProcessor::read(IBinaryArchive& fp) {
 
 	uint32_t SEffectPosAndAngleType;
 	fp.serialize(SEffectPosAndAngleType);
-	SDL_assert_release(SEffectPosAndAngleType == 495023964);
+	assert_file_crash(SEffectPosAndAngleType == 495023964);
 
 	fp.serialize(unk3);
 	fp.serialize(unk4);
@@ -397,7 +402,7 @@ void batchFile::CBlackoutEffectBatchProcessor::read(IBinaryArchive& fp) {
 		fp.serialize(batchedInstanceID);
 		SDL_Log("Tell: %u", fp.tell());
 	}
-	SDL_assert_release(hasBatchInstanceIDs);
+	assert_file_crash(hasBatchInstanceIDs);
 
 	fp.serialize(libraryObject);
 	//CNomadDb::GenRecoverLibraryObject(const(CStringID,libraryObject))
@@ -421,4 +426,45 @@ void batchFile::CBlackoutEffectBatchProcessor::SEffectPosAndAngle::read(IBinaryA
 void batchFile::CBlackoutEffectBatchProcessor::SEffectPosAndAngle::registerMembers(MemberStructure& ms) {
 	REGISTER_MEMBER(pos);
 	REGISTER_MEMBER(angle);
+}
+
+void batchFile::CParticlesBatchProcessor::read(IBinaryArchive& fp) {
+	paramFile.read(fp);
+	fp.serialize(hasBatchInstanceIDs);
+	fp.serialize(unk2);
+
+	if (hasBatchInstanceIDs) {
+		//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchedInstanceID, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
+		fp.serialize(batchedInstanceID);
+	}
+	assert_file_crash(hasBatchInstanceIDs);
+
+	SDL_Log("Tell: %u", fp.tell());
+
+	uint32_t counter;
+	fp.serialize(counter);
+
+	uint32_t CParticlesSystemHdlType;
+	fp.serialize(CParticlesSystemHdlType);
+	assert_file_crash(CParticlesSystemHdlType == 0x16BB23DD);
+
+	uint32_t counterAgain;
+	fp.serialize(unk3);
+	fp.serialize(counterAgain);
+	assert_file_crash(counterAgain == counter);
+
+	hdls.resize(counter);
+	for (uint32_t i = 0; i < counter; ++i)
+		hdls[i].read(fp);
+
+	SDL_Log("Tell: %u", fp.tell());
+}
+
+void batchFile::CParticlesBatchProcessor::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(paramFile);
+	REGISTER_MEMBER(hasBatchInstanceIDs);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(batchedInstanceID);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(hdls);
 }

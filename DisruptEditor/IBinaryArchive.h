@@ -22,6 +22,7 @@ public:
 	virtual void serialize(glm::vec2& value) = 0;
 	virtual void serialize(glm::vec3& value) = 0;
 	virtual void serialize(glm::vec4& value) = 0;
+	virtual void serialize(glm::mat4& value) = 0;
 	virtual void serialize(std::string& value) = 0;
 	virtual bool isReading() const = 0;
 	virtual void pad(size_t padding) = 0;
@@ -50,6 +51,7 @@ public:
 	virtual void serialize(glm::vec2& value);
 	virtual void serialize(glm::vec3& value);
 	virtual void serialize(glm::vec4& value);
+	virtual void serialize(glm::mat4& value);
 	virtual void serialize(std::string& value);
 	virtual bool isReading() const;
 	virtual void pad(size_t padding);

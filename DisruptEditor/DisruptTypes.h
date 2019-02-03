@@ -86,6 +86,19 @@ struct SBatchedSoundPointTransform {
 
 };
 
+struct CParticlesSystemParamResource {
+	CPathID file;
+	CStringID type;
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+struct CParticlesSystemHdl {
+	glm::mat4 unk1;
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
 struct STerrainSectorPackedData {
 	uint8_t unk[0x5ab0];
 };

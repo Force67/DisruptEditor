@@ -119,3 +119,21 @@ void SInstanceRange::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk11);
 	REGISTER_MEMBER(unk12);
 }
+
+void CParticlesSystemParamResource::read(IBinaryArchive& fp) {
+	fp.serialize(file.id);
+	fp.serialize(type.id);
+}
+
+void CParticlesSystemParamResource::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(file);
+	REGISTER_MEMBER(type);
+}
+
+void CParticlesSystemHdl::read(IBinaryArchive& fp) {
+	fp.serialize(unk1);
+}
+
+void CParticlesSystemHdl::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(unk1);
+}

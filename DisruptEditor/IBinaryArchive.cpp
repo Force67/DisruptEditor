@@ -72,6 +72,11 @@ void CBinaryArchiveReader::serialize(glm::vec4& value) {
 	SDL_RWread(fp, &value, sizeof(value), 1);
 }
 
+void CBinaryArchiveReader::serialize(glm::mat4& value) {
+	pad(4);
+	SDL_RWread(fp, &value, sizeof(value), 1);
+}
+
 void CBinaryArchiveReader::serialize(std::string& value) {
 	uint32_t len;
 	serialize(len);
