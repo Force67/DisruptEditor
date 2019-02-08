@@ -182,6 +182,10 @@ void batchFile::CBatchModelProcessorsAndResources::read(IBinaryArchive& fp) {
 			batch.particlesBatch = std::make_unique<CParticlesBatchProcessor>();
 			batch.particlesBatch->read(fp);
 		}
+		else if (typeName == "CDynamicLightBatchProcessor") {
+			batch.dynamicLightBatch = std::make_unique<CDynamicLightBatchProcessor>();
+			batch.dynamicLightBatch->read(fp);
+		}
 		else {
 			assert_file_crash(false && "IBatchProcessor not implemented");
 			return;
@@ -321,6 +325,8 @@ void batchFile::IBatchProcessor::registerMembers(MemberStructure & ms) {
 		ms.registerMember("blackoutEffectBatch", *blackoutEffectBatch);
 	if (particlesBatch)
 		ms.registerMember("particlesBatch", *particlesBatch);
+	if (dynamicLightBatch)
+		ms.registerMember("dynamicLightBatch", *dynamicLightBatch);
 }
 
 void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
@@ -467,4 +473,35 @@ void batchFile::CParticlesBatchProcessor::registerMembers(MemberStructure& ms) {
 	REGISTER_MEMBER(batchedInstanceID);
 	REGISTER_MEMBER(unk3);
 	REGISTER_MEMBER(hdls);
+}
+
+void batchFile::CDynamicLightBatchProcessor::read(IBinaryArchive& fp) {
+	lightObject.read(fp);
+	fp.serialize(hasBatchInstanceIDs);
+	if (hasBatchInstanceIDs) {
+		//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchedInstanceID, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
+		fp.serialize(batchedInstanceID);
+	}
+	assert_file_crash(hasBatchInstanceIDs);
+
+	uint32_t counter;
+	fp.serialize(counter);
+	SDL_Log("Tell: %u", fp.tell());
+
+	uint32_t unknownTypeID = 0xFB4B8BEB;
+	fp.serialize(unknownTypeID);
+	assert_file_crash(unknownTypeID == 0xFB4B8BEB);
+
+	unk1.resize(counter);
+	for (uint32_t i = 0; i < counter; ++i)
+		unk1[i].read(fp);
+
+	
+}
+
+void batchFile::CDynamicLightBatchProcessor::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(lightObject);
+	REGISTER_MEMBER(hasBatchInstanceIDs);
+	REGISTER_MEMBER(batchedInstanceID);
+	REGISTER_MEMBER(unk1);
 }

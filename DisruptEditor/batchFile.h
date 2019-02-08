@@ -114,6 +114,21 @@ public:
 		void registerMembers(MemberStructure& ms);
 	};
 
+	
+
+	struct CDynamicLightBatchProcessor {
+		CDynamicLightObject lightObject;
+		bool hasBatchInstanceIDs;
+		CBatchedInstanceID batchedInstanceID;
+
+		Vector<CUnknownLightType> unk1;
+
+		
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
 	struct IBatchProcessor {
 		uint32_t unk1;
 		CStringID type;
@@ -123,6 +138,7 @@ public:
 		std::unique_ptr<CSoundPointBatchProcessor> soundPointBatch;
 		std::unique_ptr<CBlackoutEffectBatchProcessor> blackoutEffectBatch;
 		std::unique_ptr<CParticlesBatchProcessor> particlesBatch;
+		std::unique_ptr<CDynamicLightBatchProcessor> dynamicLightBatch;
 
 		void registerMembers(MemberStructure &ms);
 	};

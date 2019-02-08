@@ -59,3 +59,28 @@ public:
 	virtual size_t tell();
 	virtual void memBlock(void* ptr, size_t objSize, size_t objCount);
 };
+
+class CBinaryArchiveWriter : public IBinaryArchive {
+public:
+	virtual void serialize(bool& value);
+	virtual void serialize(uint8_t& value);
+	virtual void serialize(int8_t& value);
+	virtual void serialize(uint16_t& value);
+	virtual void serialize(int16_t& value);
+	virtual void serialize(uint32_t& value);
+	virtual void serialize(int32_t& value);
+	virtual void serialize(uint64_t& value);
+	virtual void serialize(int64_t& value);
+	virtual void serialize(float& value);
+	virtual void serialize(double& value);
+	virtual void serialize(glm::vec2& value);
+	virtual void serialize(glm::vec3& value);
+	virtual void serialize(glm::vec4& value);
+	virtual void serialize(glm::mat4& value);
+	virtual void serialize(std::string& value);
+	virtual bool isReading() const;
+	virtual void pad(size_t padding);
+	virtual size_t size();
+	virtual size_t tell();
+	virtual void memBlock(void* ptr, size_t objSize, size_t objCount);
+};

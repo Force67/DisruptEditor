@@ -99,6 +99,113 @@ struct CParticlesSystemHdl {
 	void registerMembers(MemberStructure& ms);
 };
 
+struct CSceneLightTargets {
+	float unk1;
+	bool unk2;
+	bool unk3;
+	bool unk4;
+	bool unk5;
+	bool unk6;
+	bool unk7;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+struct CSceneLightClipPlane {
+	float angle1;
+	float angle2;
+	float unk1;
+	float unk2;
+	bool unk3;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+typedef uint32_t ESceneLightType;
+
+struct CDynamicLightSettings {
+	ESceneLightType type;
+	bool unk1;
+	bool unk2;
+	float unk3;
+	float unk4;
+	bool unk5;
+	bool unk6;
+	bool unk7;
+	bool unk8;
+	CSceneLightTargets targets;
+	uint32_t unk9;
+	int32_t unk10;
+	glm::vec3 unk11;
+	float unk12;
+	float unk13;
+	float unk14;
+	float unk15;
+	uint32_t unk16;
+	uint32_t unk17;
+	uint32_t unk18;
+	float unk19;
+	float unk20;
+	float unk21;
+	float unk22;
+	float unk23;
+	float unk24;
+	float unk25;
+	float unk26;
+	glm::vec3 unk27;
+	float unk28;
+	float unk29;
+	float unk30;
+	float unk31;
+	float unk32;
+	float unk33;
+	float unk34;
+	float unk35;
+	glm::vec2 unk36;
+	float unk37;
+	float unk38;
+	CPathID unk39;
+	CPathID unk40;
+	float unk41;
+	bool unk42;
+	bool unk43;
+	int32_t unk44;
+	bool unk45;
+	bool unk46;
+	Vector<CSceneLightClipPlane> clipPlanes;
+	bool unk47;
+	bool unk48;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+struct CDynamicLightObject {
+	bool unk1;
+	bool unk2;
+	glm::vec3 unk3;
+	float unk4;
+	CDynamicLightSettings settings;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+struct CUnknownLightType { //2461405956
+	Vector<CSceneLightClipPlane> clipPlanes;
+	glm::vec3 unk1;
+	glm::vec3 unk2;
+	glm::vec3 unk3;
+	float unk4;
+	float unk5;
+	float unk6;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
 struct STerrainSectorPackedData {
 	uint8_t unk[0x5ab0];
 };
