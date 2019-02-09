@@ -196,6 +196,10 @@ void batchFile::CBatchModelProcessorsAndResources::read(IBinaryArchive& fp) {
 			batch.lightEffectBatch = std::make_unique<CLightEffectBatchProcessor>();
 			batch.lightEffectBatch->read(fp);
 		}
+		else if (typeName == "CSecurityCameraBatchProcessor") {
+			batch.securityCameraBatch = std::make_unique<CSecurityCameraBatchProcessor>();
+			batch.securityCameraBatch->read(fp);
+		}
 		else {
 			assert_file_crash(false && "IBatchProcessor not implemented");
 			return;
@@ -335,6 +339,8 @@ void batchFile::IBatchProcessor::registerMembers(MemberStructure & ms) {
 		ms.registerMember("dynamicLightBatch", *dynamicLightBatch);
 	if (lightEffectBatch)
 		ms.registerMember("lightEffectBatch", *lightEffectBatch);
+	if (securityCameraBatch)
+		ms.registerMember("securityCameraBatch", *securityCameraBatch);
 }
 
 void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
@@ -458,7 +464,6 @@ void batchFile::CParticlesBatchProcessor::read(IBinaryArchive& fp) {
 		//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchedInstanceID, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
 		batchedInstanceID.read(fp);
 	}
-	assert_file_crash(hasBatchInstanceIDs);
 
 	SDL_Log("Tell: %u", fp.tell());
 
@@ -548,4 +553,45 @@ void batchFile::CLightEffectBatchProcessor::registerMembers(MemberStructure& ms)
 	REGISTER_MEMBER(batchedInstanceID);
 	REGISTER_MEMBER(unk2);
 	REGISTER_MEMBER(instances);
+}
+
+void batchFile::CSecurityCameraBatchProcessor::read(IBinaryArchive& fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	xbg.read(fp);
+	materialSlots.read(fp);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+
+	fp.serialize(hasUnk);
+	if (hasUnk) {
+		fp.serialize(unk6);
+		fp.serialize(unk7);
+		arche.read(fp);
+		SDL_Log("CSecurityCameraBatchProcessor type=%s path=%s", arche.type.getReverseName().c_str(), arche.file.getReverseFilename().c_str());
+		info.read(fp);
+		SDL_Log("Tell: %u", fp.tell());
+		fp.serialize(unk8);
+		fp.serializeNdVector(objects, 0x91B64372, unk9);
+		SDL_Log("Tell2: %u", fp.tell());
+	}
+}
+
+void batchFile::CSecurityCameraBatchProcessor::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(xbg);
+	REGISTER_MEMBER(materialSlots);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(hasUnk);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
+	REGISTER_MEMBER(arche);
+	REGISTER_MEMBER(info);
+	REGISTER_MEMBER(unk8);
+	REGISTER_MEMBER(unk9);
+	REGISTER_MEMBER(objects);
 }

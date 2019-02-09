@@ -315,4 +315,25 @@ struct CSceneLightEffectInstance {
 	void registerMembers(MemberStructure& ms);
 };
 
+struct SSecurityCameraBatchArchetypeInformation {
+	int64_t unk1;
+	int64_t unk2;
+	glm::vec3 unk3;
+	uint32_t unk4;
+	Vector<glm::vec3> unk5;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+struct CSecurityCameraObjectBatched {
+	bool has;
+	glm::mat4 unk1;
+	uint64_t unk2;
+	CBatchedInstanceID instance;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
 #pragma pack(pop)

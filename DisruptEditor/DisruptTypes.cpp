@@ -513,3 +513,35 @@ void CSceneLightEffectInstance::registerMembers(MemberStructure& ms) {
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(unk2);
 }
+
+void SSecurityCameraBatchArchetypeInformation::read(IBinaryArchive& fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serializeNdVectorExternal_pod(unk5);
+}
+
+void SSecurityCameraBatchArchetypeInformation::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+}
+
+void CSecurityCameraObjectBatched::read(IBinaryArchive& fp) {
+	fp.serialize(has);
+	if (has) {
+		fp.serialize(unk1);
+		fp.serialize(unk2);
+		instance.read(fp);
+	}
+}
+
+void CSecurityCameraObjectBatched::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(has);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(instance);
+}

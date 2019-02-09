@@ -35,6 +35,9 @@ public:
 	void serializeNdVectorExternal(Vector<T>& vec);
 
 	template<typename T>
+	void serializeNdVectorExternal_pod(Vector<T>& vec);
+
+	template<typename T>
 	void serializeNdVector(Vector<T>& vec, uint32_t typeId, uint32_t& unk);
 
 	SDL_RWops* fp;
@@ -105,6 +108,22 @@ inline void IBinaryArchive::serializeNdVectorExternal(Vector<T>& vec) {
 		uint32_t count = vec.size();
 		for (uint32_t i = 0; i < count; ++i)
 			vec[i].read(*this);
+	}
+}
+
+template<typename T>
+inline void IBinaryArchive::serializeNdVectorExternal_pod(Vector<T>& vec) {
+	if (isReading()) {
+		uint32_t count;
+		serialize(count);
+		vec.resize(count);
+		for (uint32_t i = 0; i < count; ++i)
+			serialize(vec[i]);
+	}
+	else {
+		uint32_t count = vec.size();
+		for (uint32_t i = 0; i < count; ++i)
+			serialize(vec[i]);
 	}
 }
 

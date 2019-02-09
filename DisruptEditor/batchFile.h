@@ -141,6 +141,28 @@ public:
 		void registerMembers(MemberStructure& ms);
 	};
 
+	struct CSecurityCameraBatchProcessor {
+		bool unk1;
+		bool unk2;
+		CGeometryResource xbg;
+		CMaterialSlotsMap materialSlots;
+		uint32_t unk3;
+		bool unk4;
+		bool unk5;
+
+		uint32_t hasUnk;
+		uint32_t unk6;
+		uint32_t unk7;
+		CArchetypeResource arche;
+		SSecurityCameraBatchArchetypeInformation info;
+		uint32_t unk8;
+		uint32_t unk9;
+		Vector<CSecurityCameraObjectBatched> objects;
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
 	struct IBatchProcessor {
 		uint32_t unk1;
 		CStringID type;
@@ -152,6 +174,7 @@ public:
 		std::unique_ptr<CParticlesBatchProcessor> particlesBatch;
 		std::unique_ptr<CDynamicLightBatchProcessor> dynamicLightBatch;
 		std::unique_ptr<CLightEffectBatchProcessor> lightEffectBatch;
+		std::unique_ptr<CSecurityCameraBatchProcessor> securityCameraBatch;
 
 		void registerMembers(MemberStructure &ms);
 	};
