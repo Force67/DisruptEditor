@@ -309,7 +309,7 @@ void CSceneLightClipPlane::registerMembers(MemberStructure& ms) {
 	REGISTER_MEMBER(bOccludeBounce);
 }
 
-void CUnknownLightType::read(IBinaryArchive& fp) {
+void CSceneLight::read(IBinaryArchive& fp) {
 	uint32_t count;
 	fp.serialize(count);
 
@@ -337,7 +337,7 @@ void CUnknownLightType::read(IBinaryArchive& fp) {
 	SDL_Log("Tell2: %u", fp.tell());
 }
 
-void CUnknownLightType::registerMembers(MemberStructure& ms) {
+void CSceneLight::registerMembers(MemberStructure& ms) {
 	REGISTER_MEMBER(clipPlanes);
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(unk2);
@@ -353,4 +353,163 @@ void CBatchedInstanceID::read(IBinaryArchive& fp) {
 
 void CBatchedInstanceID::registerMembers(MemberStructure& ms) {
 	ms.registerMember(NULL, id);
+}
+
+void CTextureResource::read(IBinaryArchive& fp) {
+	fp.serialize(file.id);
+	if (file.id != -1)
+		fp.serialize(type.id);
+}
+
+void CTextureResource::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(file);
+	REGISTER_MEMBER(type);
+}
+
+void CLightEffectObject::read(IBinaryArchive& fp) {
+	fileTexture.read(fp);
+	fp.serialize(bEnable);
+	fp.serialize(unk2);
+	effect.read(fp);
+}
+
+void CLightEffectObject::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(fileTexture);
+	REGISTER_MEMBER(bEnable);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(effect);
+}
+
+void CSceneLightEffect::read(IBinaryArchive& fp) {
+	SDL_Log("Tell: %u", fp.tell());
+
+	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVector<CLightEffectFlareElement, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>, false>]
+	fp.serializeNdVectorExternal(flares);
+
+	fp.serialize(effectType);
+	fp.serialize(sourceType);
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+	fp.serialize(unk6);
+	fp.serialize(unk7);
+	fp.serialize(unk8);
+	fp.serialize(unk9);
+	fp.serialize(unk10);
+	fp.serialize(unk11);
+	fp.serialize(unk12);
+	fp.serialize(unk13);
+	fp.serialize(unk14);
+	fp.serialize(unk15);
+	fp.serialize(unk16);
+	fp.serialize(unk17);
+	fp.serialize(unk18);
+	fp.serialize(unk19);
+	fp.serialize(unk20);
+	fp.serialize(unk21);
+	fp.serialize(unk22);
+	fp.serialize(unk23);
+	fp.serialize(unk24);
+	fp.serialize(unk25);
+	fp.serialize(unk26);
+	fp.serialize(unk27);
+	fp.serialize(unk28);
+	fp.serialize(unk29);
+	fp.serialize(unk30);
+	fp.serialize(unk31);
+	fp.serialize(unk32);
+	fp.serialize(ang1);
+	fp.serialize(unk33);
+	fp.serialize(unk34);
+	fp.serialize(unk35);
+	fp.serialize(unk36);
+	fp.serialize(unk37);
+	fp.serialize(unk38);
+	fp.serialize(unk39);
+	fp.serialize(unk40);
+	fp.serialize(unk41);
+}
+
+void CSceneLightEffect::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(flares);
+	REGISTER_MEMBER(effectType);
+	REGISTER_MEMBER(sourceType);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
+	REGISTER_MEMBER(unk8);
+	REGISTER_MEMBER(unk9);
+	REGISTER_MEMBER(unk10);
+	REGISTER_MEMBER(unk11);
+	REGISTER_MEMBER(unk12);
+	REGISTER_MEMBER(unk13);
+	REGISTER_MEMBER(unk14);
+	REGISTER_MEMBER(unk15);
+	REGISTER_MEMBER(unk16);
+	REGISTER_MEMBER(unk17);
+	REGISTER_MEMBER(unk18);
+	REGISTER_MEMBER(unk19);
+	REGISTER_MEMBER(unk20);
+	REGISTER_MEMBER(unk21);
+	REGISTER_MEMBER(unk22);
+	REGISTER_MEMBER(unk23);
+	REGISTER_MEMBER(unk24);
+	REGISTER_MEMBER(unk25);
+	REGISTER_MEMBER(unk26);
+	REGISTER_MEMBER(unk27);
+	REGISTER_MEMBER(unk28);
+	REGISTER_MEMBER(unk29);
+	REGISTER_MEMBER(unk30);
+	REGISTER_MEMBER(unk31);
+	REGISTER_MEMBER(unk32);
+	REGISTER_MEMBER(ang1);
+	REGISTER_MEMBER(unk33);
+	REGISTER_MEMBER(unk34);
+	REGISTER_MEMBER(unk35);
+	REGISTER_MEMBER(unk36);
+	REGISTER_MEMBER(unk37);
+	REGISTER_MEMBER(unk38);
+	REGISTER_MEMBER(unk39);
+	REGISTER_MEMBER(unk40);
+	REGISTER_MEMBER(unk41);
+}
+
+void CLightEffectFlareElement::read(IBinaryArchive& fp) {
+	fp.serialize(fScale);
+	fp.serialize(fScaleMin);
+	fp.serialize(fScaleMinThreshold);
+	fp.serialize(fOffset);
+	fp.serialize(iTextureSliceIndex);
+	fp.serialize(vectorColor);
+	fp.serialize(fRotationXAmount);
+	fp.serialize(fRotationYAmount);
+	fp.serialize(fFadeAngle);
+}
+
+void CLightEffectFlareElement::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(fScale);
+	REGISTER_MEMBER(fScaleMin);
+	REGISTER_MEMBER(fScaleMinThreshold);
+	REGISTER_MEMBER(fOffset);
+	REGISTER_MEMBER(iTextureSliceIndex);
+	REGISTER_MEMBER(vectorColor);
+	REGISTER_MEMBER(fRotationXAmount);
+	REGISTER_MEMBER(fRotationYAmount);
+	REGISTER_MEMBER(fFadeAngle);
+}
+
+void CSceneLightEffectInstance::read(IBinaryArchive& fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+}
+
+void CSceneLightEffectInstance::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
 }

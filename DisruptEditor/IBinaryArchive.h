@@ -35,7 +35,7 @@ public:
 	void serializeNdVectorExternal(Vector<T>& vec);
 
 	template<typename T>
-	void serializeNdVector(Vector<T>& vec);
+	void serializeNdVector(Vector<T>& vec, uint32_t typeId, uint32_t& unk);
 
 	SDL_RWops* fp;
 	bool bigEndian = false;
@@ -109,6 +109,24 @@ inline void IBinaryArchive::serializeNdVectorExternal(Vector<T>& vec) {
 }
 
 template<typename T>
-inline void IBinaryArchive::serializeNdVector(Vector<T>& vec) {
-	SDL_assert(false);
+inline void IBinaryArchive::serializeNdVector(Vector<T>& vec, uint32_t typeId, uint32_t &unk) {
+	if (isReading()) {
+		uint32_t counter, counter2;
+		serialize(counter);
+
+		uint32_t unknownTypeID;
+		serialize(unknownTypeID);
+		SDL_assert_release(unknownTypeID == typeId);
+
+		serialize(unk);
+		serialize(counter2);
+		SDL_assert_release(counter == counter2);
+
+		vec.resize(counter);
+		for (uint32_t i = 0; i < counter; ++i)
+			vec[i].read(*this);
+	}
+	else {
+		//TODO
+	}
 }

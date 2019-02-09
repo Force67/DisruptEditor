@@ -22,6 +22,13 @@ struct CGeometryResource {
 	void registerMembers(MemberStructure &ms);
 };
 
+struct CTextureResource {
+	CPathID file;
+	CStringID type;
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
 struct CMaterialResource {
 	CPathID file;
 	CStringID type;
@@ -193,7 +200,7 @@ struct CDynamicLightObject {
 	void registerMembers(MemberStructure& ms);
 };
 
-struct CUnknownLightType { //2461405956
+struct CSceneLight { //2461405956
 	Vector<CSceneLightClipPlane> clipPlanes;
 	glm::vec3 unk1;
 	glm::vec3 unk2;
@@ -216,6 +223,93 @@ struct STerrainSectorPackedElementInfo {
 
 struct CBatchedInstanceID {
 	uint32_t id;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+struct CLightEffectFlareElement {
+	float fScale;
+	float fScaleMin;
+	float fScaleMinThreshold;
+	float fOffset;
+	int32_t iTextureSliceIndex;
+	glm::vec3 vectorColor;
+	float fRotationXAmount;
+	float fRotationYAmount;
+	float fFadeAngle;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+typedef uint32_t ESceneLightEffectType;
+typedef uint32_t ESceneLightSourceType;
+
+struct CSceneLightEffect {
+	Vector< CLightEffectFlareElement> flares;
+	ESceneLightEffectType effectType;
+	ESceneLightSourceType sourceType;
+	float unk1;
+	float unk2;
+	float unk3;
+	float unk4;
+	bool unk5;
+	float unk6;
+	bool unk7;
+	bool unk8;
+	bool unk9;
+	float unk10;
+	float unk11;
+	float unk12;
+	float unk13;
+	float unk14;
+	float unk15;
+	float unk16;
+	bool unk17;
+	uint32_t unk18;
+	bool unk19;
+	float unk20;
+	glm::vec3 unk21;
+	float unk22;
+	bool unk23;
+	bool unk24;
+	uint32_t unk25;
+	float unk26;
+	float unk27;
+	bool unk28;
+	bool unk29;
+	float unk30;
+	float unk31;
+	bool unk32;
+	float ang1;
+	float unk33;
+	float unk34;
+	float unk35;
+	float unk36;
+	float unk37;
+	float unk38;
+	bool unk39;
+	float unk40;
+	bool unk41;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+struct CLightEffectObject {
+	CTextureResource fileTexture;
+	bool bEnable;
+	bool unk2;
+	CSceneLightEffect effect;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
+
+struct CSceneLightEffectInstance {
+	glm::vec3 unk1;
+	glm::vec3 unk2;
 
 	void read(IBinaryArchive& fp);
 	void registerMembers(MemberStructure& ms);

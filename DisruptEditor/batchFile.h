@@ -117,16 +117,25 @@ public:
 		void registerMembers(MemberStructure& ms);
 	};
 
-	
-
 	struct CDynamicLightBatchProcessor {
 		CDynamicLightObject lightObject;
 		bool hasBatchInstanceIDs;
 		CBatchedInstanceID batchedInstanceID;
 
-		Vector<CUnknownLightType> unk1;
+		Vector<CSceneLight> sceneLight;
 
-		
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
+	struct CLightEffectBatchProcessor {
+		CLightEffectObject obj;
+
+		bool hasBatchInstanceIDs;
+		Vector<CBatchedInstanceID> batchedInstanceID;
+
+		uint32_t unk2;
+		Vector<CSceneLightEffectInstance> instances;
 
 		void read(IBinaryArchive& fp);
 		void registerMembers(MemberStructure& ms);
@@ -142,6 +151,7 @@ public:
 		std::unique_ptr<CBlackoutEffectBatchProcessor> blackoutEffectBatch;
 		std::unique_ptr<CParticlesBatchProcessor> particlesBatch;
 		std::unique_ptr<CDynamicLightBatchProcessor> dynamicLightBatch;
+		std::unique_ptr<CLightEffectBatchProcessor> lightEffectBatch;
 
 		void registerMembers(MemberStructure &ms);
 	};

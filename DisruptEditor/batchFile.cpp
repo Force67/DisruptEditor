@@ -192,6 +192,10 @@ void batchFile::CBatchModelProcessorsAndResources::read(IBinaryArchive& fp) {
 			batch.dynamicLightBatch = std::make_unique<CDynamicLightBatchProcessor>();
 			batch.dynamicLightBatch->read(fp);
 		}
+		else if (typeName == "CLightEffectBatchProcessor") {
+			batch.lightEffectBatch = std::make_unique<CLightEffectBatchProcessor>();
+			batch.lightEffectBatch->read(fp);
+		}
 		else {
 			assert_file_crash(false && "IBatchProcessor not implemented");
 			return;
@@ -329,6 +333,8 @@ void batchFile::IBatchProcessor::registerMembers(MemberStructure & ms) {
 		ms.registerMember("particlesBatch", *particlesBatch);
 	if (dynamicLightBatch)
 		ms.registerMember("dynamicLightBatch", *dynamicLightBatch);
+	if (lightEffectBatch)
+		ms.registerMember("lightEffectBatch", *lightEffectBatch);
 }
 
 void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
@@ -505,9 +511,9 @@ void batchFile::CDynamicLightBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(u1);
 	fp.serialize(counterAgain);
 
-	unk1.resize(counter);
+	sceneLight.resize(counter);
 	for (uint32_t i = 0; i < counter; ++i)
-		unk1[i].read(fp);
+		sceneLight[i].read(fp);
 	
 }
 
@@ -515,5 +521,31 @@ void batchFile::CDynamicLightBatchProcessor::registerMembers(MemberStructure& ms
 	REGISTER_MEMBER(lightObject);
 	REGISTER_MEMBER(hasBatchInstanceIDs);
 	REGISTER_MEMBER(batchedInstanceID);
-	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(sceneLight);
+}
+
+void batchFile::CLightEffectBatchProcessor::read(IBinaryArchive& fp) {
+	SDL_Log("Tell1: %u", fp.tell());
+	obj.read(fp);
+	SDL_Log("Tell2: %u", fp.tell());
+	fp.serialize(hasBatchInstanceIDs);
+	if (hasBatchInstanceIDs) {
+		//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchedInstanceID, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
+		fp.serializeNdVectorExternal(batchedInstanceID);
+	}
+	assert_file_crash(hasBatchInstanceIDs);
+
+	SDL_Log("Tell3: %u", fp.tell());
+
+	//CSceneLightEffectInstance = 0xEB07AAAC
+	fp.serializeNdVector(instances, 0xEB07AAAC, unk2);
+	SDL_Log("Tell4: %u", fp.tell());
+}
+
+void batchFile::CLightEffectBatchProcessor::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(obj);
+	REGISTER_MEMBER(hasBatchInstanceIDs);
+	REGISTER_MEMBER(batchedInstanceID);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(instances);
 }
