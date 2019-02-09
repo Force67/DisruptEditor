@@ -109,12 +109,12 @@ struct CParticlesSystemHdl {
 
 struct CSceneLightTargets {
 	float unk1;
-	bool unk2;
-	bool unk3;
-	bool unk4;
-	bool unk5;
-	bool unk6;
-	bool unk7;
+	bool bGeometry;
+	bool bParticles;
+	bool bParticlesShadow;
+	bool bParticlesProjectedTexture;
+	bool bWater;
+	bool bGlobalIllumination;
 
 	void read(IBinaryArchive& fp);
 	void registerMembers(MemberStructure& ms);
@@ -191,10 +191,10 @@ struct CDynamicLightSettings {
 };
 
 struct CDynamicLightObject {
-	bool unk1;
+	bool bEnabled;
 	bool unk2;
-	glm::vec3 unk3;
-	float unk4;
+	glm::vec3 vectorExtraPositionOffset;
+	float fExtraDoubleSpecularOffset;
 	CDynamicLightSettings settings;
 
 	void read(IBinaryArchive& fp);

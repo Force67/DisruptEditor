@@ -148,18 +148,18 @@ void CParticlesSystemHdl::registerMembers(MemberStructure& ms) {
 }
 
 void CDynamicLightObject::read(IBinaryArchive& fp) {
-	fp.serialize(unk1);
+	fp.serialize(bEnabled);
 	fp.serialize(unk2);
-	fp.serialize(unk3);
-	fp.serialize(unk4);
+	fp.serialize(vectorExtraPositionOffset);
+	fp.serialize(fExtraDoubleSpecularOffset);
 	settings.read(fp);
 }
 
 void CDynamicLightObject::registerMembers(MemberStructure& ms) {
-	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(bEnabled);
 	REGISTER_MEMBER(unk2);
-	REGISTER_MEMBER(unk3);
-	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(vectorExtraPositionOffset);
+	REGISTER_MEMBER(fExtraDoubleSpecularOffset);
 	REGISTER_MEMBER(settings);
 }
 
@@ -280,22 +280,22 @@ void CDynamicLightSettings::registerMembers(MemberStructure& ms) {
 
 void CSceneLightTargets::read(IBinaryArchive& fp) {
 	fp.serialize(unk1);
-	fp.serialize(unk2);
-	fp.serialize(unk3);
-	fp.serialize(unk4);
-	fp.serialize(unk5);
-	fp.serialize(unk6);
-	fp.serialize(unk7);
+	fp.serialize(bGeometry);
+	fp.serialize(bParticles);
+	fp.serialize(bParticlesShadow);
+	fp.serialize(bParticlesProjectedTexture);
+	fp.serialize(bWater);
+	fp.serialize(bGlobalIllumination);
 }
 
 void CSceneLightTargets::registerMembers(MemberStructure& ms) {
 	REGISTER_MEMBER(unk1);
-	REGISTER_MEMBER(unk2);
-	REGISTER_MEMBER(unk3);
-	REGISTER_MEMBER(unk4);
-	REGISTER_MEMBER(unk5);
-	REGISTER_MEMBER(unk6);
-	REGISTER_MEMBER(unk7);
+	REGISTER_MEMBER(bGeometry);
+	REGISTER_MEMBER(bParticles);
+	REGISTER_MEMBER(bParticlesShadow);
+	REGISTER_MEMBER(bParticlesProjectedTexture);
+	REGISTER_MEMBER(bWater);
+	REGISTER_MEMBER(bGlobalIllumination);
 }
 
 void CSceneLightClipPlane::read(IBinaryArchive& fp) {
