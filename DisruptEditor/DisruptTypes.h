@@ -113,11 +113,11 @@ struct CSceneLightTargets {
 };
 
 struct CSceneLightClipPlane {
-	float angle1;
-	float angle2;
-	float unk1;
-	float unk2;
-	bool unk3;
+	float angYaw;
+	float angPitch;
+	float fDistance;
+	float fFadeDistance;
+	bool bOccludeBounce;
 
 	void read(IBinaryArchive& fp);
 	void registerMembers(MemberStructure& ms);
@@ -214,6 +214,11 @@ struct STerrainSectorPackedElementInfo {
 	uint8_t unk[0xc];
 };
 
-typedef uint32_t CBatchedInstanceID;
+struct CBatchedInstanceID {
+	uint32_t id;
+
+	void read(IBinaryArchive& fp);
+	void registerMembers(MemberStructure& ms);
+};
 
 #pragma pack(pop)

@@ -12,7 +12,8 @@ void CResourceContainer::registerMembers(MemberStructure & ms) {
 
 void CArchetypeResource::read(IBinaryArchive& fp) {
 	fp.serialize(file.id);
-	fp.serialize(type.id);
+	if(file.id != -1)
+		fp.serialize(type.id);
 }
 
 void CArchetypeResource::registerMembers(MemberStructure & ms) {
@@ -22,7 +23,8 @@ void CArchetypeResource::registerMembers(MemberStructure & ms) {
 
 void CGeometryResource::read(IBinaryArchive& fp) {
 	fp.serialize(file.id);
-	fp.serialize(type.id);
+	if (file.id != -1)
+		fp.serialize(type.id);
 }
 
 void CGeometryResource::registerMembers(MemberStructure & ms) {
@@ -123,7 +125,8 @@ void SInstanceRange::registerMembers(MemberStructure & ms) {
 
 void CParticlesSystemParamResource::read(IBinaryArchive& fp) {
 	fp.serialize(file.id);
-	fp.serialize(type.id);
+	if (file.id != -1)
+		fp.serialize(type.id);
 }
 
 void CParticlesSystemParamResource::registerMembers(MemberStructure& ms) {
@@ -207,13 +210,10 @@ void CDynamicLightSettings::read(IBinaryArchive& fp) {
 
 	SDL_Log("File1=%s", unk39.getReverseFilename().c_str());
 	SDL_Log("File2=%s", unk40.getReverseFilename().c_str());
+	SDL_Log("Tell %u", fp.tell());
 
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CSceneLightClipPlane, NoLock, ndVectorPropertiesWrapper<ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>, ndVectorAllowExternalCopyProperties>>]
-	uint32_t counter;
-	fp.serialize(counter);
-	SDL_assert_release(counter == 0);
-
-	SDL_Log("Tell %u", fp.tell());
+	fp.serializeNdVectorExternal(clipPlanes);
 
 	fp.serialize(unk47);
 	fp.serialize(unk48);
@@ -294,30 +294,32 @@ void CSceneLightTargets::registerMembers(MemberStructure& ms) {
 }
 
 void CSceneLightClipPlane::read(IBinaryArchive& fp) {
-	fp.serialize(angle1);
-	fp.serialize(angle2);
-	fp.serialize(unk1);
-	fp.serialize(unk2);
-	fp.serialize(unk3);
+	fp.serialize(angYaw);
+	fp.serialize(angPitch);
+	fp.serialize(fDistance);
+	fp.serialize(fFadeDistance);
+	fp.serialize(bOccludeBounce);
 }
 
 void CSceneLightClipPlane::registerMembers(MemberStructure& ms) {
-	REGISTER_MEMBER(angle1);
-	REGISTER_MEMBER(angle2);
-	REGISTER_MEMBER(unk1);
-	REGISTER_MEMBER(unk2);
-	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(angYaw);
+	REGISTER_MEMBER(angPitch);
+	REGISTER_MEMBER(fDistance);
+	REGISTER_MEMBER(fFadeDistance);
+	REGISTER_MEMBER(bOccludeBounce);
 }
 
 void CUnknownLightType::read(IBinaryArchive& fp) {
-	uint32_t u1, u2, count;
-	fp.serialize(u1);
-	fp.serialize(u2);
+	uint32_t count;
 	fp.serialize(count);
 
 	uint32_t CSceneLightClipPlaneType;
 	fp.serialize(CSceneLightClipPlaneType);
 	SDL_assert_release(CSceneLightClipPlaneType == 2461405956);
+
+	uint32_t u3, countAgain;
+	fp.serialize(u3);
+	fp.serialize(countAgain);
 
 	SDL_Log("Tell: %u", fp.tell());
 
@@ -343,4 +345,12 @@ void CUnknownLightType::registerMembers(MemberStructure& ms) {
 	REGISTER_MEMBER(unk4);
 	REGISTER_MEMBER(unk5);
 	REGISTER_MEMBER(unk6);
+}
+
+void CBatchedInstanceID::read(IBinaryArchive& fp) {
+	fp.serialize(id);
+}
+
+void CBatchedInstanceID::registerMembers(MemberStructure& ms) {
+	ms.registerMember(NULL, id);
 }

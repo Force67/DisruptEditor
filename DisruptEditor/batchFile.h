@@ -55,7 +55,7 @@ public:
 		uint16_t stride;
 		Vector<CProjectedDecalInfo> decals;
 		bool unk12;
-
+		Vector<CBatchedInstanceID> instances;
 		uint32_t unkc1;
 		uint32_t unkc2;
 		uint32_t unkc3;
@@ -75,6 +75,9 @@ public:
 		uint16_t unk3;
 		uint32_t unk4;
 		uint32_t unk5;
+
+		CStringID type;
+
 		uint32_t unk6;
 		uint32_t unk7;
 

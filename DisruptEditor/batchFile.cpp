@@ -124,12 +124,18 @@ void batchFile::CComponentMultiBatchProcessor::read(IBinaryArchive& fp) {
 	for (uint32_t i = 0; i < batchCount; ++i) {
 		CBatchProcessorAndResources &batch = batchProcessors.emplace_back();
 
+		/*if (i == 44)
+			__debugbreak();*/
+
 		uint32_t unk2;
 		fp.serialize(unk2);
 		assert_file_crash(unk2 == 0);
 
 		SDL_Log("CBatchModelProcessorsAndResources %u", fp.tell());
 		fp.serialize(batch.type.id);
+
+		uint32_t unk3;
+		fp.serialize(unk3);
 
 		std::string typeName = batch.type.getReverseName();
 		if (typeName == "CBatchModelProcessorsAndResources") {
@@ -221,12 +227,7 @@ void batchFile::CGraphicBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(stride);
 
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CProjectedDecalInfo, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
-	uint32_t count;
-	fp.serialize(count);
-	for (uint32_t i = 0; i < count; ++i) {
-		CProjectedDecalInfo &decal = decals.emplace_back();
-		decal.read(fp);
-	}
+	fp.serializeNdVectorExternal(decals);
 
 	fp.serialize(unk12);
 
@@ -243,11 +244,10 @@ void batchFile::CGraphicBatchProcessor::read(IBinaryArchive& fp) {
 	//Ptr to data
 	//Calls ClusterDataSwapBytes(ptr, stride, type);
 
-	assert_file_crash(!hasBatchInstanceID);
-	/*if (hasBatchInstanceID) {
-		uint32_t unkc1 = SDL_ReadLE32(fp);
-		uint32_t unkc2 = SDL_ReadLE32(fp);
-	}*/
+	//assert_file_crash(!hasBatchInstanceID);
+	if (hasBatchInstanceID) {
+		fp.serializeNdVectorExternal(instances);
+	}
 
 	fp.serialize(unkc1);
 	fp.serialize(unkc2);
@@ -255,12 +255,14 @@ void batchFile::CGraphicBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(unkc4);
 	fp.serialize(unkc5);
 
+	SDL_Log("Tell4: %u\n\n", fp.tell());
+
 	for (uint32_t j = 0; j < rangeCount; ++j) {
 		SInstanceRange &range = ranges.emplace_back();
 		range.read(fp);
 	}
 
-	SDL_Log("Tell4: %u\n\n", fp.tell());
+	SDL_Log("Tell5: %u\n\n", fp.tell());
 }
 
 void batchFile::registerMembers(MemberStructure & ms) {
@@ -349,6 +351,7 @@ void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
 }
 
 void batchFile::CSoundPointBatchProcessor::read(IBinaryArchive& fp) {
+	SDL_Log("Tell: %u", fp.tell());
 	fp.serialize(unk1);
 	fp.serialize(libraryObject);
 
@@ -364,12 +367,18 @@ void batchFile::CSoundPointBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(unk4);
 	fp.serialize(unk5);
 
-	uint32_t SBatchedSoundPointType;
-	fp.serialize(SBatchedSoundPointType);
-	assert_file_crash(SBatchedSoundPointType == 0xB29388DD);
+	//Could be SBatchedSoundPoint or 0xDF63D1E
+	fp.serialize(type.id);
+	if (type.id == 0xB29388DD) {//SBatchedSoundPoint
+		fp.serialize(unk6);
+		fp.serialize(unk7);
+	} else if (type.id == 0xDF63D1E) {//SBatchedSoundPointBreakable
+		fp.serialize(unk6);
+		fp.serialize(unk7);
+	} else {
+		assert_file_crash(false);
+	}
 
-	fp.serialize(unk6);
-	fp.serialize(unk7);
 }
 
 void batchFile::CSoundPointBatchProcessor::registerMembers(MemberStructure& ms) {
@@ -405,7 +414,7 @@ void batchFile::CBlackoutEffectBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(hasBatchInstanceIDs);
 	if (hasBatchInstanceIDs) {
 		//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchedInstanceID, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
-		fp.serialize(batchedInstanceID);
+		batchedInstanceID.read(fp);
 		SDL_Log("Tell: %u", fp.tell());
 	}
 	assert_file_crash(hasBatchInstanceIDs);
@@ -441,7 +450,7 @@ void batchFile::CParticlesBatchProcessor::read(IBinaryArchive& fp) {
 
 	if (hasBatchInstanceIDs) {
 		//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchedInstanceID, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
-		fp.serialize(batchedInstanceID);
+		batchedInstanceID.read(fp);
 	}
 	assert_file_crash(hasBatchInstanceIDs);
 
@@ -480,7 +489,7 @@ void batchFile::CDynamicLightBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(hasBatchInstanceIDs);
 	if (hasBatchInstanceIDs) {
 		//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchedInstanceID, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
-		fp.serialize(batchedInstanceID);
+		batchedInstanceID.read(fp);
 	}
 	assert_file_crash(hasBatchInstanceIDs);
 
@@ -492,10 +501,13 @@ void batchFile::CDynamicLightBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(unknownTypeID);
 	assert_file_crash(unknownTypeID == 0xFB4B8BEB);
 
+	uint32_t u1, counterAgain;
+	fp.serialize(u1);
+	fp.serialize(counterAgain);
+
 	unk1.resize(counter);
 	for (uint32_t i = 0; i < counter; ++i)
 		unk1[i].read(fp);
-
 	
 }
 

@@ -3,6 +3,7 @@
 #include <SDL_rwops.h>
 #include "glm/glm.hpp"
 #include <string>
+#include "Vector.h"
 
 class IBinaryArchive {
 public:
@@ -29,6 +30,12 @@ public:
 	virtual size_t size() = 0;
 	virtual size_t tell() = 0;
 	virtual void memBlock(void* ptr, size_t objSize, size_t objCount) = 0;
+
+	template<typename T>
+	void serializeNdVectorExternal(Vector<T>& vec);
+
+	template<typename T>
+	void serializeNdVector(Vector<T>& vec);
 
 	SDL_RWops* fp;
 	bool bigEndian = false;
@@ -84,3 +91,24 @@ public:
 	virtual size_t tell();
 	virtual void memBlock(void* ptr, size_t objSize, size_t objCount);
 };
+
+template<typename T>
+inline void IBinaryArchive::serializeNdVectorExternal(Vector<T>& vec) {
+	if (isReading()) {
+		uint32_t count;
+		serialize(count);
+		vec.resize(count);
+		for (uint32_t i = 0; i < count; ++i)
+			vec[i].read(*this);
+	}
+	else {
+		uint32_t count = vec.size();
+		for (uint32_t i = 0; i < count; ++i)
+			vec[i].read(*this);
+	}
+}
+
+template<typename T>
+inline void IBinaryArchive::serializeNdVector(Vector<T>& vec) {
+	SDL_assert(false);
+}

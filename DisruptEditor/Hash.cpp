@@ -1,6 +1,7 @@
 #include "Hash.h"
 
 #include "tinyxml2.h"
+#include <SDL_assert.h>
 #include <SDL_log.h>
 #include <algorithm>
 
@@ -207,6 +208,7 @@ uint32_t crc32buf(const char *buf, size_t len) {
 }
 
 Hash::Hash() {
+	handleFile("res/classNames.txt");
 	handleFile("res/strings.txt");
 	handleFileFNV("res/arches.txt");
 	handleFileFNV("res/archeBrute.txt");
@@ -295,6 +297,9 @@ void Hash::handleFile(const char *file) {
 		line[strlen(line) - 1] = '\0';
 
 		uint32_t hash = crc32buf((const char*)line, strlen(line));
+		if (reverseHash.count(hash) != 0 && reverseHash[hash] != line) {
+			SDL_Log("Duplicate CStringID hash %s for %s %08x", line, reverseHash[hash].c_str(), hash);
+		}
 		reverseHash[hash] = line;
 	}
 
