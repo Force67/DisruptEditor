@@ -72,17 +72,20 @@ inline void MemberStructure::registerMember(const char * name, std::vector<T>& v
 	switch (type) {
 		case TOXML:
 		{
-			printer->OpenElement(name);
+			if (name)
+				printer->OpenElement(name);
 			for (int i = 0; i < value.size(); ++i) {
 				registerMember("Elem", value[i]);
 			}
-			printer->CloseElement();
+			if (name)
+				printer->CloseElement();
 			return;
 		}
 		case FROMXML:
 		{
 			tinyxml2::XMLElement* itBack = it;
-			it = it->FirstChildElement(name);
+			if (name)
+				it = it->FirstChildElement(name);
 			if (it) {
 				value.clear();
 				it = it->FirstChildElement();
@@ -125,14 +128,16 @@ inline void MemberStructure::registerMember(const char *name, T &value) {
 	switch (type) {
 		case TOXML:
 		{
-			printer->OpenElement(name);
+			if(name)
+				printer->OpenElement(name);
 			value.registerMembers(*this);
-			printer->CloseElement();
+			if (name)
+				printer->CloseElement();
 			return;
 		}
 		case FROMXML:
 		{
-			tinyxml2::XMLElement* ref = it->FirstChildElement(name);
+			tinyxml2::XMLElement* ref = name ? it->FirstChildElement(name) : it;
 			if (ref)
 				unserializeFromXML(value, ref);
 			return;

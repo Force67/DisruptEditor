@@ -47,6 +47,8 @@ public:
 
 class CBinaryArchiveReader : public IBinaryArchive {
 public:
+	CBinaryArchiveReader(SDL_RWops* _fp);
+
 	virtual void serialize(bool& value);
 	virtual void serialize(uint8_t& value);
 	virtual void serialize(int8_t& value);

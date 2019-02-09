@@ -164,9 +164,8 @@ public:
 	};
 
 	struct IBatchProcessor {
-		uint32_t unk1;
-		CStringID type;
-		uint32_t unk2;
+		CStringID batchProcessor;
+		uint32_t batchProcessorUnk1;
 
 		std::unique_ptr<CGraphicBatchProcessor> graphicBatch;
 		std::unique_ptr<CSoundPointBatchProcessor> soundPointBatch;
@@ -181,24 +180,13 @@ public:
 
 	struct CBatchModelProcessorsAndResources {
 		CArchetypeResource arche;
-		uint32_t unk1;
 		Vector<IBatchProcessor> processors;
 		void read(IBinaryArchive& fp);
 		void registerMembers(MemberStructure &ms);
 	};
 
-	struct CBatchProcessorAndResources {
-		uint32_t unk1;
-		CStringID type;
-
-		CBatchModelProcessorsAndResources batchModel;
-
-		void registerMembers(MemberStructure &ms);
-	};
-
 	struct CComponentMultiBatchProcessor {
-		uint32_t unk1;
-		Vector<CBatchProcessorAndResources> batchProcessors;
+		Vector<CBatchModelProcessorsAndResources> batchProcessors;
 		void read(IBinaryArchive& fp);
 		void registerMembers(MemberStructure &ms);
 	};
@@ -216,8 +204,7 @@ public:
 	//TODO: Remove this, this is so we can write files with this unfinished implementation
 	Vector<uint8_t> extraData;
 
-	bool open(SDL_RWops *fp);
-	void write(SDL_RWops *fp);
+	bool open(IBinaryArchive& reader);
 	void registerMembers(MemberStructure &ms);
 };
 

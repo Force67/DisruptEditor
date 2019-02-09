@@ -12,6 +12,7 @@ class IBinaryArchive;
 struct CResourceContainer {
 	CStringID type;
 	CPathID file;
+	void read(IBinaryArchive& fp);
 	void registerMembers(MemberStructure &ms);
 };
 

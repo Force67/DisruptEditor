@@ -5,6 +5,10 @@ IBinaryArchive::IBinaryArchive() {
 	fp = NULL;
 }
 
+CBinaryArchiveReader::CBinaryArchiveReader(SDL_RWops* _fp) {
+	fp = _fp;
+}
+
 void CBinaryArchiveReader::serialize(bool& value) {
 	SDL_RWread(fp, &value, sizeof(value), 1);
 }

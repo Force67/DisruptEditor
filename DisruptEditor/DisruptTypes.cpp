@@ -5,6 +5,11 @@
 #include "FileHandler.h"
 #include "IBinaryArchive.h"
 
+void CResourceContainer::read(IBinaryArchive& fp) {
+	fp.serialize(type.id);
+	fp.serialize(file.id);
+}
+
 void CResourceContainer::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(type);
 	REGISTER_MEMBER(file);

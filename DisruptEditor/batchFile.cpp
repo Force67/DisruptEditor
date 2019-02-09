@@ -17,18 +17,15 @@ void crashFileHandler() {
 
 #define assert_file_crash(x) { SDL_assert_release(x); if(!(x)) crashFileHandler(); }
 
-bool batchFile::open(SDL_RWops *fp) {
-	if (!fp) return false;
-
-	CBinaryArchiveReader reader;
-	reader.fp = fp;
+bool batchFile::open(IBinaryArchive &reader) {
 	size_t size = reader.size();
 
 	reader.memBlock(&head, sizeof(head), 1);
 	assert_file_crash(head.magic == 1112818504);
 	assert_file_crash(head.unk1 == 32);
 	assert_file_crash(head.type == 0 || head.type == 1);
-	assert_file_crash(head.size == size - sizeof(head));
+	if(reader.isReading())
+		assert_file_crash(head.size == size - sizeof(head));
 	assert_file_crash(head.unk4 == 0);
 	assert_file_crash(head.unk5 == 0);
 	assert_file_crash(head.unk6 == 0);
@@ -39,24 +36,16 @@ bool batchFile::open(SDL_RWops *fp) {
 
 	if (head.type == 0) {
 		//assert_file_crash(strstr(filename, "_compound.cbatch"));
-		assert_file_crash(head.size + sizeof(head) == size);
 
 		reader.memBlock(&compound, sizeof(compound), 1);
 
 		//assert_file_crash(compound.unk3 == 0);
 
 		reader.serialize(srcFilename);
-		seekpad(fp, 4);
 		//SDL_Log("%s\n", srcFilename.c_str());
 
 		//Resources
-		uint32_t CResourceContainerCount;
-		reader.serialize(CResourceContainerCount);
-		for (uint32_t i = 0; i < CResourceContainerCount; ++i) {
-			CResourceContainer &resource = resources.emplace_back();
-			reader.serialize(resource.type.id);
-			reader.serialize(resource.file.id);
-		}
+		reader.serializeNdVectorExternal(resources);
 
 		reader.serialize(physicsFile.id);
 
@@ -77,73 +66,54 @@ bool batchFile::open(SDL_RWops *fp) {
 	}
 	*/
 
-	size_t extra = size - SDL_RWtell(fp);
-	extraData.resize(extra);
-	SDL_RWread(fp, extraData.data(), 1, extra);
+	if (reader.isReading())
+		extraData.resize(size - reader.tell());
+	reader.memBlock(extraData.data(), 1, extraData.size());
+	
 
-	SDL_RWclose(fp);
-	return true;
-}
-
-void batchFile::write(SDL_RWops * fp) {
-	if (!fp) return;
-
-	SDL_RWwrite(fp, &head, sizeof(head), 1);
-	SDL_RWwrite(fp, &compound, sizeof(compound), 1);
-	//writeString(fp, false, srcFilename);
-	writepad(fp, 4);
-
-	SDL_WriteLE32(fp, resources.size());
-	for (CResourceContainer &resource : resources) {
-		SDL_WriteLE32(fp, resource.type.id);
-		SDL_WriteLE32(fp, resource.file.id);
+	if (!reader.isReading()) {
+		//Go back and write the size
+		SDL_RWseek(reader.fp, 12, RW_SEEK_SET);
+		SDL_WriteLE32(reader.fp, SDL_RWsize(reader.fp) - sizeof(head));
 	}
 
-	SDL_WriteLE32(fp, physicsFile.id);
-
-	//componentMBP.write(fp);
-	SDL_RWwrite(fp, extraData.data(), 1, extraData.size());
-
-	//Go back and write the size
-	SDL_RWseek(fp, 12, RW_SEEK_SET);
-	SDL_WriteLE32(fp, SDL_RWsize(fp) - sizeof(head));
-	SDL_RWclose(fp);
+	return true;
 }
 
 void batchFile::CComponentMultiBatchProcessor::read(IBinaryArchive& fp) {
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBatchModelProcessorsAndResources *, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
 
+	uint32_t unk1 = 1;
 	fp.serialize(unk1);
 	assert_file_crash(unk1 == 1);//If this is zero it looks like we should just skip the rest of this code, however none of the files contain 0 so I won't bother
 
-	uint32_t batchCount;
+	uint32_t batchCount = batchProcessors.size();
 	fp.serialize(batchCount);
+	batchProcessors.resize(batchCount);
 	SDL_Log("batchCount=%u @%u", batchCount, fp.tell() - 4);
 
 	//void SerializeArray<T1>(IBinaryArchive &, T1 *, unsigned long) [with T1=CBatchModelProcessorsAndResources *]
 	for (uint32_t i = 0; i < batchCount; ++i) {
-		CBatchProcessorAndResources &batch = batchProcessors.emplace_back();
+		CBatchModelProcessorsAndResources &batch = batchProcessors[i];
 
 		/*if (i == 44)
 			__debugbreak();*/
 
-		uint32_t unk2;
+		uint32_t unk2 = 0;
 		fp.serialize(unk2);
 		assert_file_crash(unk2 == 0);
 
+		CStringID typeID;
+		typeID.id = 0xE85D5889;
 		SDL_Log("CBatchModelProcessorsAndResources %u", fp.tell());
-		fp.serialize(batch.type.id);
+		fp.serialize(typeID.id);
+		assert_file_crash(typeID.id == 0xE85D5889);
 
-		uint32_t unk3;
+		uint32_t unk3 = 0;
 		fp.serialize(unk3);
+		assert_file_crash(unk3 == 0);
 
-		std::string typeName = batch.type.getReverseName();
-		if (typeName == "CBatchModelProcessorsAndResources") {
-			batch.batchModel.read(fp);
-		} else {
-			assert_file_crash(false && "BatchProcessorAndResources not implemented");
-			return;
-		}
+		batch.read(fp);
 	}
 }
 
@@ -157,19 +127,23 @@ void batchFile::CBatchModelProcessorsAndResources::read(IBinaryArchive& fp) {
 	//unk1 = SDL_ReadLE32(fp);
 	//assert_file_crash(unk1 == 1);
 	
-	uint32_t batchProcessorCount;
+	uint32_t batchProcessorCount = processors.size();
 	fp.serialize(batchProcessorCount);
+	processors.resize(batchProcessorCount);
 	SDL_Log("batchProcessorCount=%u @%u", batchProcessorCount, fp.tell() - 4);
 
 	//void SerializeArray<T1>(IBinaryArchive &, T1 *, unsigned long) [with T1=IBatchProcessor *]
 	for (uint32_t i = 0; i < batchProcessorCount; ++i) {
-		IBatchProcessor &batch = processors.emplace_back();
+		IBatchProcessor &batch = processors[i];
 
-		fp.serialize(batch.unk1);
-		fp.serialize(batch.type.id);
-		fp.serialize(batch.unk2);
+		uint32_t unk1 = 0;
+		fp.serialize(unk1);
+		assert_file_crash(unk1 == 0);
 
-		std::string typeName = batch.type.getReverseName();
+		fp.serialize(batch.batchProcessor.id);
+		fp.serialize(batch.batchProcessorUnk1);
+
+		std::string typeName = batch.batchProcessor.getReverseName();
 		SDL_Log("IBatchProcessor type=%s", typeName.c_str());
 
 		if (typeName == "CGraphicBatchProcessor") {
@@ -284,7 +258,6 @@ void batchFile::registerMembers(MemberStructure & ms) {
 
 void batchFile::CBatchModelProcessorsAndResources::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(arche);
-	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(processors);
 }
 
@@ -312,35 +285,27 @@ void batchFile::compoundHeader::registerMembers(MemberStructure & ms) {
 }
 
 void batchFile::CComponentMultiBatchProcessor::registerMembers(MemberStructure & ms) {
-	REGISTER_MEMBER(unk1);
-	REGISTER_MEMBER(batchProcessors);
-}
-
-void batchFile::CBatchProcessorAndResources::registerMembers(MemberStructure & ms) {
-	REGISTER_MEMBER(unk1);
-	REGISTER_MEMBER(type);
-	REGISTER_MEMBER(batchModel);
+	ms.registerMember(NULL, batchProcessors);
 }
 
 void batchFile::IBatchProcessor::registerMembers(MemberStructure & ms) {
-	REGISTER_MEMBER(unk1);
-	REGISTER_MEMBER(type);
-	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(batchProcessor);
+	REGISTER_MEMBER(batchProcessorUnk1);
 
 	if (graphicBatch)
-		ms.registerMember("graphicBatch", *graphicBatch);
+		ms.registerMember(NULL, *graphicBatch);
 	if (soundPointBatch)
-		ms.registerMember("soundPointBatch", *soundPointBatch);
+		ms.registerMember(NULL, *soundPointBatch);
 	if (blackoutEffectBatch)
-		ms.registerMember("blackoutEffectBatch", *blackoutEffectBatch);
+		ms.registerMember(NULL, *blackoutEffectBatch);
 	if (particlesBatch)
-		ms.registerMember("particlesBatch", *particlesBatch);
+		ms.registerMember(NULL, *particlesBatch);
 	if (dynamicLightBatch)
-		ms.registerMember("dynamicLightBatch", *dynamicLightBatch);
+		ms.registerMember(NULL, *dynamicLightBatch);
 	if (lightEffectBatch)
-		ms.registerMember("lightEffectBatch", *lightEffectBatch);
+		ms.registerMember(NULL, *lightEffectBatch);
 	if (securityCameraBatch)
-		ms.registerMember("securityCameraBatch", *securityCameraBatch);
+		ms.registerMember(NULL, *securityCameraBatch);
 }
 
 void batchFile::CGraphicBatchProcessor::registerMembers(MemberStructure & ms) {
