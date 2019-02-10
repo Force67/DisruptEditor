@@ -75,6 +75,9 @@ tinyxml2::XMLElement* RmlNode::serializeXML(tinyxml2::XMLDocument *doc, tinyxml2
 }
 
 std::unique_ptr<tinyxml2::XMLDocument> loadRml(SDL_RWops *fp) {
+	if (!fp)
+		return NULL;
+
 	std::unique_ptr<tinyxml2::XMLDocument> doc = std::make_unique<tinyxml2::XMLDocument>();
 
 	RmlHeader head;

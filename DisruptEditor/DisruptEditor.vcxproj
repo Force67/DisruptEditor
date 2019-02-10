@@ -164,6 +164,7 @@
     <ClCompile Include="DisruptTypes.cpp" />
     <ClCompile Include="DominoWindow.cpp" />
     <ClCompile Include="EntityLibraryWindow.cpp" />
+    <ClCompile Include="HexBase64.cpp" />
     <ClCompile Include="IBinaryArchive.cpp" />
     <ClCompile Include="ImguiWindows.cpp" />
     <ClCompile Include="imgui_widgets.cpp" />
@@ -212,6 +213,7 @@
     <ClInclude Include="CPathID.h" />
     <ClInclude Include="CStringID.h" />
     <ClInclude Include="DisruptTypes.h" />
+    <ClInclude Include="HexBase64.h" />
     <ClInclude Include="IBinaryArchive.h" />
     <ClInclude Include="imconfig.h" />
     <ClInclude Include="imgui.h" />

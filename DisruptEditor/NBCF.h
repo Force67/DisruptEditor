@@ -28,7 +28,6 @@ public:
 
 	std::string getHashName();
 	std::string getHumanReadable();
-	std::string getByteString();
 	uint32_t hash;
 	Vector<uint8_t> buffer;
 };

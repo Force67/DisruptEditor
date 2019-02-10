@@ -170,6 +170,9 @@
     <ClCompile Include="IBinaryArchive.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HexBase64.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -351,6 +354,9 @@
     </ClInclude>
     <ClInclude Include="Version.h" />
     <ClInclude Include="IBinaryArchive.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HexBase64.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

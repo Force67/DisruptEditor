@@ -4,6 +4,7 @@
 #include <SDL_log.h>
 #include <SDL_endian.h>
 #include "Hash.h"
+#include "HexBase64.h"
 
 uint32_t ReadCountA(SDL_RWops *fp, bool &isOffset, bool bigEndian) {
 	uint8_t value = SDL_ReadU8(fp);
@@ -130,16 +131,7 @@ void Attribute::deserializeXML(const tinyxml2::XMLAttribute *attr) {
 	data = attr->Value();
 
 	if (hex) {
-		buffer.clear();
-		if (strlen(data) == 0) return;
-		int len = (strlen(data) / 3) + 1;
-		buffer.reserve(len);
-
-		for (int i = 0; i < len; ++i) {
-			uint8_t byte = (uint8_t)strtol(data, NULL, 16);
-			buffer.push_back(byte);
-			data += 3;
-		}
+		buffer = fromHexString(data);
 	} else {
 		buffer.resize(strlen(data) + 1);
 		strcpy((char*)buffer.data(), data);
@@ -170,22 +162,7 @@ std::string Attribute::getHumanReadable() {
 			return std::string((char*)buffer.data());
 	}
 
-	return getByteString();
-}
-
-std::string Attribute::getByteString() {
-	std::string str;
-
-	for (auto byte : buffer) {
-		char strbuffer[4];
-		snprintf(strbuffer, sizeof(strbuffer), "%02x ", byte);
-		str.append(strbuffer);
-	}
-
-	if (!str.empty())
-		str.pop_back();
-
-	return str;
+	return toHexString(buffer.data(), buffer.size());
 }
 
 void Node::deserialize(SDL_RWops* fp, bool bigEndian) {
