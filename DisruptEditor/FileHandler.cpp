@@ -79,11 +79,8 @@ SDL_RWops * FH::openFile(uint32_t path) {
 }
 
 std::string FH::getReverseFilename(uint32_t hash) {
-	if (knownFiles.count(hash) == 0) {
-		char buffer[12];
-		snprintf(buffer, sizeof(buffer), "_%08x", hash);
-		return std::string(buffer);
-	}
+	if (knownFiles.count(hash) == 0)
+		return Hash::instance().getReverseHashFNV(hash);
 
 	return knownFiles[hash];
 }

@@ -74,6 +74,8 @@ public:
 
 class CBinaryArchiveWriter : public IBinaryArchive {
 public:
+	CBinaryArchiveWriter(SDL_RWops* _fp);
+
 	virtual void serialize(bool& value);
 	virtual void serialize(uint8_t& value);
 	virtual void serialize(int8_t& value);
@@ -108,6 +110,7 @@ inline void IBinaryArchive::serializeNdVectorExternal(Vector<T>& vec) {
 	}
 	else {
 		uint32_t count = vec.size();
+		serialize(count);
 		for (uint32_t i = 0; i < count; ++i)
 			vec[i].read(*this);
 	}
@@ -124,6 +127,7 @@ inline void IBinaryArchive::serializeNdVectorExternal_pod(Vector<T>& vec) {
 	}
 	else {
 		uint32_t count = vec.size();
+		serialize(count);
 		for (uint32_t i = 0; i < count; ++i)
 			serialize(vec[i]);
 	}

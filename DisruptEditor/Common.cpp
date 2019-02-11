@@ -139,6 +139,7 @@ void Settings::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(patchDir);
 
 	REGISTER_MEMBER(textDrawDistance);
+	REGISTER_MEMBER(displayComponents);
 
 	REGISTER_MEMBER(windowSize);
 	REGISTER_MEMBER(maximized);

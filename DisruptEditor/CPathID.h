@@ -3,6 +3,7 @@
 #include <string>
 
 class MemberStructure;
+class IBinaryArchive;
 
 class CPathID {
 public:
@@ -11,6 +12,7 @@ public:
 	CPathID(const std::string &filename);
 	uint32_t id = -1;
 	std::string getReverseFilename();
+	void read(IBinaryArchive& fp);
 	void registerMembers(MemberStructure &ms);
 };
 

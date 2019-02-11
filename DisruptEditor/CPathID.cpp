@@ -3,6 +3,7 @@
 #include "FileHandler.h"
 #include "Hash.h"
 #include "Serialization.h"
+#include "IBinaryArchive.h"
 
 CPathID::CPathID(const std::string &filename) {
 	id = Hash::instance().getFilenameHash(filename);
@@ -10,6 +11,10 @@ CPathID::CPathID(const std::string &filename) {
 
 std::string CPathID::getReverseFilename() {
 	return FH::getReverseFilename(id);
+}
+
+void CPathID::read(IBinaryArchive& fp) {
+	fp.serialize(id);
 }
 
 void CPathID::registerMembers(MemberStructure & ms) {

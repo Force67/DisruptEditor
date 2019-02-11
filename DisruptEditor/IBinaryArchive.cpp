@@ -108,6 +108,10 @@ void CBinaryArchiveReader::memBlock(void* ptr, size_t objSize, size_t objCount) 
 	SDL_RWread(fp, ptr, objSize, objCount);
 }
 
+CBinaryArchiveWriter::CBinaryArchiveWriter(SDL_RWops* _fp) {
+	fp = _fp;
+}
+
 void CBinaryArchiveWriter::serialize(bool& value) {
 	SDL_RWwrite(fp, &value, sizeof(value), 1);
 }

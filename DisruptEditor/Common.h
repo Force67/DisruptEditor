@@ -25,6 +25,7 @@ struct Settings {
 
 	//Graphics Settings
 	float textDrawDistance = 5.f;
+	std::map<std::string, bool> displayComponents;
 	
 	// Window Settings
 	glm::ivec2 windowSize = glm::ivec2(1600, 900);
