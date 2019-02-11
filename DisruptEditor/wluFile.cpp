@@ -225,6 +225,7 @@ void wluFile::draw(bool drawImgui, bool draw3D) {
 	static char searchWluBuffer[255] = { 0 };
 	ImGui::InputText("##Search", searchWluBuffer, sizeof(searchWluBuffer));
 	ImGui::ListBoxHeader("##Entity List");
+	bool foundSelectedEntity = false;
 	for (Node &entity : Entities->children) {
 		Attribute *hidName = entity.getAttribute("hidName");
 
@@ -234,13 +235,20 @@ void wluFile::draw(bool drawImgui, bool draw3D) {
 		if (std::string(tempName).find(searchWluBuffer) == std::string::npos) continue;
 
 		bool selected = &entity == selectedEntity;
+
 		if (ImGui::Selectable(tempName, selected))
 			selectedEntity = &entity;
+
+		if (&entity == selectedEntity)
+			foundSelectedEntity = true;
 	}
 	ImGui::ListBoxFooter();
 	ImGui::PopItemWidth();
 
 	char imGuiBuffer[1024];
+
+	if (!foundSelectedEntity)
+		selectedEntity = NULL;
 
 	if(selectedEntity) {
 		ImGui::Separator();
