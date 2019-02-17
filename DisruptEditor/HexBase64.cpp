@@ -53,12 +53,9 @@ std::string toBase64String(const void * ptr, size_t size) {
 	int outputSize = 4 * ((size / 3) + (size % 3 > 0 ? 1 : 0));
 	str.reserve(outputSize);
 
-	uint32_t tmp;
-	int j, d, padding;
-
 	for (size_t i = 0; i < size; i += 3) {
-		padding = (i + 3) - size;
-		tmp = 0;
+		int padding = (i + 3) - size;
+		uint32_t tmp = 0;
 
 		switch (padding) {
 		case 2:
@@ -101,12 +98,10 @@ std::vector<uint8_t> fromBase64String(const std::string &str) {
 	decoded.reserve(outputSize);
 
 	char ch[4];
-	uint32_t tmp;
-	int i, j;
 	int padding = 0;
 
-	for (i = 0; i < str.size(); i += 4) {
-		for (j = 0; j < 4; j++) {
+	for (int i = 0; i < str.size(); i += 4) {
+		for (int j = 0; j < 4; j++) {
 			if (str[i + j] == padchar) {
 				ch[j] = '\0';
 				padding++;
@@ -116,7 +111,7 @@ std::vector<uint8_t> fromBase64String(const std::string &str) {
 			}
 		}
 
-		tmp = 0;
+		uint32_t tmp = 0;
 		tmp |= (ch[0] << 18) | (ch[1] << 12) | (ch[2] << 6) | ch[3];
 
 		decoded.push_back((tmp & 0xff0000) >> 16);

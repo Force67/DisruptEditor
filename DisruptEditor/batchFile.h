@@ -192,6 +192,22 @@ public:
 	};
 
 	//
+
+	struct CBuildingMultiBatchProcessor {
+		bool unk1;
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
+	//template <typename T>
+	//CQuadtreeCollidableBatchProcessor
+
+	struct CQuadtreeCollidableMultiBatchProcessor {
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
 	
 #pragma pack(pop)
 	batchHeader head;
@@ -200,6 +216,8 @@ public:
 	Vector<CResourceContainer> resources;
 	CPathID physicsFile;
 	CComponentMultiBatchProcessor componentMBP;
+	CBuildingMultiBatchProcessor buildingMBP;
+	CQuadtreeCollidableMultiBatchProcessor quadtreeCollidableMBP;
 
 	//TODO: Remove this, this is so we can write files with this unfinished implementation
 	Vector<uint8_t> extraData;

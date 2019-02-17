@@ -30,13 +30,10 @@ Node* findEntityByUID(uint32_t UID) {
 
 void loadEntityLibrary() {
 	SDL_RWops *fp = FH::openFile("worlds\\windy_city\\generated\\entitylibrary_rt.fcb");
-	size_t size = SDL_RWsize(fp);
-	Vector<uint8_t> data(size);
-	SDL_RWread(fp, data.data(), size, 1);
-	SDL_RWclose(fp);
-
-	fp = SDL_RWFromConstMem(data.data(), size);
-	SDL_assert_release(fp);
+	if (!fp) {
+		SDL_ShowSimpleMessageBox(0, "Disrupt Editor", "Failed to load entity Library", NULL);
+		exit(0);
+	}
 
 	uint32_t infoOffset = SDL_ReadLE32(fp);
 	uint32_t infoCount = SDL_ReadLE32(fp);

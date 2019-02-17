@@ -42,6 +42,7 @@ bool wluFile::open(std::string filename) {
 	}
 
 	SDL_RWclose(fp);
+	return ret;
 }
 
 bool wluFile::openWD1(SDL_RWops *fp) {

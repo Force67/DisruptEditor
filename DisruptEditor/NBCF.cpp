@@ -246,7 +246,7 @@ void Node::deserializeA(SDL_RWops * fp, Vector<Node*> &list, bool bigEndian) {
 	list.push_back(this);
 
 	children.resize(childCount);
-	for (int index = 0; index < childCount; ++index)
+	for (uint32_t index = 0; index < childCount; ++index)
 		children[index].deserializeA(fp, list, bigEndian);
 }
 

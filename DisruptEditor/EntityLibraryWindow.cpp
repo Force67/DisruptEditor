@@ -26,7 +26,7 @@ void UI::displayEntityLibrary() {
 	for (auto it = entityLibrary.begin(); it != entityLibrary.end(); ++it) {
 		Node &entity = it->second;
 
-		int i = entity.children.size();
+		size_t i = entity.children.size();
 
 		std::string name = (const char*)entity.getAttribute("hidName")->buffer.data();
 		if (name.find(searchBuffer) != std::string::npos) {

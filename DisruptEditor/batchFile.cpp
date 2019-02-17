@@ -50,8 +50,11 @@ bool batchFile::open(IBinaryArchive &reader) {
 		reader.serialize(physicsFile.id);
 
 		SDL_Log("CMBP Tell: %u\n\n", reader.tell());
-
 		componentMBP.read(reader);
+		SDL_Log("BMBP Tell: %u\n\n", reader.tell());
+		buildingMBP.read(reader);
+		SDL_Log("quadtreeCollidableMBP Tell: %u\n\n", reader.tell());
+		quadtreeCollidableMBP.read(reader);
 	} else if (head.type == 1) {
 		//assert_file_crash(strstr(filename, "_phys.cbatch"));
 	}
@@ -214,8 +217,9 @@ void batchFile::CGraphicBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(unk12);
 
 	//Count for CClusterHelper?
-	uint32_t rangeCount;
+	uint32_t rangeCount = ranges.size();
 	fp.serialize(rangeCount);
+	ranges.resize(rangeCount);
 
 	//CClusterHelper
 	SDL_Log("Tell3: %u\n\n", fp.tell());
@@ -239,10 +243,8 @@ void batchFile::CGraphicBatchProcessor::read(IBinaryArchive& fp) {
 
 	SDL_Log("Tell4: %u\n\n", fp.tell());
 
-	for (uint32_t j = 0; j < rangeCount; ++j) {
-		SInstanceRange &range = ranges.emplace_back();
-		range.read(fp);
-	}
+	for (uint32_t j = 0; j < rangeCount; ++j)
+		ranges[j].read(fp);
 
 	SDL_Log("Tell5: %u\n\n", fp.tell());
 }
@@ -253,6 +255,8 @@ void batchFile::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(resources);
 	REGISTER_MEMBER(physicsFile);
 	REGISTER_MEMBER(componentMBP);
+	REGISTER_MEMBER(buildingMBP);
+	REGISTER_MEMBER(quadtreeCollidableMBP);
 	REGISTER_MEMBER(extraData);
 }
 
@@ -559,4 +563,41 @@ void batchFile::CSecurityCameraBatchProcessor::registerMembers(MemberStructure& 
 	REGISTER_MEMBER(unk8);
 	REGISTER_MEMBER(unk9);
 	REGISTER_MEMBER(objects);
+}
+
+void batchFile::CBuildingMultiBatchProcessor::read(IBinaryArchive& fp) {
+	fp.serialize(unk1);
+
+	uint32_t count;
+	fp.serialize(count);
+	SDL_assert_release(count == 0);
+	for (uint32_t i = 0; i < count; ++i) {
+		Vector<CPathID> buildingResources;
+		fp.serializeNdVectorExternal(buildingResources);
+
+		//TODO: Finish This
+	}
+
+}
+
+void batchFile::CBuildingMultiBatchProcessor::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(unk1);
+}
+
+void batchFile::CQuadtreeCollidableMultiBatchProcessor::read(IBinaryArchive& fp) {
+	//void SerializeMember<T1>(IBinaryArchive&, T1&)[with T1 = IQuadtreeCollidableBatchProcessor * [3]]
+
+	uint32_t unk1;
+	fp.serialize(unk1);
+
+	uint32_t unk2;
+	fp.serialize(unk2);
+
+	CStringID type;
+	fp.serialize(type.id);
+	SDL_Log("%s", type.getReverseName().c_str());
+
+}
+
+void batchFile::CQuadtreeCollidableMultiBatchProcessor::registerMembers(MemberStructure& ms) {
 }

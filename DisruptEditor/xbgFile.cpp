@@ -147,7 +147,7 @@ void xbgFile::open(SDL_RWops *fp) {
 		uint32_t count = SDL_ReadLE32(fp);
 		if (count != 0)
 			return;
-		for (int32_t i = 0; i < count; ++i) {
+		for (uint32_t i = 0; i < count; ++i) {
 			Unknown u;
 			SDL_RWread(fp, &u, sizeof(u), 1);
 
@@ -231,16 +231,16 @@ void xbgFile::open(SDL_RWops *fp) {
 	{
 		uint32_t count = SDL_ReadLE32(fp);
 		SDL_assert_release(count == 0);
-		for (int32_t i = 0; i < count; ++i) {
+		for (uint32_t i = 0; i < count; ++i) {
 
 		}
 	}
 
 	//Parse Mesh
-	for (int32_t i = 0; i < head.lodCount; ++i) {
+	for (uint32_t i = 0; i < head.lodCount; ++i) {
 		uint32_t meshCount = SDL_ReadLE32(fp);
 		meshes.resize(meshCount);
-		for (int32_t j = 0; j < meshCount; ++j) {
+		for (uint32_t j = 0; j < meshCount; ++j) {
 			Mesh &mesh = meshes[j];
 
 			MeshData data;
@@ -255,7 +255,7 @@ void xbgFile::open(SDL_RWops *fp) {
 			mesh.scaleFlag = 0;
 			mesh.boneMapID = data.u2[6];
 
-			for (int32_t k = 0; k < data.matCount; ++k) {
+			for (uint32_t k = 0; k < data.matCount; ++k) {
 				SDL_RWseek(fp, 68, RW_SEEK_CUR);
 				mesh.mat = readString(fp);
 				seekpad(fp, 4);

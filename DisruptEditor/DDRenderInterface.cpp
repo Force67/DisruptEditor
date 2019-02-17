@@ -112,7 +112,7 @@ void RenderInterface::drawGlyphList(const dd::DrawVertex * glyphs, int count, dd
 	updateVertexBuffer(glyphs, count * sizeof(dd::DrawVertex), texBuffer);
 
 	tex.use();
-	glUniform2f(tex.uniforms["windowSize"], windowSize.x, windowSize.y);
+	glUniform2f(tex.uniforms["windowSize"], (float)windowSize.x, (float)windowSize.y);
 	glBindBuffer(GL_ARRAY_BUFFER, texBuffer.buffer_id);
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);

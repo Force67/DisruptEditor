@@ -72,7 +72,7 @@ static const uint32_t crc_lookup[256] = {
 	0xbcb4666d,0xb8757bda,0xb5365d03,0xb1f740b4 };
 
 uint32_t crc32bufogg(const uint8_t *buf, size_t len) {
-	register uint32_t crc = 0;
+	uint32_t crc = 0;
 
 	for (; len; --len, ++buf)
 		crc = (crc << 8) ^ crc_lookup[((crc >> 24) & 0xff) ^ *buf];
@@ -195,7 +195,7 @@ uint32_t updateCRC32(unsigned char ch, uint32_t crc) {
 }
 
 uint32_t crc32buf(const char *buf, size_t len) {
-	register uint32_t oldcrc32;
+	uint32_t oldcrc32;
 
 	oldcrc32 = 0xFFFFFFFF;
 
@@ -257,7 +257,7 @@ uint32_t Hash::getFilenameHash(std::string str) {
 		hash64 *= 0x100000001B3;
 		hash64 ^= t;
 	}
-	uint32_t hash32 = hash64;
+	uint32_t hash32 = (uint32_t)hash64;
 	if ((hash32 & 0xFFFF0000) == 0xFFFF0000) {
 		return hash32 & ~(1u << 16);
 	}
