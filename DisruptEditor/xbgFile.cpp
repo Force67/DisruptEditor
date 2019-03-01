@@ -1,3 +1,11 @@
+/*
+
+Copyright 2019 Jonathan Scott
+All rights reserved
+You may not use this file without permission
+
+*/
+
 #include "xbgFile.h"
 
 #include <iostream>
@@ -10,301 +18,87 @@
 #include <SDL_log.h>
 #include <SDL_rwops.h>
 #include "FileHandler.h"
+#include "IBinaryArchive.h"
+#include "Hash.h"
 
-#pragma pack(push, 1)
-struct XBGHead {
-	uint32_t magic;
-	uint16_t majorVersion;
-	uint16_t minorVersion;
-	uint32_t unk[26];
-	uint32_t lodCount;
-};
-struct Bone {
-	int32_t unknown;
-	float pos[3];
-	float rot[4];
-	int16_t parent;
-	int16_t id;
-	uint32_t hash;
-};
-struct Unknown {
-	int32_t u1[2];
-	float u2[7];
-	int32_t u3[5];
-	int32_t type;
-};
-struct MeshData {
-	float u1[10];
-	uint16_t u2[20];
-	uint32_t matCount;
-	uint32_t u3[2];
-};
-#pragma pack(pop)
+void xbgFile::open(IBinaryArchive &fp) {
+	header.read(fp);
 
-static inline std::string readString(SDL_RWops *fp) {
-	uint32_t size = SDL_ReadLE32(fp);
-	std::string str(size, '\0');
-	SDL_RWread(fp, &str[0], 1, size);
-	return str;
-}
+	//CGeometryResource::GetCurrentVersion()
+	//	which calls CPathID::GetCollisionTableVersion()
+	//	which returns 0x38 (On WiiU)
+	
+	//ReadValue<T1>(T1 &, unsigned char *&) [with T1=CGeometryResource::SMemoryNeed]
+	memoryNeeded.read(fp);
 
-void xbgFile::open(SDL_RWops *fp) {
-	if (!fp) {
-		SDL_Log("Failed\n");
-		return;
-	}
+	//.text:05A15178 Then Pads 4, loads float
+	fp.serialize(unk1);
 
-	XBGHead head;
-	SDL_RWread(fp, &head, sizeof(head), 1);
-	SDL_assert_release(head.magic == 1195724621);
-	SDL_assert_release(head.majorVersion == 97);
-	SDL_assert_release(head.minorVersion == 50);
+	fp.serialize(unk2);
 
-	SDL_RWseek(fp, head.lodCount * sizeof(float), RW_SEEK_CUR);
-	SDL_RWseek(fp, 8, RW_SEEK_CUR);
-	uint32_t a = SDL_ReadLE32(fp);
-	SDL_RWseek(fp, (head.lodCount - a) * sizeof(float), RW_SEEK_CUR);
+	//CGeometryResource::ReadSceneGeometryParams((CSceneGeometry &,uchar const *&))
+	SDL_Log("SceneGeometryParams: %u", fp.tell());
+	geomParams.read(fp);
 
-	//Section A - Materials
-	SDL_Log("Materials Offset: %u\n", SDL_RWtell(fp));
-	{
-		uint32_t count = SDL_ReadLE32(fp);
-		for (uint32_t i = 0; i < count; ++i) {
-			Material &mat = materials.emplace_back();
-			mat.hash = SDL_ReadLE32(fp);
-			mat.file = readString(fp);
-			SDL_Log("Mat %u %s\n", mat.hash, mat.file.c_str());
-			seekpad(fp, 4);
-		}
-	}
+	SDL_Log("MaterialResources: %u", fp.tell());
+	materialResources.read(fp);
 
-	//Section B -
-	SDL_Log("Materials Slot to Index?: %u\n", SDL_RWtell(fp));
-	{
-		uint32_t matCount = SDL_ReadLE32(fp);
-		for (uint32_t i = 0; i < matCount; ++i) {
-			uint32_t hash = SDL_ReadLE32(fp);
-			std::string matFile = readString(fp);
-			seekpad(fp, 4);
-			SDL_ReadLE32(fp);
-		}
+	SDL_Log("MaterialSlotToIndex: %u", fp.tell());
+	materialSlotToIndex.read(fp);
 
-		//Bl
-		uint32_t count = SDL_ReadLE32(fp);
-		for (uint32_t i = 0; i < count; ++i) {
-			uint32_t hash = SDL_ReadLE32(fp);
-			std::string matFile = readString(fp);
-			seekpad(fp, 4);
-		}
-	}
+	SDL_Log("SkinNames: %u", fp.tell());
+	skinNames.read(fp);
 
-	//Section C -
-	SDL_Log("Skin Names: %u\n", SDL_RWtell(fp));
-	{
-		uint32_t boneMapCount = SDL_ReadLE32(fp);
-		for (uint32_t i = 0; i < boneMapCount; ++i) {
-			uint32_t boneIDCount = SDL_ReadLE32(fp);
-			uint16_t boneMap = SDL_ReadLE16(fp);
-			seekpad(fp, 4);
-		}
-	}
+	SDL_Log("BonePalettes: %u", fp.tell());
+	bonePalettes.read(fp);
 
-	//Section D -
-	{
-		uint32_t boneChunk = SDL_ReadLE32(fp);
-		if (boneChunk == 1) {
-			uint32_t boneCount = SDL_ReadLE32(fp);
-			for (uint32_t i = 0; i < boneCount; ++i) {
-				Bone bone;
-				SDL_RWread(fp, &bone, sizeof(bone), 1);
-				std::string name = readString(fp);
-				seekpad(fp, 4);
-			}
-		}
-	}
+	SDL_Log("SkelResources: %u", fp.tell());
+	skelResources.read(fp);
 
-	//Section E -
-	{
-		uint32_t f1 = SDL_ReadLE32(fp);
-		uint32_t matrixCount = SDL_ReadLE32(fp);
-		seekpad(fp, 16);
+	SDL_RWseek(fp.fp, 56584, RW_SEEK_SET);
+	SDL_assert_release(fp.tell() == 56584);//Debug
+	SDL_Log("ReflexSystem: %u", fp.tell());
+	relfexSystem.read(fp);
 
-		Vector<glm::mat4> data(matrixCount);
-		SDL_RWread(fp, data.data(), sizeof(glm::mat4), data.size());
-	}
+	SDL_Log("SecondaryMotionObjects: %u", fp.tell());
+	secondaryMotionObjects.read(fp);
 
-	//Section K -
-	{
-		uint32_t f1 = SDL_ReadLE32(fp);
-		if (f1 > 0) {
-			uint32_t size = SDL_ReadLE32(fp);
-			SDL_RWseek(fp, size, RW_SEEK_CUR);
-		}
-	}
+	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0;
 
-	//Section G - TODO
-	{
-		uint32_t count = SDL_ReadLE32(fp);
-		if (count != 0)
-			return;
-		for (uint32_t i = 0; i < count; ++i) {
-			Unknown u;
-			SDL_RWread(fp, &u, sizeof(u), 1);
+	/*
+	First Time
+	
+	r5 = r4 + 3;
+	r11 = r5 & 0xFFFFFFFC;
+	r6 = r11 + 7;
+	r11 = r6 & 0xFFFFFFFC;
+	r7 = r11 + 7;
+	r8 = r7 & 0xFFFFFFFC;
+	r0 = r8 + 7;
+	r9 = r0 & 0xFFFFFFFC;
+	r10 = r9 + 7;
+	//lwz       r31, 0(r11)   # gets value at base + 4 + 7
+	r11 = r10 & 0xFFFFFFFC;
+	r4 = r11 + 4;//r4 is at 20
+	//stw       r4, 0x188 + ptrcur(r1)
+	*/
 
-			/*if (u.type == 2) {
-				count=g.i(1)[0]
-				count=g.i(1)[0]
-				for m in range(count):
-					hash=g.i(1)[0]
-					m,g.word(g.i(1)[0])
-					g.seekpad(16)
-					g.f(4)	
-					g.f(4)	
-					g.f(4)	
-					g.f(4)	
-					g.f(1)
-				g.i(1)[0]
-				count=g.i(1)[0]
-				for m in range(count):
-					hash=g.i(1)[0]
-					m,g.word(g.i(1)[0])
-					g.seekpad(16)
-					g.f(4)	
-					g.f(4)	
-					g.f(4)	
-					g.f(4)	
-					g.f(7)
-				count=g.i(1)[0]
-				for m in range(count):
-					hash=g.i(1)[0]
-					m,g.word(g.i(1)[0])
-					g.seekpad(16)
-					g.f(4)	
-					g.f(4)	
-					g.f(4)	
-					g.f(4)	
-					g.f(6)
-				count=g.i(1)[0]	
-				for m in range(count):
-					cv=g.i(1)[0]
-					g.tell()
-					count=g.i(1)[0]
-					for m in range(count):
-						g.f(5)
-				count=g.i(1)[0]		
-				for m in range(count):
-					cv=g.i(1)[0]
-					count=g.i(1)[0]	
-					for m in range(count):
-						g.f(9)
-				count=g.i(1)[0]		
-				for m in range(count):
-					cv=g.i(1)[0]
-					count=g.i(1)[0]	
-					for m in range(count):
-						g.f(9)
-				count=g.i(1)[0]
-				for m in range(count):
-					hash=g.i(1)[0]
-					m,g.word(g.i(1)[0])
-					g.seekpad(4)
-					g.f(4)
-				
-				count=g.i(1)[0]
-				for m in range(count):
-					hash=g.i(1)[0]
-					m,g.word(g.i(1)[0])
-					g.seekpad(4)
-					
-				count=g.i(1)[0]
-				count=g.i(1)[0]
-				count=g.i(1)[0]
-				count=g.i(1)[0]
-			} else {
+	/*r7 = r8 + 3;
+	r9 = r7 & 0xFFFFFFFC;
+	r0 = r9 + 7;
+	r12 = r0 & 0xFFFFFFFC;
+	r9 = r12 + 7;
+	r10 = r9 & 0xFFFFFFFC;
+	r0 = r10 + 7;
+	r5 = r0 & 0xFFFFFFFC;
+	r0 = r5 + 7;
+	r11 = r0 & 0xFFFFFFFC;*/
 
-			}*/
-
-		}
-	}
-
-	//Section F - TODO
-	{
-		uint32_t count = SDL_ReadLE32(fp);
-		SDL_assert_release(count == 0);
-		for (uint32_t i = 0; i < count; ++i) {
-
-		}
-	}
-
-	//Parse Mesh
-	for (uint32_t i = 0; i < head.lodCount; ++i) {
-		uint32_t meshCount = SDL_ReadLE32(fp);
-		meshes.resize(meshCount);
-		for (uint32_t j = 0; j < meshCount; ++j) {
-			Mesh &mesh = meshes[j];
-
-			MeshData data;
-			SDL_RWread(fp, &data, sizeof(data), 1);
-
-			mesh.vertexStride = data.u2[4];
-			mesh.matID = data.u2[2];
-			mesh.vertexCount = 1 + data.u2[18] - data.u2[17];
-			mesh.totalVertexCount = data.u2[16];
-			mesh.faceCount = data.u2[10];
-			mesh.UVFlag = data.u2[3];
-			mesh.scaleFlag = 0;
-			mesh.boneMapID = data.u2[6];
-
-			for (uint32_t k = 0; k < data.matCount; ++k) {
-				SDL_RWseek(fp, 68, RW_SEEK_CUR);
-				mesh.mat = readString(fp);
-				seekpad(fp, 4);
-
-				uint16_t u[2];
-				SDL_RWread(fp, u, sizeof(uint16_t), 2);
-			}
-		}
-	}
-
-	uint32_t min = SDL_ReadLE32(fp);
-	uint32_t max = SDL_ReadLE32(fp);
-
-	struct Model {
-
-	};
-	Vector<Model> models(head.lodCount);
-
-	for (uint32_t i = 0; i < max; ++i) {
-		uint32_t meshCount = SDL_ReadLE32(fp);
-
-		for (int32_t j = 0; j < meshes.size(); ++j) {
-			Mesh &mesh = meshes[j];
-
-			mesh.buffer.resize(mesh.vertexCount * mesh.vertexStride / sizeof(uint16_t));
-			SDL_RWread(fp, mesh.buffer.data(), sizeof(uint16_t), mesh.buffer.size());
-			mesh.vbo = createVertexBuffer(mesh.buffer.data(), sizeof(uint16_t) * mesh.buffer.size(), BUFFER_STATIC);
-		}
-
-		//Faces
-		SDL_ReadLE32(fp);
-		for (int32_t j = 0; j < meshes.size(); ++j) {
-			Mesh &mesh = meshes[j];
-
-			mesh.index.resize(mesh.faceCount * 3);
-			SDL_RWread(fp, mesh.index.data(), sizeof(uint16_t), mesh.index.size());
-			mesh.ibo = createVertexBuffer(mesh.index.data(), sizeof(uint16_t) * mesh.index.size(), BUFFER_STATIC);
-		}
-
-		seekpad(fp, 4);
-
-		break;
-	}
-
-	SDL_RWclose(fp);
+	int b = 0;
 }
 
 void xbgFile::draw() {
-	auto material = materials.begin();
+	/*auto material = materials.begin();
 	for (auto &mesh : meshes) {
 		auto &mat = loadMaterial(material->file);
 		if (!mat.entries.empty()) {
@@ -344,5 +138,266 @@ void xbgFile::draw() {
 		glDisableVertexAttribArray(1);
 
 		++material;
-	}
+	}*/
+}
+
+void xbgFile::Header::read(IBinaryArchive & fp) {
+	magic = 0x47454F4D;
+	fp.serialize(magic);
+	SDL_assert_release(magic == 0x47454F4D);
+
+	majorVersion = 97;
+	fp.serialize(majorVersion);
+	SDL_assert_release(majorVersion == 97);
+
+	minorVersion = 50;
+	fp.serialize(minorVersion);
+	SDL_assert_release(minorVersion == 50);
+
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+}
+
+void xbgFile::SMemoryNeed::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+}
+
+void xbgFile::SceneGeometryParams::read(IBinaryArchive &fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+
+	fp.serialize(unk5);
+	fp.serialize(unk6);
+
+	fp.serialize(unk7);
+	fp.serialize(unk8);
+	fp.serialize(unk9);
+	fp.serialize(unk10);
+
+	fp.serialize(unk11);
+	fp.serialize(unk12);
+	fp.serialize(unk13);
+	//fp.serialize(unk14);
+
+	SDL_assert_release(fp.tell() == 112);
+	fp.serializeNdVectorExternal(lods);
+
+	fp.serialize(unk15);
+	fp.serialize(unk16);
+	fp.serialize(unk17);
+	fp.serialize(unk18);
+}
+
+void xbgFile::SceneGeometryParams::SLOD::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+}
+
+void xbgFile::MaterialResources::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serializeNdVectorExternal(materials);
+}
+
+void xbgFile::MaterialResources::MaterialFile::read(IBinaryArchive & fp) {
+	fp.serialize(file1.id);
+	fp.serialize(file2);
+	std::string abc = file1.getReverseFilename();
+	uint32_t abc2 = Hash::instance().getFilenameHash(file2);
+	//SDL_assert_release(file1.id == Hash::instance().getFilenameHash(file2));
+}
+
+void xbgFile::MaterialSlotToIndex::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(slots);
+}
+
+void xbgFile::MaterialSlotToIndex::Slot::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+}
+
+void xbgFile::SkinNames::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(skins);
+}
+
+void xbgFile::SkinNames::Skin::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+}
+
+void xbgFile::BonePalettes::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(pallets);
+}
+
+void xbgFile::BonePalettes::BonesPallet::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal_pod(unk1);
+}
+
+void xbgFile::SkelResources::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(resources);
+
+	//reads uint32_t
+	//reads uint32_t
+
+}
+
+void xbgFile::SkelResources::SRawNode::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(pos);
+	fp.serialize(rot);
+	fp.serialize(unk9);
+}
+
+void xbgFile::SkelResources::SkelResource::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	node.read(fp);
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+}
+
+void xbgFile::ReflexSystem::read(IBinaryArchive &fp) {
+	root = readFCB(fp.fp);
+	tinyxml2::XMLPrinter printer;
+	root.serializeXML(printer);
+	const char* str = printer.CStr();
+}
+
+void xbgFile::SecondaryMotionObjects::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(smos);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::read(IBinaryArchive & fp) {
+	simulationParams.read(fp);
+	secondaryMotionUnitCollisionPrimitives.read(fp);
+	secondaryMotionUnitLimits.read(fp);
+	secondaryMotionUnitParticles.read(fp);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SSMSimulationParametersDesc::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+	fp.serialize(unk6);
+	fp.serialize(unk7);
+	fp.serialize(unk8);
+	fp.serialize(unk9);
+	fp.serialize(unk10);
+	fp.serialize(unk11);
+	fp.serialize(unk12);
+	fp.serialize(type);
+	fp.serialize(unk13);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(spheres);
+	fp.serializeNdVectorExternal(cylinders);
+	fp.serializeNdVectorExternal(capsules);
+	fp.serializeNdVectorExternal(planes);
+
+	SDL_Log("%u", fp.tell());
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SSphereDesc::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SCylinderDesc::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SCapsuleDesc::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SInfinitePlaneDesc::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::read(IBinaryArchive & fp) {
+	SDL_Log("%u", fp.tell());
+	fp.serializeNdVectorExternal(spheres);
+	SDL_Log("%u", fp.tell());
+	fp.serializeNdVectorExternal(boxes);
+	SDL_Log("%u", fp.tell());
+	fp.serializeNdVectorExternal(cylinders);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SSphereLimitDesc::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SBoxLimitDesc::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SCylinderLimitDesc::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitParticles::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(particles);
+	fp.serializeNdVectorExternal(meshes);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitParticles::SSMParticleDesc::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+}
+
+void xbgFile::CMeshNameID::read(IBinaryArchive & fp) {
+	fp.serialize(name1.id);
+	fp.serialize(name2);
+	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
 }

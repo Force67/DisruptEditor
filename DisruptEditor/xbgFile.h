@@ -1,48 +1,305 @@
+/*
+
+Copyright 2019 Jonathan Scott
+All rights reserved
+You may not use this file without permission
+
+*/
+
 #pragma once
 
 #include <stdint.h>
 #include "Vector.h"
 #include <string>
 #include "GLHelper.h"
+#include "CPathID.h"
+#include "CStringID.h"
+#include "glm/glm.hpp"
+#include "NBCF.h"
 
-/*
-
-Wobble wrote:
-I found the vertex format here:
-vertexdeclaration.inc.fx
-
-VERTEX_DECL_POSITIONCOMPRESSED
-VERTEX_DECL_POSITIONFLOAT
-VERTEX_DECL_UV0
-VERTEX_DECL_UV1
-...
-
-They don't say what the actual bits are for each flag, but just looking at the order of things gives
-a basic layout of the format:
-position | uv0 | uv1 | blend_weights | blend_indices | normal | color | tangent | binormal | ...
-
-Perhaps these flags are defined in an XBOX or PS3 SDK that is only available to Developers.
-
-
-For stride 44 theres a blank unknown if i can recall but yeah thats the basic format if only I was home and the game was dx9 could easily get the bit values using Microsoft PIX
-//POS
-//UV
-//UV2
-//BoneWeights
-//BoneIndices
-//blankUnknown
-//Vertex normal
-//Vertex col
-//Bi-Normal
-//Tangents
-
-*/
-
-struct SDL_RWops;
+class IBinaryArchive;
 
 class xbgFile {
 public:
-	void open(SDL_RWops* fp);
+	void open(IBinaryArchive &fp);
+
+	//Header (20 bytes)
+	struct Header {
+		uint32_t magic;
+		uint16_t majorVersion;
+		uint16_t minorVersion;
+		uint32_t unk1;
+		uint32_t unk2;
+		uint32_t unk3;
+		void read(IBinaryArchive &fp);
+	};
+	Header header;
+
+	struct SMemoryNeed {
+		uint32_t unk1;
+		uint32_t unk2;
+		void read(IBinaryArchive &fp);
+	};
+	SMemoryNeed memoryNeeded;
+
+	float unk1;
+	bool unk2;//This bool is used in the first branch of SceneGeometryParams
+
+	struct CMeshNameID {
+		CStringID name1;
+		std::string name2;
+		void read(IBinaryArchive &fp);
+	};
+
+	struct SceneGeometryParams {
+		uint32_t unk1;
+		float unk2;
+		float unk3;
+		float unk4;
+
+		//First Branch
+		float unk5;
+		float unk6;
+
+		glm::vec3 unk7;
+		float unk8;
+		glm::vec3 unk9;
+		glm::vec3 unk10;
+
+		//Game doesn't read this?
+		uint32_t unk11;
+		uint32_t unk12;
+		uint32_t unk13;
+		//uint32_t unk14;
+
+		struct SLOD { //CSceneGeometry::SLOD 16 bytes
+			float unk1;
+			float unk2;
+			float unk3;
+			float unk4;
+			void read(IBinaryArchive &fp);
+		};
+		Vector<SLOD> lods;
+
+		float unk15;
+		bool unk16;
+		bool unk17;
+		uint8_t unk18;
+
+		void read(IBinaryArchive &fp);
+	};
+	SceneGeometryParams geomParams;
+
+	struct MaterialResources {
+		uint32_t unk1;
+		uint32_t unk2;
+		struct MaterialFile {
+			CPathID file1;
+			std::string file2;
+			void read(IBinaryArchive &fp);
+		};
+		Vector<MaterialFile> materials;
+
+		void read(IBinaryArchive &fp);
+	};
+	MaterialResources materialResources;
+
+	struct MaterialSlotToIndex {
+		struct Slot {
+			CStringID name1;
+			std::string name2;
+			uint32_t unk1;
+			void read(IBinaryArchive &fp);
+		};
+		Vector<Slot> slots;
+
+		void read(IBinaryArchive &fp);
+	};
+	MaterialSlotToIndex materialSlotToIndex;
+
+	struct SkinNames {
+		struct Skin {
+			CStringID name1;
+			std::string name2;
+			void read(IBinaryArchive &fp);
+		};
+		Vector<Skin> skins;
+
+		void read(IBinaryArchive &fp);
+	};
+	SkinNames skinNames;
+
+	struct BonePalettes {
+		struct BonesPallet {
+			Vector<uint16_t> unk1;
+			void read(IBinaryArchive &fp);
+		};
+		Vector<BonesPallet> pallets;
+
+		void read(IBinaryArchive &fp);
+	};
+	BonePalettes bonePalettes;
+
+	struct SkelResources {
+		struct SRawNode {
+			uint32_t unk1;
+			glm::vec3 pos;
+			glm::vec4 rot;
+			uint32_t unk9;
+			void read(IBinaryArchive &fp);
+		};
+
+		struct SkelResource {
+			uint32_t unk1;
+			SRawNode node;
+			CStringID name1;
+			std::string name2;
+			void read(IBinaryArchive &fp);
+		};
+		Vector<SkelResource> resources;
+
+
+
+		void read(IBinaryArchive &fp);
+	};
+	SkelResources skelResources;
+
+	struct ReflexSystem {
+		Node root;
+		void read(IBinaryArchive &fp);
+	};
+	ReflexSystem relfexSystem;
+
+
+	typedef uint32_t ESecondaryMotionObjectType;
+	struct SecondaryMotionObjects {
+		struct SMO {
+			struct SSMSimulationParametersDesc {
+				glm::vec3 unk1;
+				float unk2;
+				float unk3;
+				float unk4;
+				float unk5;
+				float unk6;
+				float unk7;
+				float unk8;
+				float unk9;
+				float unk10;
+				float unk11;
+				uint32_t unk12;
+				ESecondaryMotionObjectType type;
+				bool unk13;
+				void read(IBinaryArchive &fp);
+			};
+			SSMSimulationParametersDesc simulationParams;
+
+			struct SecondaryMotionUnitCollisionPrimitives {
+				struct SSphereDesc {
+					CStringID name1;
+					std::string name2;
+					glm::mat4 unk1;
+					float unk2;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SSphereDesc> spheres;
+
+				struct SCylinderDesc {
+					CStringID name1;
+					std::string name2;
+					glm::mat4 unk1;
+					float unk2;
+					glm::vec3 unk3;
+					glm::vec3 unk4;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SCylinderDesc> cylinders;
+
+				struct SCapsuleDesc {
+					CStringID name1;
+					std::string name2;
+					glm::mat4 unk1;
+					float unk2;
+					glm::vec3 unk3;
+					glm::vec3 unk4;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SCapsuleDesc> capsules;
+
+				struct SInfinitePlaneDesc {
+					CStringID name1;
+					std::string name2;
+					glm::mat4 unk1;
+					glm::vec3 unk2;
+					glm::vec3 unk3;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SInfinitePlaneDesc> planes;
+
+				void read(IBinaryArchive &fp);
+			};
+			SecondaryMotionUnitCollisionPrimitives secondaryMotionUnitCollisionPrimitives;
+
+			struct SecondaryMotionUnitLimits {
+				struct SSphereLimitDesc {
+					CStringID name1;
+					std::string name2;
+					uint16_t unk1;
+					glm::vec3 unk2;
+					float unk3;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SSphereLimitDesc> spheres;
+
+				struct SBoxLimitDesc {
+					CStringID name1;
+					std::string name2;
+					uint16_t unk1;
+					glm::vec3 unk2;
+					glm::vec3 unk3;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SBoxLimitDesc> boxes;
+
+				struct SCylinderLimitDesc {
+					CStringID name1;
+					std::string name2;
+					uint16_t unk1;
+					glm::vec3 unk2;
+					glm::vec3 unk3;
+					float unk4;
+					float unk5;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SCylinderLimitDesc> cylinders;
+
+				void read(IBinaryArchive &fp);
+			};
+			SecondaryMotionUnitLimits secondaryMotionUnitLimits;
+
+			struct SecondaryMotionUnitParticles {
+				struct SSMParticleDesc {
+					CStringID name1;
+					std::string name2;
+					float unk1;
+					bool unk2;
+					uint16_t unk3;
+					glm::vec2 unk4;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SSMParticleDesc> particles;
+				Vector<CMeshNameID> meshes;
+
+				void read(IBinaryArchive &fp);
+			};
+			SecondaryMotionUnitParticles secondaryMotionUnitParticles;
+
+			void read(IBinaryArchive &fp);
+		};
+		Vector<SMO> smos;
+
+		void read(IBinaryArchive &fp);
+	};
+	SecondaryMotionObjects secondaryMotionObjects;
 
 	struct Mesh {
 		uint16_t vertexStride, matID, vertexCount, totalVertexCount, faceCount, UVFlag, scaleFlag, boneMapID;
@@ -51,12 +308,6 @@ public:
 		VertexBuffer vbo, ibo;
 	};
 	Vector<Mesh> meshes;
-
-	struct Material {
-		uint32_t hash;
-		std::string file;
-	};
-	Vector<Material> materials;
 
 	void draw();
 };

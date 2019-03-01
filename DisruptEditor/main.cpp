@@ -32,7 +32,10 @@
 #include "FileHandler.h"
 #include "World.h"
 #include "ImguiWindows.h"
+#include "Serialization.h"
 #include "Version.h"
+#include "IBinaryArchive.h"
+#include "HexBase64.h"
 
 int main(int argc, char **argv) {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -80,7 +83,43 @@ int main(int argc, char **argv) {
 	camera.far_plane = 6500.f;
 
 	//Debug
+#if _DEBUG
 	{
+		/*auto b = fromHexString("10 ae 2346");
+		auto c = fromHexString("10AE2346");
+
+		CStringID temp;
+		temp.id = 0xEB07AAAC;
+		std::string temp2 = temp.getReverseName();
+		
+
+		temp2 = std::to_string(Hash::instance().getHash("SBatchedSoundPointBreakable"));*/
+
+		FH::Init();
+		xbgFile xbg;
+		SDL_RWops* fp = SDL_RWFromFile("Z:\\scratch\\bin\\windy_city\\graphics\\characters\\char\\char01\\char01.xbg", "rb");
+		xbg.open(CBinaryArchiveReader(fp));
+		SDL_RWclose(fp);
+
+		batchFile bf;
+		try {
+			SDL_RWops* fp = SDL_RWFromFile("C:\\Program Files\\Ubisoft\\WATCH_DOGS\\bin\\patch\\worlds\\windy_city\\generated\\batchmeshentity\\batchmeshentity_c2_i0_xn0767_yp0513_xn0641_yp0639_compound.cbatch", "rb");
+			bf.open(CBinaryArchiveReader(fp));
+			SDL_RWclose(fp);
+
+			//bf.componentMBP.batchProcessors.clear();
+			//bf.physicsFile.id = -1;
+
+			/*fp = SDL_RWFromFile("C:\\Program Files\\Ubisoft\\WATCH_DOGS\\bin\\patch\\worlds\\windy_city\\generated\\batchmeshentity\\batchmeshentity_c2_i0_xn0767_yp0513_xn0641_yp0639_compound.cbatch", "wb");
+			bf.open(CBinaryArchiveWriter(fp));
+			SDL_RWclose(fp);*/
+
+		}
+		catch (...) {}
+		bf.extraData.clear();
+		std::string str = serializeToXML(bf);
+		int a = 1;
+
 		/*tfDIR dir;
 		tfDirOpen(&dir, "C:\\Program Files\\Ubisoft\\WATCH_DOGS\\bin\\patch\\worlds\\windy_city\\generated\\batchmeshentity");
 		while (dir.has_next) {
@@ -91,7 +130,9 @@ int main(int argc, char **argv) {
 				SDL_Log("Loading %s", file.name);
 
 				batchFile bf;
-				bf.open(SDL_RWFromFile(file.path, "rb+"));
+				bf.open(SDL_RWFromFile(file.path, "rb"));
+				std::string str = serializeToJSON(bf);
+				std::string outFilename = file.name + std::string(".json");
 			}
 
 			tfDirNext(&dir);
@@ -115,15 +156,15 @@ int main(int argc, char **argv) {
 
 			tfDirNext(&dir);
 		}
-		tfDirClose(&dir);
+		tfDirClose(&dir);*/
 		
 
-		/*tfDirOpen(&dir, "D:/Desktop/bin/windy_city/__UNKNOWN/srhr");
+		/*tfDirOpen(&dir, "C:\\Program Files\\Ubisoft\\WATCH_DOGS\\bin\\patch\\worlds/windy_city/generated/sdat");
 		while (dir.has_next) {
 			tfFILE file;
 			tfReadFile(&dir, &file);
 
-			if (!file.is_dir) {
+			if (!file.is_dir && strstr(file.name, ".sdhr") != NULL) {
 				SDL_Log("Loading %s\n", file.name);
 
 				CSectorHighRes spk;
@@ -134,6 +175,7 @@ int main(int argc, char **argv) {
 		}
 		tfDirClose(&dir);*/
 	}
+#endif
 
 	{
 		loadingScreen->setTitle("Scanning Files");
@@ -149,7 +191,7 @@ int main(int argc, char **argv) {
 
 		SDL_PumpEvents();
 		loadingScreen->setTitle("Loading Particle Library");
-		//world.particles = loadRml(FH::openFile(2646343311));
+		world.particles = loadRml(FH::openFile("worlds/windy_city/generated/windy_city_deploadnewparticles.rml"));
 
 		world.spawnPointList = loadXml(FH::openFile("worlds/windy_city/generated/spawnpointlist.xml"));
 

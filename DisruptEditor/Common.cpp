@@ -17,6 +17,7 @@
 #include "FileHandler.h"
 #include "Serialization.h"
 #include <SDL_messagebox.h>
+#include "IBinaryArchive.h"
 
 Settings settings;
 std::unordered_map<std::string, materialFile> materials;
@@ -76,7 +77,7 @@ xbgFile &loadXBG(uint32_t path) {
 		SDL_Log("Loading %u.xbg\n", path);
 		SDL_RWops *fp = FH::openFile(path);
 		if (fp)
-			model.open(fp);
+			model.open(CBinaryArchiveReader(fp));
 	}
 	return xbgs[path];
 }
