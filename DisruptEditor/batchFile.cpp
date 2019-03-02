@@ -378,19 +378,7 @@ void batchFile::CBlackoutEffectBatchProcessor::read(IBinaryArchive& fp) {
 	fp.serialize(unk2);
 
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<CBlackoutEffectBatchProcessor::SEffectPosAndAngle, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
-	uint32_t count;
-	fp.serialize(count);
-	posAndAngles.resize(count);
-
-	uint32_t SEffectPosAndAngleType;
-	fp.serialize(SEffectPosAndAngleType);
-	assert_file_crash(SEffectPosAndAngleType == 495023964);
-
-	fp.serialize(unk3);
-	fp.serialize(unk4);
-
-	for (uint32_t i = 0; i < count; ++i)
-		posAndAngles[i].read(fp);
+	fp.serializeNdVector(posAndAngles, 495023964, unk3);
 
 	fp.serialize(hasBatchInstanceIDs);
 	if (hasBatchInstanceIDs) {
@@ -409,7 +397,6 @@ void batchFile::CBlackoutEffectBatchProcessor::registerMembers(MemberStructure& 
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(unk2);
 	REGISTER_MEMBER(unk3);
-	REGISTER_MEMBER(unk4);
 	REGISTER_MEMBER(posAndAngles);
 	REGISTER_MEMBER(hasBatchInstanceIDs);
 }
@@ -436,21 +423,7 @@ void batchFile::CParticlesBatchProcessor::read(IBinaryArchive& fp) {
 
 	SDL_Log("Tell: %u", fp.tell());
 
-	uint32_t counter;
-	fp.serialize(counter);
-
-	uint32_t CParticlesSystemHdlType;
-	fp.serialize(CParticlesSystemHdlType);
-	assert_file_crash(CParticlesSystemHdlType == 0x16BB23DD);
-
-	uint32_t counterAgain;
-	fp.serialize(unk3);
-	fp.serialize(counterAgain);
-	assert_file_crash(counterAgain == counter);
-
-	hdls.resize(counter);
-	for (uint32_t i = 0; i < counter; ++i)
-		hdls[i].read(fp);
+	fp.serializeNdVector(hdls, 0x16BB23DD, unk3);
 
 	SDL_Log("Tell: %u", fp.tell());
 }
@@ -473,28 +446,14 @@ void batchFile::CDynamicLightBatchProcessor::read(IBinaryArchive& fp) {
 	}
 	assert_file_crash(hasBatchInstanceIDs);
 
-	uint32_t counter;
-	fp.serialize(counter);
-	SDL_Log("Tell: %u", fp.tell());
-
-	uint32_t unknownTypeID = 0xFB4B8BEB;
-	fp.serialize(unknownTypeID);
-	assert_file_crash(unknownTypeID == 0xFB4B8BEB);
-
-	uint32_t u1, counterAgain;
-	fp.serialize(u1);
-	fp.serialize(counterAgain);
-
-	sceneLight.resize(counter);
-	for (uint32_t i = 0; i < counter; ++i)
-		sceneLight[i].read(fp);
-	
+	fp.serializeNdVector(sceneLight, 0xFB4B8BEB, unk1);
 }
 
 void batchFile::CDynamicLightBatchProcessor::registerMembers(MemberStructure& ms) {
 	REGISTER_MEMBER(lightObject);
 	REGISTER_MEMBER(hasBatchInstanceIDs);
 	REGISTER_MEMBER(batchedInstanceID);
+	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(sceneLight);
 }
 

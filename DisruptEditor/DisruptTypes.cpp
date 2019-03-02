@@ -40,10 +40,11 @@ void CGeometryResource::registerMembers(MemberStructure & ms) {
 void CMaterialSlotsMap::read(IBinaryArchive& fp) {
 	fp.serialize(unk1);
 	fp.serialize(unk2);
-	uint32_t count;
+
+	uint32_t count = slots.size();
 	fp.serialize(count);
 	for (uint32_t i = 0; i < count; ++i) {
-		auto &it = slots.emplace_back();
+		auto &it = slots[i];
 		fp.serialize(it.first.id);
 		it.second.read(fp);
 	}
@@ -315,23 +316,7 @@ void CSceneLightClipPlane::registerMembers(MemberStructure& ms) {
 }
 
 void CSceneLight::read(IBinaryArchive& fp) {
-	uint32_t count;
-	fp.serialize(count);
-
-	uint32_t CSceneLightClipPlaneType;
-	fp.serialize(CSceneLightClipPlaneType);
-	SDL_assert_release(CSceneLightClipPlaneType == 2461405956);
-
-	uint32_t u3, countAgain;
-	fp.serialize(u3);
-	fp.serialize(countAgain);
-
-	SDL_Log("Tell: %u", fp.tell());
-
-	clipPlanes.resize(count);
-	for (uint32_t i = 0; i < count; ++i)
-		clipPlanes[i].read(fp);
-
+	fp.serializeNdVector(clipPlanes, 2461405956, u1);
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -343,6 +328,7 @@ void CSceneLight::read(IBinaryArchive& fp) {
 }
 
 void CSceneLight::registerMembers(MemberStructure& ms) {
+	REGISTER_MEMBER(u1);
 	REGISTER_MEMBER(clipPlanes);
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(unk2);

@@ -95,7 +95,6 @@ public:
 		glm::vec2 unk1;
 		glm::vec2 unk2;
 		uint32_t unk3;
-		uint32_t unk4;
 		Vector<SEffectPosAndAngle> posAndAngles;
 		bool hasBatchInstanceIDs;
 		CBatchedInstanceID batchedInstanceID;
@@ -122,6 +121,7 @@ public:
 		bool hasBatchInstanceIDs;
 		CBatchedInstanceID batchedInstanceID;
 
+		uint32_t unk1;
 		Vector<CSceneLight> sceneLight;
 
 		void read(IBinaryArchive& fp);

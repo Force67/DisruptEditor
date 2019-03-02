@@ -202,6 +202,7 @@ struct CDynamicLightObject {
 };
 
 struct CSceneLight { //2461405956
+	uint32_t u1;
 	Vector<CSceneLightClipPlane> clipPlanes;
 	glm::vec3 unk1;
 	glm::vec3 unk2;
