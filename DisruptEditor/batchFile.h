@@ -203,6 +203,41 @@ public:
 	//template <typename T>
 	//CQuadtreeCollidableBatchProcessor
 
+	typedef uint32_t EDecalCollisionType;
+
+	struct SDeepEllipse {
+		glm::mat4 offset;
+		glm::vec2 unk1;
+		float unk2;
+		EDecalCollisionType decalCollisionType;
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
+	struct SRoadObjectQuadtreeElement {
+		glm::mat4 offset;
+		glm::vec2 unk1;
+		EDecalCollisionType decalCollisionType;
+		uint8_t unk2;
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
+	template<typename T>
+	struct CQuadtreeCollidableBatchProcessor {
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+
+		bool notHas;
+		glm::vec2 unk1;
+		glm::vec2 unk2;
+		EDecalCollisionType decalCollisionType;
+
+		Vector< T > tree;
+	};
+
 	struct CQuadtreeCollidableMultiBatchProcessor {
 
 		void read(IBinaryArchive& fp);
@@ -226,3 +261,30 @@ public:
 	void registerMembers(MemberStructure &ms);
 };
 
+template<typename T>
+inline void batchFile::CQuadtreeCollidableBatchProcessor<T>::read(IBinaryArchive & fp) {
+	fp.serialize(notHas);
+	if (notHas) return;
+
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+
+	uint32_t count = tree.size();
+	fp.serialize(count);
+	tree.resize(count);
+
+	fp.serialize(decalCollisionType);
+
+	//Construct Quadtree
+	for (uint32_t i = 0; i < count; ++i)
+		tree[i].read(fp);
+}
+
+template<typename T>
+inline void batchFile::CQuadtreeCollidableBatchProcessor<T>::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(notHas);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(decalCollisionType);
+	REGISTER_MEMBER(tree);
+}

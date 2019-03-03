@@ -209,6 +209,7 @@ uint32_t crc32buf(const char *buf, size_t len) {
 
 Hash::Hash() {
 	handleFile("res/classNames.txt");
+	handleFile("res/exeStrings.txt");
 	handleFile("res/strings.txt");
 	handleFileFNV("res/arches.txt");
 	handleFileFNV("res/archeBrute.txt");

@@ -43,6 +43,7 @@ void CMaterialSlotsMap::read(IBinaryArchive& fp) {
 
 	uint32_t count = slots.size();
 	fp.serialize(count);
+	slots.resize(count);
 	for (uint32_t i = 0; i < count; ++i) {
 		auto &it = slots[i];
 		fp.serialize(it.first.id);

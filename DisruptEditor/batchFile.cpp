@@ -545,18 +545,71 @@ void batchFile::CBuildingMultiBatchProcessor::registerMembers(MemberStructure& m
 
 void batchFile::CQuadtreeCollidableMultiBatchProcessor::read(IBinaryArchive& fp) {
 	//void SerializeMember<T1>(IBinaryArchive&, T1&)[with T1 = IQuadtreeCollidableBatchProcessor * [3]]
+	//Serializes array of size 3
 
-	uint32_t unk1;
-	fp.serialize(unk1);
+	//Types:
+	//CQuadtreeCollidableBatchProcessor::SDeepEllipse
+	//CQuadtreeCollidableBatchProcessor::SRoadObjectQuadtreeElement
 
-	uint32_t unk2;
-	fp.serialize(unk2);
+	uint32_t count;
+	fp.serialize(count);
 
-	CStringID type;
-	fp.serialize(type.id);
-	SDL_Log("%s", type.getReverseName().c_str());
+	count = 3;//Debug
+
+	for (uint32_t i = 0; i < count; ++i) {
+		uint32_t count2;
+		fp.serialize(count2);
+
+		CStringID type;
+		fp.serialize(type.id);
+		std::string typeName = type.getReverseName();
+		SDL_Log("%s", typeName.c_str());
+
+		uint32_t unk2;
+		fp.serialize(unk2);
+
+		if (typeName == "CQuadtreeCollidableBatchProcessorSDeepEllipse") {
+			CQuadtreeCollidableBatchProcessor<SDeepEllipse> de;
+			de.read(fp);
+			
+		} else if(typeName == "CQuadtreeCollidableBatchProcessorSRoadObjectQuadtreeElement") {
+			CQuadtreeCollidableBatchProcessor<SRoadObjectQuadtreeElement> de;
+			de.read(fp);
+		} else {
+			assert_file_crash(false);
+		}
+		SDL_Log("%u", fp.tell());
+	}
 
 }
 
 void batchFile::CQuadtreeCollidableMultiBatchProcessor::registerMembers(MemberStructure& ms) {
+}
+
+void batchFile::SDeepEllipse::read(IBinaryArchive &fp) {
+	fp.serialize(offset);
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(decalCollisionType);
+}
+
+void batchFile::SDeepEllipse::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(offset);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(decalCollisionType);
+}
+
+void batchFile::SRoadObjectQuadtreeElement::read(IBinaryArchive & fp) {
+	fp.serialize(offset);
+	fp.serialize(unk1);
+	fp.serialize(decalCollisionType);
+	fp.serialize(unk2);
+}
+
+void batchFile::SRoadObjectQuadtreeElement::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(offset);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(decalCollisionType);
+	REGISTER_MEMBER(unk2);
 }
