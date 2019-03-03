@@ -243,6 +243,25 @@ public:
 		void read(IBinaryArchive& fp);
 		void registerMembers(MemberStructure& ms);
 	};
+
+	struct SDebrisSpawnerBatchInstance {
+		uint32_t objectID;
+		glm::mat4 offset;
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
+
+	struct CDebrisSpawnerMultiBatchProcessor {
+		Vector<SDebrisSpawnerBatchInstance> batchInstances;
+		uint32_t unk1;
+
+		glm::vec3 unk2;
+		glm::vec3 unk3;
+
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
 	
 #pragma pack(pop)
 	batchHeader head;
@@ -253,9 +272,7 @@ public:
 	CComponentMultiBatchProcessor componentMBP;
 	CBuildingMultiBatchProcessor buildingMBP;
 	CQuadtreeCollidableMultiBatchProcessor quadtreeCollidableMBP;
-
-	//TODO: Remove this, this is so we can write files with this unfinished implementation
-	Vector<uint8_t> extraData;
+	CDebrisSpawnerMultiBatchProcessor debrisSpawnerMBP;
 
 	bool open(IBinaryArchive& reader);
 	void registerMembers(MemberStructure &ms);

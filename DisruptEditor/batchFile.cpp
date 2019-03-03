@@ -55,6 +55,8 @@ bool batchFile::open(IBinaryArchive &reader) {
 		buildingMBP.read(reader);
 		SDL_Log("quadtreeCollidableMBP Tell: %u\n\n", reader.tell());
 		quadtreeCollidableMBP.read(reader);
+		SDL_Log("debrisSpawnerMBP Tell: %u\n\n", reader.tell());
+		debrisSpawnerMBP.read(reader);
 	} else if (head.type == 1) {
 		//assert_file_crash(strstr(filename, "_phys.cbatch"));
 	}
@@ -68,11 +70,6 @@ bool batchFile::open(IBinaryArchive &reader) {
 			SDL_Log("%u type=%s", offset, type.c_str());
 	}
 	*/
-
-	if (reader.isReading())
-		extraData.resize(size - reader.tell());
-	reader.memBlock(extraData.data(), 1, extraData.size());
-	
 
 	if (!reader.isReading()) {
 		//Go back and write the size
@@ -257,7 +254,7 @@ void batchFile::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(componentMBP);
 	REGISTER_MEMBER(buildingMBP);
 	REGISTER_MEMBER(quadtreeCollidableMBP);
-	REGISTER_MEMBER(extraData);
+	REGISTER_MEMBER(debrisSpawnerMBP);
 }
 
 void batchFile::CBatchModelProcessorsAndResources::registerMembers(MemberStructure & ms) {
@@ -612,4 +609,33 @@ void batchFile::SRoadObjectQuadtreeElement::registerMembers(MemberStructure & ms
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(decalCollisionType);
 	REGISTER_MEMBER(unk2);
+}
+
+void batchFile::CDebrisSpawnerMultiBatchProcessor::read(IBinaryArchive & fp) {
+	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVectorExternal<SDebrisSpawnerBatchInstance, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>>]
+
+	fp.serializeNdVector(batchInstances, 0xB59E6B00, unk1);
+
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+
+}
+
+void batchFile::CDebrisSpawnerMultiBatchProcessor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(batchInstances);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+}
+
+void batchFile::SDebrisSpawnerBatchInstance::read(IBinaryArchive & fp) {
+	fp.serialize(objectID);
+	//GenRecoverLibraryObject (CDebrisSpawnerDbObject, objectID);
+
+	fp.serialize(offset);
+}
+
+void batchFile::SDebrisSpawnerBatchInstance::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(objectID);
+	REGISTER_MEMBER(offset);
 }
