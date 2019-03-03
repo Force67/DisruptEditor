@@ -57,6 +57,8 @@ bool batchFile::open(IBinaryArchive &reader) {
 		quadtreeCollidableMBP.read(reader);
 		SDL_Log("debrisSpawnerMBP Tell: %u\n\n", reader.tell());
 		debrisSpawnerMBP.read(reader);
+		SDL_Log("vegetationMBP Tell: %u\n\n", reader.tell());
+		vegetationMBP.read(reader);
 	} else if (head.type == 1) {
 		//assert_file_crash(strstr(filename, "_phys.cbatch"));
 	}
@@ -255,6 +257,7 @@ void batchFile::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(buildingMBP);
 	REGISTER_MEMBER(quadtreeCollidableMBP);
 	REGISTER_MEMBER(debrisSpawnerMBP);
+	REGISTER_MEMBER(vegetationMBP);
 }
 
 void batchFile::CBatchModelProcessorsAndResources::registerMembers(MemberStructure & ms) {
@@ -638,4 +641,12 @@ void batchFile::SDebrisSpawnerBatchInstance::read(IBinaryArchive & fp) {
 void batchFile::SDebrisSpawnerBatchInstance::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(objectID);
 	REGISTER_MEMBER(offset);
+}
+
+void batchFile::CVegetationMultiBatchProcessor::read(IBinaryArchive & fp) {
+
+}
+
+void batchFile::CVegetationMultiBatchProcessor::registerMembers(MemberStructure & ms) {
+
 }

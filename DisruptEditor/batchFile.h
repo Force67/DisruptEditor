@@ -262,6 +262,11 @@ public:
 		void read(IBinaryArchive& fp);
 		void registerMembers(MemberStructure& ms);
 	};
+
+	struct CVegetationMultiBatchProcessor {
+		void read(IBinaryArchive& fp);
+		void registerMembers(MemberStructure& ms);
+	};
 	
 #pragma pack(pop)
 	batchHeader head;
@@ -273,6 +278,7 @@ public:
 	CBuildingMultiBatchProcessor buildingMBP;
 	CQuadtreeCollidableMultiBatchProcessor quadtreeCollidableMBP;
 	CDebrisSpawnerMultiBatchProcessor debrisSpawnerMBP;
+	CVegetationMultiBatchProcessor vegetationMBP;
 
 	bool open(IBinaryArchive& reader);
 	void registerMembers(MemberStructure &ms);
