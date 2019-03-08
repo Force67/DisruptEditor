@@ -20,6 +20,7 @@ public:
 	uint32_t unk5;
 	uint32_t unk6;
 	uint32_t unk7;
+	//Game skips everything before this except magic and version
 
 	//CMaterialResource::LoadMaterial((void const *,ulong))
 	uint32_t size;
@@ -98,8 +99,6 @@ public:
 		void registerMembers(MemberStructure &ms);
 	};
 	Vector<CGradient> gradients;
-
-	
 
 	bool open(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);

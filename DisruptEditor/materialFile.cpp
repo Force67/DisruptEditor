@@ -42,17 +42,17 @@ bool materialFile::open(IBinaryArchive &fp) {
 	for (uint16_t i = 0; i < count; ++i)
 		commands[i].read(fp);
 
-	size_t a = fp.tell();
-
 	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVector<CMaterialResource::CGradient, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>, false>]
-	/*fp.serializeNdVectorExternal(gradients);
-
-	uint32_t b;
-	fp.serialize(b);
-	fp.serialize(b);*/
-
-	//a = fp.tell();
-	//SDL_assert_release(fp.tell() == fp.size());
+	if (fp.isReading()) {
+		if (fp.tell() != fp.size())
+			fp.serializeNdVectorExternal(gradients);
+	} else {
+		if (!gradients.empty()) {
+			fp.serializeNdVectorExternal(gradients);
+		}
+	}
+	
+	fp.pad(16);
 
 	return true;
 }
@@ -81,8 +81,8 @@ void materialFile::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(shaderName);
 
 	REGISTER_MEMBER(initSettings);
-	REGISTER_MEMBER(gradients);
 	REGISTER_MEMBER(commands);
+	REGISTER_MEMBER(gradients);
 }
 
 void materialFile::SInitSettings::read(IBinaryArchive & fp) {

@@ -211,6 +211,7 @@ Hash::Hash() {
 	handleFile("res/classNames.txt");
 	handleFile("res/exeStrings.txt");
 	handleFile("res/strings.txt");
+	handleFile("res/materialNames.txt");
 	handleFileFNV("res/arches.txt");
 	handleFileFNV("res/archeBrute.txt");
 	handleTypes("res/types.xml");
