@@ -87,8 +87,11 @@ materialFile &loadMaterial(const std::string & path) {
 		auto &model = materials[path];
 		SDL_Log("Loading %s...\n", path.c_str());
 		SDL_RWops *fp = FH::openFile(path);
-		if (fp)
-			model.open(fp);
+		if (fp) {
+			CBinaryArchiveReader reader(fp);
+			model.open(reader);
+			SDL_RWclose(fp);
+		}
 	}
 	return materials[path];
 }

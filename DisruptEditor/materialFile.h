@@ -3,76 +3,105 @@
 #include <stdint.h>
 #include "Vector.h"
 #include <string>
+#include "CStringID.h"
+#include "glm/glm.hpp"
 
-/*
-BIN format (Watch Dogs)
-=======================
-DWORD id;   // '0MAT' BigEndian
-DWORD version;
-
-DWORD unk1[6];   // ids,hashes?
-
-DWORD unk2[9];   // unknown, important
-
-char name1[];   // ASCIIZ padded name
-char name2[];   // ASCIIZ padded name
-
-DWORD unk3[5];   // zero
-
-WORD w1;
-WORD w2;   // unknown, important
-
-list of texture names here, unknown list size
-
-(all unknown)
-EOF
-
-DIFFUSE MAP: 0xF95881AF
-DETAIL MAP: 0x6051D015
-SPECULAR MAP: 0x1767E828
-DIFFUSE NORMAL MAP: 0x045829E2 ???
-DETAIL NORMAL MAP: 0x9D517858  ???
-
-COLOR: 0x974DA6CD (diffuse?)
-COLOR: 0x0E44F777
-COLOR: 0xE073EE18
-COLOR: 0x471932CF
-
-
-Awesome, I found the hashed names. The first two name strings in the BIN refer to a shader,
-such as "DriverGeneric". Just look for that shader file, and you'll get a list of names.
-
-0xF95881AF = "DiffuseTexture1"
-0x0E44F777 = "DiffuseColor1"
-etc...
-*/
-
-struct matHeader {
-	uint32_t magic; // 54 41 4D 00
-	uint32_t unknum; //7
-	uint32_t unk[3];
-	uint32_t unk2[3]; //00
-	uint32_t size;
-	uint32_t size2;
-	uint32_t unk3[2]; //00
-	uint32_t size3; //Repeat of size
-	uint32_t unk4; //00
-	uint32_t size4; //Repeat of size
-	uint32_t unk5; //00
-	uint32_t unk6; //00
-};
-
-struct matEntry {
-	std::string name;
-	std::string shader;
-	std::string texture;
-};
-
-struct SDL_RWops;
+class IBinaryArchive;
+class MemberStructure;
 
 class materialFile {
 public:
-	bool open(SDL_RWops *fp);
-	Vector< matEntry > entries;
+	//Header
+	uint32_t magic; // 54 41 4D 00
+	uint32_t version; //7
+	uint32_t unk2;
+	uint32_t unk3;
+	uint32_t unk4;
+	uint32_t unk5;
+	uint32_t unk6;
+	uint32_t unk7;
+
+	//CMaterialResource::LoadMaterial((void const *,ulong))
+	uint32_t size;
+	uint32_t size2;
+	uint32_t unk8; //00
+	uint32_t unk9; //00
+	uint32_t size3; //Repeat of size
+	uint32_t unk10; //00
+	uint32_t size4; //Repeat of size
+	uint32_t unk11; //00
+	uint32_t unk12; //00
+
+	std::string name;
+	std::string shaderName;
+
+	struct SInitSettings {
+		uint16_t unk1;
+		uint8_t unk2;
+		uint8_t unk3;
+		float unk4;
+		int32_t unk5;
+		int32_t unk6;
+		int32_t unk7;
+		uint8_t unk8;
+		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
+	};
+	SInitSettings initSettings;
+
+	struct SCommand {
+		uint8_t type;
+
+		//Only for types greater than 10?
+		uint8_t unk1;
+		CStringID name;
+
+		//For 1
+		float unks1;
+
+		//For 2
+		glm::vec2 unks2;
+
+		//For 3
+		glm::vec3 unks3;
+
+		//For 4
+		glm::vec4 unks4;
+
+		//For 5
+		int32_t unks5;
+
+		//For 6
+		int8_t unks6;
+
+		//For 7
+		CStringID unks7;
+
+		//For 8-10
+		std::string path;
+
+		//For 11
+		CStringID unks11;
+		int32_t unks11_2;
+
+		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
+	};
+	Vector<SCommand> commands;
+
+	struct CGradient {
+		Vector<glm::vec4> vecs;
+		CStringID id;
+		float unk1;
+		bool unk2;
+		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
+	};
+	Vector<CGradient> gradients;
+
+	
+
+	bool open(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 

@@ -3,61 +3,212 @@
 #include <stdio.h>
 #include <SDL_assert.h>
 #include <SDL_log.h>
-#include <SDL_rwops.h>
+#include "IBinaryArchive.h"
 #include "FileHandler.h"
+#include "Serialization.h"
 
-bool materialFile::open(SDL_RWops *fp) {
-	if (!fp) return false;
+bool materialFile::open(IBinaryArchive &fp) {
+	fp.serialize(magic);
+	SDL_assert_release(magic == 5062996);
+	fp.serialize(version);
+	SDL_assert_release(version == 7);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+	fp.serialize(unk6);
+	fp.serialize(unk7);
+	//Game skips the above
 
-	matHeader head;
-	SDL_RWread(fp, &head, sizeof(head), 1);
+	fp.serialize(size);
+	fp.serialize(size2);
+	fp.serialize(unk8);
+	fp.serialize(unk9);
+	fp.serialize(size3);
+	fp.serialize(unk10);
+	fp.serialize(size4);
+	fp.serialize(unk11);
+	fp.serialize(unk12);
+	//SDL_assert_release(size == size3 == size4);
 
-	SDL_assert_release(head.magic == 5062996);
-	SDL_assert_release(head.unknum == 7);
-	SDL_assert_release(head.unk2[0] == 0);
-	SDL_assert_release(head.unk2[1] == 0);
-	SDL_assert_release(head.unk2[2] == 0);
-	SDL_assert_release(head.unk3[0] == 0);
-	SDL_assert_release(head.unk3[1] == 0);
-	SDL_assert_release(head.unk4 == 0);
-	SDL_assert_release(head.unk5 == 0);
-	SDL_assert_release(head.unk6 == 0);
+	fp.serialize(name);
+	fp.serialize(shaderName);
 
-	SDL_assert_release(head.size == head.size3);
-	SDL_assert_release(head.size == head.size4);
+	initSettings.read(fp);
 
-	matEntry me;
+	uint16_t count = commands.size();
+	fp.serialize(count);
+	commands.resize(count);
+	for (uint16_t i = 0; i < count; ++i)
+		commands[i].read(fp);
 
-	uint32_t size = SDL_ReadLE32(fp);
-	me.name.resize(size+1, '\0');
-	SDL_RWread(fp, &me.name[0], 1, size);
-	seekpad(fp, 4);
+	size_t a = fp.tell();
 
-	size = SDL_ReadLE32(fp);
-	me.shader.resize(size + 1, '\0');
-	SDL_RWread(fp, &me.shader[0], 1, size);
-	seekpad(fp, 4);
+	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVector<CMaterialResource::CGradient, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>, false>]
+	/*fp.serializeNdVectorExternal(gradients);
 
-	//Skip 28 bytes and guess
-	SDL_RWseek(fp, 28, RW_SEEK_CUR);
+	uint32_t b;
+	fp.serialize(b);
+	fp.serialize(b);*/
 
-	size = SDL_ReadLE32(fp);
-	if (size != 4183327151) {
-		SDL_RWclose(fp);
-		return false;
+	//a = fp.tell();
+	//SDL_assert_release(fp.tell() == fp.size());
+
+	return true;
+}
+
+void materialFile::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(magic);
+	REGISTER_MEMBER(version);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
+
+	REGISTER_MEMBER(size);
+	REGISTER_MEMBER(size2);
+	REGISTER_MEMBER(unk8); //00
+	REGISTER_MEMBER(unk9); //00
+	REGISTER_MEMBER(size3); //Repeat of size
+	REGISTER_MEMBER(unk10); //00
+	REGISTER_MEMBER(size4); //Repeat of size
+	REGISTER_MEMBER(unk11); //00
+	REGISTER_MEMBER(unk12); //00
+
+	REGISTER_MEMBER(name);
+	REGISTER_MEMBER(shaderName);
+
+	REGISTER_MEMBER(initSettings);
+	REGISTER_MEMBER(gradients);
+	REGISTER_MEMBER(commands);
+}
+
+void materialFile::SInitSettings::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+	fp.serialize(unk6);
+	fp.serialize(unk7);
+	fp.serialize(unk8);
+}
+
+void materialFile::SInitSettings::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
+	REGISTER_MEMBER(unk8);
+}
+
+
+void materialFile::CGradient::read(IBinaryArchive & fp) {
+	//void SerializeMember<T1>(IBinaryArchive &, T1 &) [with T1=ndVector<ndVec_tpl<float, (int)4>, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>, false>]
+	fp.serializeNdVectorExternal_pod(vecs);
+
+	fp.serialize(id.id);
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+}
+
+void materialFile::CGradient::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(vecs);
+	REGISTER_MEMBER(id.id);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+}
+
+
+void materialFile::SCommand::read(IBinaryArchive & fp) {
+	fp.serialize(type);
+	if (type - 1 <= 0xA) {
+		fp.serialize(unk1);
+		fp.serialize(name.id);
 	}
 
-	size = SDL_ReadLE32(fp);
-	me.texture.resize(size + 1, '\0');
-	SDL_RWread(fp, &me.texture[0], 1, size);
-	seekpad(fp, 4);
+	switch (type) {//Switch 12 cases
+	case 1:
+		fp.serialize(unks1);
+		break;
+	case 2:
+		fp.serialize(unks2);
+		break;
+	case 3:
+		fp.serialize(unks3);
+		break;
+	case 4:
+		fp.serialize(unks4);
+		break;
+	case 5:
+		fp.serialize(unks5);
+		break;
+	case 6:
+		fp.serialize(unks6);
+		break;
+	case 7:
+		fp.serialize(unks7.id);
+		break;
+	case 8:
+	case 9:
+	case 10:
+		fp.serialize(path);
+		break;
+	case 11:
+		fp.serialize(unks11.id);
+		fp.serialize(unks11_2);
+		break;
+	default:
+		SDL_assert_release(false);
+		break;
+	}
 
-	SDL_Log("%s\n", me.name.c_str());
-	SDL_Log("%s\n", me.shader.c_str());
-	SDL_Log("%s\n", me.texture.c_str());
+}
 
-	entries.push_back(me);
+void materialFile::SCommand::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(type);
+	if (type - 1 <= 0xA) {
+		REGISTER_MEMBER(unk1);
+		REGISTER_MEMBER(name);
+	}
 
-	SDL_RWclose(fp);
-	return true;
+	switch (type) {//Switch 12 cases
+	case 1:
+		ms.registerMember("Value", unks1);
+		break;
+	case 2:
+		ms.registerMember("Value", unks2);
+		break;
+	case 3:
+		ms.registerMember("Value", unks3);
+		break;
+	case 4:
+		ms.registerMember("Value", unks4);
+		break;
+	case 5:
+		ms.registerMember("Value", unks5);
+		break;
+	case 6:
+		ms.registerMember("Value", unks6);
+		break;
+	case 7:
+		ms.registerMember("Value", unks7);
+		break;
+	case 8:
+	case 9:
+	case 10:
+		ms.registerMember("Value", path);
+		break;
+	case 11:
+		ms.registerMember("Value1", unks11);
+		ms.registerMember("Value2", unks11_2);
+		break;
+	default:
+		break;
+	}
 }
