@@ -119,11 +119,10 @@ void materialFile::CGradient::read(IBinaryArchive & fp) {
 
 void materialFile::CGradient::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(vecs);
-	REGISTER_MEMBER(id.id);
+	REGISTER_MEMBER(id);
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(unk2);
 }
-
 
 void materialFile::SCommand::read(IBinaryArchive & fp) {
 	fp.serialize(type);
