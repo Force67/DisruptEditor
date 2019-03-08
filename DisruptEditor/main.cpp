@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 	camera.far_plane = 6500.f;
 
 	//Debug
-#if _DEBUG
+#if _DEBUG && FALSE
 	{
 		/*auto b = fromHexString("10 ae 2346");
 		auto c = fromHexString("10AE2346");
@@ -96,10 +96,35 @@ int main(int argc, char **argv) {
 		temp2 = std::to_string(Hash::instance().getHash("SBatchedSoundPointBreakable"));*/
 
 		FH::Init();
-		xbgFile xbg;
-		SDL_RWops* fp = SDL_RWFromFile("Z:\\scratch\\bin\\windy_city\\graphics\\characters\\char\\char01\\char01.xbg", "rb");
+
+		tfDIR dir;
+		tfDirOpen(&dir, "C:\\Users\\Jonathan\\Desktop\\WD_materials_BIN");
+		while (dir.has_next) {
+			tfFILE file;
+			tfReadFile(&dir, &file);
+
+			if (!file.is_dir && strstr(file.name, ".bin") != NULL && strstr(file.name, ".bin.xml") == NULL) {
+				SDL_Log("Loading %s", file.name);
+
+				materialFile mat;
+				SDL_RWops* fp = SDL_RWFromFile(file.path, "rb");
+				mat.open(CBinaryArchiveReader(fp));
+				SDL_RWclose(fp);
+				std::string str = serializeToXML(mat);
+				std::string outFilename = file.path + std::string(".xml");
+				fp = SDL_RWFromFile(outFilename.c_str(), "wb");
+				SDL_RWwrite(fp, str.data(), str.size(), 1);
+				SDL_RWclose(fp);
+			}
+
+			tfDirNext(&dir);
+		}
+		tfDirClose(&dir);
+
+		/*xbgFile xbg;
+		fp = SDL_RWFromFile("C:\\Users\\Jonathan\\Desktop\\C85A0D42 - Copy.xbg", "rb");
 		xbg.open(CBinaryArchiveReader(fp));
-		SDL_RWclose(fp);
+		SDL_RWclose(fp);*/
 
 		batchFile bf;
 		try {
@@ -116,7 +141,6 @@ int main(int argc, char **argv) {
 
 		}
 		catch (...) {}
-		bf.extraData.clear();
 		std::string str = serializeToXML(bf);
 		int a = 1;
 

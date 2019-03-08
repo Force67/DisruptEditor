@@ -5,6 +5,7 @@
 #include "Vector.h"
 #include "Pair.h"
 #include <memory>
+#include "IBinaryArchive.h"
 
 struct SDL_RWops;
 class MemberStructure;

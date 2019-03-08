@@ -41,14 +41,14 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -106,15 +106,23 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>GLM_FORCE_LEFT_HANDED;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLM_FORCE_LEFT_HANDED;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_USRDLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>../lib/SDL2.lib;../lib/SDL2main.lib;Shlwapi.lib;Winmm.lib;Ws2_32.lib;Version.lib;Imm32.lib;XInput.lib;XAudio2.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../lib/SDL2.lib;Shlwapi.lib;Winmm.lib;Ws2_32.lib;Version.lib;Imm32.lib;XInput.lib;XAudio2.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <MapExports>true</MapExports>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /y /d  "$(SolutionDir)lib\*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -143,7 +151,7 @@
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>GLM_FORCE_LEFT_HANDED;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLM_FORCE_LEFT_HANDED;WIN32_LEAN_AND_MEAN;_CRT_SECURE_NO_WARNINGS;_USRDLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>../include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
@@ -153,8 +161,16 @@
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>../lib/SDL2.lib;../lib/SDL2main.lib;Shlwapi.lib;Winmm.lib;Ws2_32.lib;Version.lib;Imm32.lib;XInput.lib;XAudio2.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../lib/SDL2.lib;Shlwapi.lib;Winmm.lib;Ws2_32.lib;Version.lib;Imm32.lib;XInput.lib;XAudio2.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <MapExports>true</MapExports>
     </Link>
+    <CustomBuildStep>
+      <Command>
+      </Command>
+    </CustomBuildStep>
+    <PostBuildEvent>
+      <Command>xcopy /y /d  "$(SolutionDir)lib\*.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CBATCHWindow.cpp" />
@@ -194,8 +210,8 @@
     <ClCompile Include="LoadingScreen.cpp" />
     <ClCompile Include="locFile.cpp" />
     <ClCompile Include="mabFile.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="materialFile.cpp" />
+    <ClCompile Include="MaterialWindow.cpp" />
     <ClCompile Include="NBCF.cpp" />
     <ClCompile Include="RML.cpp" />
     <ClCompile Include="RoadNetwork.cpp" />
@@ -272,12 +288,6 @@
     <ClInclude Include="World.h" />
     <ClInclude Include="xbgFile.h" />
     <ClInclude Include="xbtFile.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Res.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="Icon.ico" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />
