@@ -22,7 +22,7 @@ void CStringID::registerMembers(MemberStructure & ms) {
 		if (temp[0] == '_')
 			sscanf(temp.c_str(), "_%08x", &id);
 		else
-			id = Hash::instance().getFilenameHash(temp);
+			id = Hash::instance().getHash(temp.c_str());
 		break;
 	}
 	default:

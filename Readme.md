@@ -41,6 +41,7 @@ https://hg.libsdl.org/SDL/file/05aff4771d9a/include/SDL_keycode.h#l325
 
 * WLU Editing (Export/Import as XML)
 * Display of some xbgs
+* Material Editing
 
 # Roadmap
 

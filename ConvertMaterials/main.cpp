@@ -1,6 +1,6 @@
 ﻿#include <stdio.h>
 #include <string>
-#include "SDL_rwops.h"
+#include "SDL.h"
 
 #include "materialFile.h"
 #include "IBinaryArchive.h"
@@ -84,6 +84,8 @@ int main(int argc, char **argv) {
 
 		printf("\n");
 	}
+
+	SDL_Delay(3 * 1000);
 
 	return 0;
 }
