@@ -39,15 +39,6 @@ Dialog::Dialog() {
 	SDL_assert_release(SDL_RWtell(fp) == SDL_RWsize(fp));
 	SDL_RWclose(fp);
 
-	/*tinyxml2::XMLDocument doc;
-	doc.LoadFile("res/loc.xml");
-	for (auto it = doc.RootElement()->FirstChildElement(); it; it = it->NextSiblingElement()) {
-		int32_t lineID = it->IntAttribute("id");
-		const char* text = it->GetText();
-		if(text)
-			locStrings[lineID] = text;
-	}*/
-
 	//main.open("D:\\wd2\\common\\languages\\main_english.loc");
 	/*main.open("D:\\wiiu\\common\\languages\\main_english.loc");
 	main.open("C:\\Users\\Jonathan\\Documents\\rpcs3\\dev_hdd0\\game\\BLES01854\\USRDIR\\common_unpack\\languages\\main_english.loc");

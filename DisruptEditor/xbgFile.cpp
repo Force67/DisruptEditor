@@ -29,6 +29,7 @@ void xbgFile::open(IBinaryArchive &fp) {
 	//	which returns 0x38 (On WiiU)
 	
 	//ReadValue<T1>(T1 &, unsigned char *&) [with T1=CGeometryResource::SMemoryNeed]
+	SDL_Log("SMemoryNeed: %u", fp.tell());
 	memoryNeeded.read(fp);
 
 	//.text:05A15178 Then Pads 4, loads float
@@ -41,7 +42,7 @@ void xbgFile::open(IBinaryArchive &fp) {
 	geomParams.read(fp);
 
 	SDL_Log("MaterialResources: %u", fp.tell());
-	materialResources.read(fp);
+	materialResources.read(fp, geomParams.lods.size());
 
 	SDL_Log("MaterialSlotToIndex: %u", fp.tell());
 	materialSlotToIndex.read(fp);
@@ -55,13 +56,14 @@ void xbgFile::open(IBinaryArchive &fp) {
 	SDL_Log("SkelResources: %u", fp.tell());
 	skelResources.read(fp);
 
-	SDL_RWseek(fp.fp, 56584, RW_SEEK_SET);
-	SDL_assert_release(fp.tell() == 56584);//Debug
 	SDL_Log("ReflexSystem: %u", fp.tell());
 	relfexSystem.read(fp);
 
 	SDL_Log("SecondaryMotionObjects: %u", fp.tell());
 	secondaryMotionObjects.read(fp);
+
+	SDL_Log("ProceduralNodes: %u", fp.tell());
+	proceduralNodes.read(fp);
 
 	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0;
 
@@ -196,9 +198,10 @@ void xbgFile::SceneGeometryParams::SLOD::read(IBinaryArchive & fp) {
 	fp.serialize(unk1);
 }
 
-void xbgFile::MaterialResources::read(IBinaryArchive & fp) {
-	fp.serialize(unk1);
-	fp.serialize(unk2);
+void xbgFile::MaterialResources::read(IBinaryArchive & fp, size_t lods) {
+	unk1.resize(lods);
+	for (size_t i = 0; i < lods; ++i)
+		fp.serialize(unk1[i]);
 	fp.serializeNdVectorExternal(materials);
 }
 
@@ -240,11 +243,21 @@ void xbgFile::BonePalettes::BonesPallet::read(IBinaryArchive & fp) {
 }
 
 void xbgFile::SkelResources::read(IBinaryArchive & fp) {
-	fp.serializeNdVectorExternal(resources);
+	//Can either read 1 or 0
+	fp.serialize(unk1);
+	if (unk1) {
+		fp.serializeNdVectorExternal(resources);
 
-	//reads uint32_t
-	//reads uint32_t
+		fp.serialize(unk2);
 
+		fp.serializeNdVectorExternal_pod(mats);
+
+		SDL_assert_release(resources.size() == mats.size());
+
+		float a, b;//TODO: Fix this?
+		fp.serialize(a);
+		fp.serialize(b);
+	}
 }
 
 void xbgFile::SkelResources::SRawNode::read(IBinaryArchive & fp) {
@@ -255,7 +268,6 @@ void xbgFile::SkelResources::SRawNode::read(IBinaryArchive & fp) {
 }
 
 void xbgFile::SkelResources::SkelResource::read(IBinaryArchive & fp) {
-	fp.serialize(unk1);
 	node.read(fp);
 	fp.serialize(name1.id);
 	fp.serialize(name2);
@@ -263,10 +275,14 @@ void xbgFile::SkelResources::SkelResource::read(IBinaryArchive & fp) {
 }
 
 void xbgFile::ReflexSystem::read(IBinaryArchive &fp) {
-	root = readFCB(fp.fp);
-	tinyxml2::XMLPrinter printer;
-	root.serializeXML(printer);
-	const char* str = printer.CStr();
+	fp.serialize(has);
+	if (has) {
+		fp.serialize(size);
+		root = readFCB(fp.fp);
+		tinyxml2::XMLPrinter printer;
+		root.serializeXML(printer);
+		const char* str = printer.CStr();
+	}
 }
 
 void xbgFile::SecondaryMotionObjects::read(IBinaryArchive & fp) {
@@ -311,7 +327,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitive
 	fp.serialize(name2);
 	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
 	fp.serialize(unk1);
-	fp.serialize(unk2);
+	fp.serialize(fRadius);
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SCylinderDesc::read(IBinaryArchive & fp) {
@@ -400,4 +416,11 @@ void xbgFile::CMeshNameID::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
 	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+}
+
+void xbgFile::ProceduralNodes::read(IBinaryArchive & fp) {
+	fp.serialize(has);//either 0 or 1
+	if (has) {
+		SDL_assert_release(false);
+	}
 }

@@ -91,8 +91,7 @@ public:
 	SceneGeometryParams geomParams;
 
 	struct MaterialResources {
-		uint32_t unk1;
-		uint32_t unk2;
+		Vector<uint32_t> unk1;
 		struct MaterialFile {
 			CPathID file1;
 			std::string file2;
@@ -100,7 +99,7 @@ public:
 		};
 		Vector<MaterialFile> materials;
 
-		void read(IBinaryArchive &fp);
+		void read(IBinaryArchive &fp, size_t lods);
 	};
 	MaterialResources materialResources;
 
@@ -150,26 +149,28 @@ public:
 		};
 
 		struct SkelResource {
-			uint32_t unk1;
 			SRawNode node;
 			CStringID name1;
 			std::string name2;
 			void read(IBinaryArchive &fp);
 		};
+
+		uint32_t unk1;
 		Vector<SkelResource> resources;
-
-
+		uint32_t unk2;
+		Vector<glm::mat4> mats;
 
 		void read(IBinaryArchive &fp);
 	};
 	SkelResources skelResources;
 
 	struct ReflexSystem {
+		uint32_t has;
+		uint32_t size;
 		Node root;
 		void read(IBinaryArchive &fp);
 	};
 	ReflexSystem relfexSystem;
-
 
 	typedef uint32_t ESecondaryMotionObjectType;
 	struct SecondaryMotionObjects {
@@ -198,7 +199,7 @@ public:
 					CStringID name1;
 					std::string name2;
 					glm::mat4 unk1;
-					float unk2;
+					float fRadius;
 					void read(IBinaryArchive &fp);
 				};
 				Vector<SSphereDesc> spheres;
@@ -300,6 +301,15 @@ public:
 		void read(IBinaryArchive &fp);
 	};
 	SecondaryMotionObjects secondaryMotionObjects;
+
+	struct ProceduralNodes {
+		uint32_t has;
+
+		//Only one SProceduralNode
+
+		void read(IBinaryArchive &fp);
+	};
+	ProceduralNodes proceduralNodes;
 
 	struct Mesh {
 		uint16_t vertexStride, matID, vertexCount, totalVertexCount, faceCount, UVFlag, scaleFlag, boneMapID;

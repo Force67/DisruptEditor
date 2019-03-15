@@ -88,6 +88,9 @@ bool locFile::open(const char *filename) {
 		}
 	}
 
+	//Read index
+	uint32_t max = SDL_ReadLE32(fp);
+
 	//Read String index table
 	SDL_RWseek(fp, sizeof(head), RW_SEEK_SET);
 	Vector<locTableEntry> tables(head.count);
