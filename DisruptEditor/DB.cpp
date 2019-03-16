@@ -42,7 +42,7 @@ std::unique_ptr<DB::File> DB::getFileByPath(const char* path) {
 std::string DB::getStrFromCRC(uint32_t hash) {
 	try {
 		std::string str;
-		*db << "select str from hashes where str=?;" << hash >> str;
+		*db << "select str from hashes where hash=?;" << hash >> str;
 		return str;
 	}
 	catch (...) {
