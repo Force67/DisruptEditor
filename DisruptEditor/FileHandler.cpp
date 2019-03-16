@@ -2,10 +2,8 @@
 #include "Common.h"
 #include "Hash.h"
 #include "tinyfiles.h"
-#include <set>
 #include <Shlwapi.h>
-
-static std::unordered_map<uint32_t, std::string> knownFiles;
+#include "DB.h"
 
 Vector<FileInfo> FH::getFileList(const std::string &dir, const std::string &extFilter) {
 	std::map<std::string, tfFILE> files;
@@ -79,10 +77,14 @@ SDL_RWops * FH::openFile(uint32_t path) {
 }
 
 std::string FH::getReverseFilename(uint32_t hash) {
-	if (knownFiles.count(hash) == 0)
-		return Hash::instance().getReverseHashFNV(hash);
+	auto it = DB::instance().getFileByHash(hash);
+	if (!it) {
+		char buffer[12];
+		snprintf(buffer, sizeof(buffer), "_%08x", hash);
+		return std::string(buffer);
+	}
 
-	return knownFiles[hash];
+	return it->path;
 }
 
 std::string FH::getAbsoluteFilePath(const std::string &path) {
@@ -96,29 +98,20 @@ std::string FH::getAbsoluteFilePath(const std::string &path) {
 	}
 
 	//Search Unknown Files
-	uint32_t hash = Hash::instance().getFilenameHash(path);
+	uint32_t hash = Hash::getFilenameHash(path);
 
 	return std::string();
 }
 
 std::string FH::getAbsoluteFilePath(uint32_t path) {
-	auto it = knownFiles.find(path);
-	if (it != knownFiles.end())
-		return getAbsoluteFilePath(it->second);
+	auto it = DB::instance().getFileByHash(path);
+	if (it)
+		return getAbsoluteFilePath(it->path);
 
 	return "";
 }
 
 void FH::Init() {
-	knownFiles.clear();
-	FILE* fp = fopen("res/Watch Dogs.filelist", "r");
-	char buffer[500];
-	while (fgets(buffer, sizeof(buffer), fp)) {
-		buffer[strlen(buffer) - 1] = '\0';
-		uint32_t hash = Hash::instance().getFilenameHash(buffer);
-		knownFiles[hash] = buffer;
-	}
-	fclose(fp);
 }
 
 void seekpad(SDL_RWops *fp, long pad) {

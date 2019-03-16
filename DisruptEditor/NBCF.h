@@ -4,6 +4,7 @@
 #include <string>
 #include "tinyxml2.h"
 #include <SDL_rwops.h>
+#include "CStringID.h"
 
 #pragma pack(push, 1)
 struct fcbHeader {
@@ -28,7 +29,7 @@ public:
 
 	std::string getHashName();
 	std::string getHumanReadable();
-	uint32_t hash;
+	CStringID name;
 	Vector<uint8_t> buffer;
 };
 
@@ -56,7 +57,7 @@ public:
 	std::string getHashName();
 
 	size_t offset;
-	uint32_t hash;
+	CStringID name;
 
 	Vector<Node> children;
 	Vector<Attribute> attributes;

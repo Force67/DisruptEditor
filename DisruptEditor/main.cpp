@@ -36,6 +36,7 @@
 #include "Version.h"
 #include "IBinaryArchive.h"
 #include "HexBase64.h"
+#include "DB.h"
 
 int main(int argc, char **argv) {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -54,7 +55,7 @@ int main(int argc, char **argv) {
 
 	reloadSettings();
 
-	SDL_Window* window = SDL_CreateWindow("Disrupt Editor (" DE_VERSION ")", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, settings.windowSize.x, settings.windowSize.y, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
+	SDL_Window* window = SDL_CreateWindow("Disrupt Editor v" DE_VERSIONSTR, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, settings.windowSize.x, settings.windowSize.y, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
 	if (window == NULL) {
 		SDL_Log("Could not create window: %s\n", SDL_GetError());
 		return 1;
@@ -83,21 +84,27 @@ int main(int argc, char **argv) {
 	camera.far_plane = 6500.f;
 
 	//Debug
-#if _DEBUG && FALSE
+#if _DEBUG
 	{
+		//locFile loc;
+		//loc.open("Z:\\scratch\\bin\\common\\languages\\main_english.loc");
+
 		/*auto b = fromHexString("10 ae 2346");
 		auto c = fromHexString("10AE2346");
 
+		temp2 = std::to_string(Hash::getHash("SBatchedSoundPointBreakable"));*/
+
+		char buffer[255];
+		snprintf(buffer, sizeof(buffer), "graphics\\Terrain\\Water\\AnimatedCaustics_%03d.xbt", 0);
+
+		uint32_t d = Hash::getFilenameHash(buffer);
+
 		CStringID temp;
-		temp.id = 0xEB07AAAC;
+		temp.id = 0x1D072E66;
 		std::string temp2 = temp.getReverseName();
-		
-
-		temp2 = std::to_string(Hash::instance().getHash("SBatchedSoundPointBreakable"));*/
-
 		FH::Init();
 
-		tfDIR dir;
+		/*tfDIR dir;
 		tfDirOpen(&dir, "C:\\Users\\Jonathan\\Desktop\\WD_materials_BIN");
 		while (dir.has_next) {
 			tfFILE file;
@@ -108,7 +115,8 @@ int main(int argc, char **argv) {
 
 				materialFile mat;
 				SDL_RWops* fp = SDL_RWFromFile(file.path, "rb");
-				mat.open(CBinaryArchiveReader(fp));
+				CBinaryArchiveReader reader(fp);
+				mat.open(reader);
 				SDL_RWclose(fp);
 				std::string str = serializeToXML(mat);
 				std::string outFilename = file.path + std::string(".xml");
@@ -119,17 +127,21 @@ int main(int argc, char **argv) {
 
 			tfDirNext(&dir);
 		}
-		tfDirClose(&dir);
+		tfDirClose(&dir);*/
 
-		/*xbgFile xbg;
-		fp = SDL_RWFromFile("C:\\Users\\Jonathan\\Desktop\\C85A0D42 - Copy.xbg", "rb");
-		xbg.open(CBinaryArchiveReader(fp));
-		SDL_RWclose(fp);*/
+		{
+			xbgFile xbg;
+			SDL_RWops *fp = SDL_RWFromFile("C:\\Users\\Jonathan\\Desktop\\helicopter_01.xbg", "rb");
+			CBinaryArchiveReader reader(fp);
+			xbg.open(reader);
+			SDL_RWclose(fp);
+		}
 
 		batchFile bf;
 		try {
 			SDL_RWops* fp = SDL_RWFromFile("C:\\Program Files\\Ubisoft\\WATCH_DOGS\\bin\\patch\\worlds\\windy_city\\generated\\batchmeshentity\\batchmeshentity_c2_i0_xn0767_yp0513_xn0641_yp0639_compound.cbatch", "rb");
-			bf.open(CBinaryArchiveReader(fp));
+			CBinaryArchiveReader reader(fp);
+			bf.open(reader);
 			SDL_RWclose(fp);
 
 			//bf.componentMBP.batchProcessors.clear();
@@ -202,8 +214,9 @@ int main(int argc, char **argv) {
 #endif
 
 	{
-		loadingScreen->setTitle("Scanning Files");
+		loadingScreen->setTitle("Setting Up Database");
 		FH::Init();
+		DB::instance();
 
 		SDL_PumpEvents();
 		loadingScreen->setTitle("Loading Entity Library");
@@ -233,7 +246,7 @@ int main(int argc, char **argv) {
 	/*{
 		FILE *out = fopen("out.txt", "w");
 		for (auto it = entityLibraryUID.begin(); it != entityLibraryUID.end(); ++it) {
-			std::string arche = Hash::instance().getReverseHashFNV(it->first);
+			std::string arche = Hash::getReverseHashFNV(it->first);
 			fprintf(out, "%s = %s\n", it->second.c_str(), arche.c_str());
 		}
 		fclose(out);
@@ -250,7 +263,7 @@ int main(int argc, char **argv) {
 				unknown.emplace(it->first);
 			}
 
-			for (auto it = Hash::instance().reverseFNVHash.begin(); it != Hash::instance().reverseFNVHash.end(); ++it) {
+			for (auto it = Hash::reverseFNVHash.begin(); it != Hash::reverseFNVHash.end(); ++it) {
 				unknown.erase(it->first);
 			}
 		}
@@ -269,7 +282,7 @@ int main(int argc, char **argv) {
 				guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
 				guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
 
-			hash = Hash::instance().getFilenameHash(buffer);
+			hash = Hash::getFilenameHash(buffer);
 			if (unknown.count(hash) > 0) {
 				unknown.erase(hash);
 				fprintf(fp, "%s\n", buffer);
@@ -393,7 +406,7 @@ int main(int argc, char **argv) {
 				Node *entityPtr = &entityRef;
 				Attribute *ArchetypeGuid = entityRef.getAttribute("ArchetypeGuid");
 				if (ArchetypeGuid) {
-					uint32_t uid = Hash::instance().getFilenameHash((const char*)ArchetypeGuid->buffer.data());
+					uint32_t uid = Hash::getFilenameHash((const char*)ArchetypeGuid->buffer.data());
 					entityPtr = findEntityByUID(uid);
 					if (!entityPtr) {
 						SDL_Log("Could not find %s\n", ArchetypeGuid->buffer.data());

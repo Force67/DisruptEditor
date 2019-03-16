@@ -1,12 +1,12 @@
 ## Disrupt Editor
 
-[![Build status](https://ci.appveyor.com/api/projects/status/tpcpf00rbkk8i1n0?svg=true)](https://ci.appveyor.com/project/j301scott/disrupteditor) [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
+[![Build status](https://ci.appveyor.com/api/projects/status/tpcpf00rbkk8i1n0?svg=true)](https://ci.appveyor.com/project/j301scott/disrupteditor)
 
 Latest Build: https://ci.appveyor.com/project/j301scott/disrupteditor/build/artifacts
 
 # Setup
 
-1. Run Disrupt Editor, it will automatically create a settings.json for you to fill in
+1. Run Disrupt Editor, it will automatically create a settings.xml for you to fill in
 2. Assuming Z:/scratch/bin is where you extracted each of the fat/dat files, add them to searchPaths like so:
 patchDir is where modified files like wlu and cbatch are written. Files in the patchDir will always take precedence
 ```xml

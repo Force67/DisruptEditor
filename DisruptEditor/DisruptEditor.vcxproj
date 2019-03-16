@@ -177,6 +177,7 @@
     <ClCompile Include="CPathID.cpp" />
     <ClCompile Include="CStringID.cpp" />
     <ClCompile Include="DAREWindow.cpp" />
+    <ClCompile Include="DB.cpp" />
     <ClCompile Include="DisruptTypes.cpp" />
     <ClCompile Include="DominoWindow.cpp" />
     <ClCompile Include="EntityLibraryWindow.cpp" />
@@ -218,8 +219,10 @@
     <ClCompile Include="sbaoFile.cpp" />
     <ClCompile Include="Serialization.cpp" />
     <ClCompile Include="spkFile.cpp" />
+    <ClCompile Include="sqlite3.c" />
     <ClCompile Include="stb_vorbis.c" />
     <ClCompile Include="tinyxml2.cpp" />
+    <ClCompile Include="Types.cpp" />
     <ClCompile Include="wluFile.cpp" />
     <ClCompile Include="World.cpp" />
     <ClCompile Include="xbgFile.cpp" />
@@ -228,6 +231,7 @@
   <ItemGroup>
     <ClInclude Include="CPathID.h" />
     <ClInclude Include="CStringID.h" />
+    <ClInclude Include="DB.h" />
     <ClInclude Include="DisruptTypes.h" />
     <ClInclude Include="HexBase64.h" />
     <ClInclude Include="IBinaryArchive.h" />
@@ -275,6 +279,8 @@
     <ClInclude Include="sbaoFile.h" />
     <ClInclude Include="Serialization.h" />
     <ClInclude Include="spkFile.h" />
+    <ClInclude Include="sqlite3.h" />
+    <ClInclude Include="sqlite3ext.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="stb_image_write.h" />
     <ClInclude Include="stb_rect_pack.h" />
@@ -282,6 +288,7 @@
     <ClInclude Include="stb_truetype.h" />
     <ClInclude Include="tinyfiles.h" />
     <ClInclude Include="tinyxml2.h" />
+    <ClInclude Include="Types.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="wluFile.h" />

@@ -68,7 +68,7 @@ bool writeFile(const std::string & file, const std::string &contents) {
 std::unordered_map<uint32_t, xbgFile> xbgs;
 
 xbgFile& loadXBG(const std::string &path) {
-	return loadXBG(Hash::instance().getFilenameHash(path));
+	return loadXBG(Hash::getFilenameHash(path));
 }
 
 xbgFile &loadXBG(uint32_t path) {

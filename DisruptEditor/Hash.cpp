@@ -194,56 +194,17 @@ uint32_t updateCRC32(unsigned char ch, uint32_t crc) {
 	return UPDC32(ch, crc);
 }
 
-uint32_t crc32buf(const char *buf, size_t len) {
-	uint32_t oldcrc32;
-
-	oldcrc32 = 0xFFFFFFFF;
-
+uint32_t Hash::crc32buf(const void *data, size_t len) {
+	const char* buf = (const char*)data;
+	uint32_t oldcrc32 = 0xFFFFFFFF;
 	for (; len; --len, ++buf) {
 		oldcrc32 = UPDC32(*buf, oldcrc32);
 	}
-
 	return ~oldcrc32;
-
 }
 
-Hash::Hash() {
-	handleFile("res/classNames.txt");
-	handleFile("res/exeStrings.txt");
-	handleFile("res/strings.txt");
-	handleFile("res/materialNames.txt");
-	handleFileFNV("res/arches.txt");
-	handleFileFNV("res/archeBrute.txt");
-	handleTypes("res/types.xml");
-}
-
-uint32_t Hash::crcHash(void * data, size_t size) {
+uint32_t Hash::crcHash(const void * data, size_t size) {
 	return crc32bufogg((const uint8_t*)data, size);
-}
-
-Hash& Hash::instance() {
-	static Hash hash;
-	return hash;
-}
-
-std::string Hash::getReverseHash(uint32_t hash) {
-	if (reverseHash.count(hash) == 0) {
-		char buffer[12];
-		snprintf(buffer, sizeof(buffer), "_%08x", hash);
-		return std::string(buffer);
-	}
-
-	return reverseHash[hash];
-}
-
-std::string Hash::getReverseHashFNV(uint32_t hash) {
-	if (reverseFNVHash.count(hash) == 0) {
-		char buffer[12];
-		snprintf(buffer, sizeof(buffer), "_%08x", hash);
-		return std::string(buffer);
-	}
-
-	return reverseFNVHash[hash];
 }
 
 uint32_t Hash::getHash(const char *str) {
@@ -277,103 +238,4 @@ uint64_t Hash::getFilenameHash64(std::string str) {
 	}
 
 	return hash64 & 0x1FFFFFFFFFFFFFFF | 0xA000000000000000;
-}
-
-Hash::Types Hash::getHashType(const char *str) {
-	uint32_t hash = crc32buf(str, strlen(str));
-	return getHashType(hash);
-}
-
-Hash::Types Hash::getHashType(uint32_t hash) {
-	if (hashTypes.count(hash) > 0)
-		return hashTypes[hash];
-
-	return Hash::BINHEX;
-}
-
-void Hash::handleFile(const char *file) {
-	FILE *fp = fopen(file, "r");
-
-	char line[512];
-	while (fgets(line, sizeof(line), fp)) {
-		line[strlen(line) - 1] = '\0';
-
-		uint32_t hash = crc32buf((const char*)line, strlen(line));
-		if (reverseHash.count(hash) != 0 && reverseHash[hash] != line) {
-			SDL_Log("Duplicate CStringID hash %s for %s %08x", line, reverseHash[hash].c_str(), hash);
-		}
-		reverseHash[hash] = line;
-	}
-
-	fclose(fp);
-}
-
-void Hash::handleFileFNV(const char *file) {
-	FILE *fp = fopen(file, "r");
-
-	char line[512];
-	while (fgets(line, sizeof(line), fp)) {
-		line[strlen(line) - 1] = '\0';
-
-		uint32_t hash = getFilenameHash(line);
-		reverseFNVHash[hash] = line;
-	}
-
-	fclose(fp);
-}
-
-Hash::Types strToType(const std::string &str) {
-	if (str == "String")
-		return Hash::STRING;
-	else if (str == "StringHash")
-		return Hash::STRINGHASH;
-	else if (str == "BinHex")
-		return Hash::BINHEX;
-	else if (str == "Bool")
-		return Hash::BOOL;
-	else if (str == "Float")
-		return Hash::FLOAT;
-	else if (str == "Int16")
-		return Hash::INT16;
-	else if (str == "Int32")
-		return Hash::INT32;
-	else if (str == "Byte")
-		return Hash::UINT8;
-	else if (str == "UInt16")
-		return Hash::UINT16;
-	else if (str == "UInt32")
-		return Hash::UINT32;
-	else if (str == "UInt64")
-		return Hash::UINT64;
-	else if (str == "Vector2")
-		return Hash::VEC2;
-	else if (str == "Vector3")
-		return Hash::VEC3;
-	else if (str == "Vector4")
-		return Hash::VEC4;
-	return Hash::BINHEX;
-}
-
-void Hash::handleTypes(const char *file) {
-	tinyxml2::XMLDocument doc;
-	doc.LoadFile(file);
-
-	for (tinyxml2::XMLElement *it = doc.RootElement()->FirstChildElement("Attribute"); it; it = it->NextSiblingElement("Attribute")) {
-		uint32_t hash = crc32buf(it->Attribute("Name"), strlen(it->Attribute("Name")));
-
-		if (!it->Attribute("Type")) continue;
-
-		hashTypes[hash] = strToType(it->Attribute("Type"));
-	}
-
-	for (tinyxml2::XMLElement *it = doc.RootElement()->FirstChildElement("AttributeGroup"); it; it = it->NextSiblingElement("AttributeGroup")) {
-		if (!it->Attribute("Type")) continue;
-		Types type = strToType(it->Attribute("Type"));
-
-		for (tinyxml2::XMLElement *a = it->FirstChildElement("Attribute"); a; a = a->NextSiblingElement("Attribute")) {
-			if (!a->Attribute("Name")) continue;
-			uint32_t hash = crc32buf(a->Attribute("Name"), strlen(a->Attribute("Name")));
-			hashTypes[hash] = type;
-		}
-	}
 }

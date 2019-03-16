@@ -9,6 +9,7 @@
 #include "xbgFile.h"
 #include "FileHandler.h"
 #include "imgui.h"
+#include "DB.h"
 
 std::map<std::string, Node> entityLibrary;
 std::unordered_map<uint32_t, std::string> entityLibraryUID;
@@ -63,7 +64,7 @@ void drawCGraphicComponent(Node *entity, Node *node, bool drawImGui, bool draw3D
 #define handleComponent(componentName) else if(name == #componentName) draw##componentName(entity, node, drawImGui, draw3D);
 
 void drawComponent(Node *entity, Node *node, bool drawImGui, bool draw3D) {
-	std::string name = Hash::instance().getReverseHash(node->hash);
+	std::string name = node->name.getReverseName();
 
 	if (false) {
 

@@ -34,9 +34,9 @@ void UI::displayTopMenu() {
 	if (ImGui::BeginMenu("Hasher")) {
 		static char buffer[255] = { '\0' };
 		ImGui::InputText("##UID", buffer, sizeof(buffer));
-		uint32_t fnv = Hash::instance().getFilenameHash(buffer);
-		uint64_t fnv64 = Hash::instance().getFilenameHash64(buffer);
-		uint32_t crc = Hash::instance().getHash(buffer);
+		uint32_t fnv = Hash::getFilenameHash(buffer);
+		uint64_t fnv64 = Hash::getFilenameHash64(buffer);
+		uint32_t crc = Hash::getHash(buffer);
 
 		char outbuffer[255];
 		snprintf(outbuffer, sizeof(outbuffer), "%u", fnv);
@@ -90,8 +90,9 @@ void UI::displayTopMenu() {
 		ImGui::DragFloat("Label Draw Distance", &settings.textDrawDistance, 0.05f, 0.f, 4096.f);
 		ImGui::EndMenu();
 	}
+
 	if (ImGui::BeginMenu("Credits")) {
-		ImGui::Text("Disrupt Editor " DE_VERSION);
+		ImGui::Text("Disrupt Editor v" DE_VERSIONSTR);
 		if (ImGui::Selectable("Check for updates"))
 			ShellExecute(0, 0, L"https://ci.appveyor.com/project/j301scott/disrupteditor/build/artifacts", 0, 0, SW_SHOW);
 		ImGui::Separator();

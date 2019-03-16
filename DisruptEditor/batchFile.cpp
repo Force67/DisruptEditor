@@ -67,7 +67,7 @@ bool batchFile::open(IBinaryArchive &reader) {
 	while (SDL_RWtell(fp) < SDL_RWsize(fp)) {
 		uint32_t offset = SDL_RWtell(fp);
 		uint32_t ID = SDL_ReadLE32(fp);
-		std::string type = Hash::instance().getReverseHash(ID);
+		std::string type = Hash::getReverseHash(ID);
 		if (type[0] != '_' && !type.empty())
 			SDL_Log("%u type=%s", offset, type.c_str());
 	}

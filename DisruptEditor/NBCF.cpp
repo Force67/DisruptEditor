@@ -5,6 +5,7 @@
 #include <SDL_endian.h>
 #include "Hash.h"
 #include "HexBase64.h"
+#include "DB.h"
 
 uint32_t ReadCountA(SDL_RWops *fp, bool &isOffset, bool bigEndian) {
 	uint8_t value = SDL_ReadU8(fp);
@@ -55,11 +56,11 @@ void writeSize(SDL_RWops *fp, size_t osize) {
 }
 
 Attribute::Attribute(SDL_RWops * fp, bool bigEndian) {
-	hash = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
+	name.id = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
 }
 
 void Attribute::deserializeA(SDL_RWops * fp, bool bigEndian) {
-	hash = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
+	name.id = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
 
 	bool isOffset;
 	size_t position = SDL_RWtell(fp);
@@ -104,13 +105,13 @@ void Attribute::serialize(SDL_RWops * fp) {
 }
 
 void Attribute::deserializeXML(const tinyxml2::XMLAttribute *attr) {
-	const char* name = attr->Name();
+	const char* xname = attr->Name();
 	//Determine if this is a hash or name
-	if (name[0] == '_') {
-		name++;
-		hash = std::stoul(name, NULL, 16);
+	if (xname[0] == '_') {
+		xname++;
+		name = std::stoul(xname, NULL, 16);
 	} else {
-		hash = Hash::instance().getHash(name);
+		name = Hash::getHash(xname);
 	}
 
 	//Determine if this is hex string or string
@@ -144,7 +145,7 @@ void Attribute::serializeXML(tinyxml2::XMLPrinter &printer) {
 }
 
 std::string Attribute::getHashName() {
-	return Hash::instance().getReverseHash(hash);
+	return name.getReverseName();
 }
 
 std::string Attribute::getHumanReadable() {
@@ -177,7 +178,7 @@ void Node::deserialize(SDL_RWops* fp, bool bigEndian) {
 		SDL_RWseek(fp, pos + 4, RW_SEEK_SET);
 	} else {
 		offset = pos;
-		hash = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
+		name.id = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
 
 		uint16_t num1 = bigEndian ? SDL_ReadBE16(fp) : SDL_ReadLE16(fp);
 
@@ -232,7 +233,7 @@ void Node::deserializeA(SDL_RWops * fp, Vector<Node*> &list, bool bigEndian) {
 		*this = *list[childCount];
 		return;
 	} else {
-		hash = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
+		name.id = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
 
 		uint32_t attributeCount = ReadCountA(fp, isOffset, bigEndian);
 		SDL_assert_release(!isOffset);
@@ -252,7 +253,7 @@ void Node::deserializeA(SDL_RWops * fp, Vector<Node*> &list, bool bigEndian) {
 
 void Node::serialize(SDL_RWops * fp) {
 	writeSize(fp, children.size());
-	SDL_WriteLE32(fp, hash);
+	SDL_WriteLE32(fp, name.id);
 
 	//Calc Attribute Size
 	uint16_t num1 = 0;
@@ -261,7 +262,7 @@ void Node::serialize(SDL_RWops * fp) {
 	else
 		num1 += 1;
 	for (auto &attribute : attributes) {
-		num1 += sizeof(attribute.hash);
+		num1 += sizeof(attribute.name);
 		num1 += attribute.buffer.size();
 		if (attribute.buffer.size() > 254)
 			num1 += 4;
@@ -273,7 +274,7 @@ void Node::serialize(SDL_RWops * fp) {
 	//Write Attribute Hashes
 	writeSize(fp, attributes.size());
 	for (auto &attribute : attributes) {
-		SDL_WriteLE32(fp, attribute.hash);
+		SDL_WriteLE32(fp, attribute.name.id);
 	}
 	for (auto &attribute : attributes) {
 		attribute.serialize(fp);
@@ -286,13 +287,13 @@ void Node::serialize(SDL_RWops * fp) {
 }
 
 void Node::deserializeXML(const tinyxml2::XMLElement *node) {
-	const char* name = node->Name();
+	const char* xname = node->Name();
 	//Determine if this is a hash or name
-	if (name[0] == '_') {
-		name++;
-		hash = std::stoul(name, NULL, 16);
+	if (xname[0] == '_') {
+		xname++;
+		name = std::stoul(xname, NULL, 16);
 	} else {
-		hash = Hash::instance().getHash(name);
+		name = Hash::getHash(xname);
 	}
 
 	//Load Attributes
@@ -324,10 +325,10 @@ void Node::serializeXML(tinyxml2::XMLPrinter &printer) {
 }
 
 Node* Node::findFirstChild(const char *name) {
-	uint32_t hash = Hash::instance().getHash(name);
+	uint32_t hash = Hash::getHash(name);
 
 	for (auto &child : children) {
-		if (child.hash == hash)
+		if (child.name.id == hash)
 			return &child;
 	}
 
@@ -336,7 +337,7 @@ Node* Node::findFirstChild(const char *name) {
 
 Node* Node::findFirstChild(uint32_t hash) {
 	for (auto &child : children) {
-		if (child.hash == hash)
+		if (child.name.id == hash)
 			return &child;
 	}
 
@@ -344,10 +345,10 @@ Node* Node::findFirstChild(uint32_t hash) {
 }
 
 Attribute* Node::getAttribute(const char *name) {
-	uint32_t hash = Hash::instance().getHash(name);
+	uint32_t hash = Hash::getHash(name);
 
 	for (auto &attribute : attributes) {
-		if (attribute.hash == hash)
+		if (attribute.name.id == hash)
 			return &attribute;
 	}
 
@@ -356,7 +357,7 @@ Attribute* Node::getAttribute(const char *name) {
 
 Attribute* Node::getAttribute(uint32_t hash) {
 	for (auto &attribute : attributes) {
-		if (attribute.hash == hash)
+		if (attribute.name.id == hash)
 			return &attribute;
 	}
 
@@ -372,7 +373,7 @@ int Node::countNodes() {
 }
 
 std::string Node::getHashName() {
-	return Hash::instance().getReverseHash(hash);
+	return name.getReverseName();
 }
 
 Node readFCB(const char * filename) {

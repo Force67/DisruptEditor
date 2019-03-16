@@ -173,6 +173,15 @@
     <ClCompile Include="MaterialWindow.cpp">
       <Filter>Source Files\Windows</Filter>
     </ClCompile>
+    <ClCompile Include="DB.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sqlite3.c">
+      <Filter>Externals</Filter>
+    </ClCompile>
+    <ClCompile Include="Types.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -357,6 +366,18 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="HexBase64.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlite3ext.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="DB.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

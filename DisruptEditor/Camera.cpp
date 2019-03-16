@@ -36,14 +36,14 @@ void Camera::update(float delta) {
 			glm::vec3 movement;
 
 			if (moveForward) {
-				movement.x += dx;
-				movement.y += dy;
-				movement.z += dz;
-			}
-			if (moveBackward) {
 				movement.x -= dx;
 				movement.y -= dy;
 				movement.z -= dz;
+			}
+			if (moveBackward) {
+				movement.x += dx;
+				movement.y += dy;
+				movement.z += dz;
 			}
 			if (moveLeft) {
 				movement.x += dy;
@@ -69,8 +69,8 @@ void Camera::update(float delta) {
 			if (!(mouseMask & SDL_BUTTON(SDL_BUTTON_MIDDLE)))
 				actualLookSpeed = 0.f;
 
-			lon += mouseX * actualLookSpeed;
-			lat -= mouseY * actualLookSpeed;
+			lon -= mouseX * actualLookSpeed;
+			lat += mouseY * actualLookSpeed;
 
 			lat = max(-85, min(85, lat));
 			phi = (90 - lat) * (3.141592f / 180.f);

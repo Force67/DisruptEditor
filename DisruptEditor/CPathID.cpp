@@ -6,7 +6,7 @@
 #include "IBinaryArchive.h"
 
 CPathID::CPathID(const std::string &filename) {
-	id = Hash::instance().getFilenameHash(filename);
+	id = Hash::getFilenameHash(filename);
 }
 
 std::string CPathID::getReverseFilename() {
@@ -28,7 +28,7 @@ void CPathID::registerMembers(MemberStructure & ms) {
 		if (temp[0] == '_')
 			sscanf(temp.c_str(), "_%08x", &id);
 		else
-			id = Hash::instance().getFilenameHash(temp);
+			id = Hash::getFilenameHash(temp);
 		break;
 	}
 	default:

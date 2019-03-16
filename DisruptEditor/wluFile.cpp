@@ -15,6 +15,8 @@
 #include "ImGuizmo.h"
 #include "DDRenderInterface.h"
 #include "FileHandler.h"
+#include "DB.h"
+#include "Types.h"
 
 bool wluFile::open(std::string filename) {
 	origFilename = filename;
@@ -275,7 +277,7 @@ void wluFile::draw(bool drawImgui, bool draw3D) {
 
 		Attribute *ArchetypeGuid = entity.getAttribute("ArchetypeGuid");
 		if (ArchetypeGuid) {
-			uint32_t uid = Hash::instance().getFilenameHash((const char*)ArchetypeGuid->buffer.data());
+			uint32_t uid = Hash::getFilenameHash((const char*)ArchetypeGuid->buffer.data());
 			char temp[40];
 			snprintf(temp, sizeof(temp), "UID: %u", uid);
 			if (ImGui::Selectable(temp)) {
@@ -286,12 +288,12 @@ void wluFile::draw(bool drawImgui, bool draw3D) {
 
 		for (Attribute &attr : entity.attributes) {
 			char name[1024];
-			snprintf(name, sizeof(name), "%s##%p", Hash::instance().getReverseHash(attr.hash).c_str(), &attr);
+			snprintf(name, sizeof(name), "%s##%p", attr.name.getReverseName().c_str(), &attr);
 
-			Hash::Types type = Hash::instance().getHashType(attr.hash);
+			Types::Type type = Types::getHashType(attr.name.id);
 
 			switch (type) {
-				case Hash::STRING:
+				case Types::STRING:
 				{
 					char temp[1024];
 					strncpy(temp, (char*)attr.buffer.data(), sizeof(temp));
@@ -301,19 +303,19 @@ void wluFile::draw(bool drawImgui, bool draw3D) {
 					}
 					break;
 				}
-				case Hash::FLOAT:
+				case Types::FLOAT:
 					ImGui::DragFloat(name, (float*)attr.buffer.data());
 					break;
-				case Hash::UINT64:
+				case Types::UINT64:
 					ImGui::InputUInt64(name, (uint64_t*)attr.buffer.data());
 					break;
-				case Hash::VEC2:
+				case Types::VEC2:
 					ImGui::DragFloat2(name, (float*)attr.buffer.data());
 					break;
-				case Hash::VEC3:
+				case Types::VEC3:
 					ImGui::DragFloat3(name, (float*)attr.buffer.data());
 					break;
-				case Hash::VEC4:
+				case Types::VEC4:
 					ImGui::DragFloat4(name, (float*)attr.buffer.data());
 					break;
 				default:

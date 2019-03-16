@@ -209,8 +209,8 @@ void xbgFile::MaterialResources::MaterialFile::read(IBinaryArchive & fp) {
 	fp.serialize(file1.id);
 	fp.serialize(file2);
 	std::string abc = file1.getReverseFilename();
-	uint32_t abc2 = Hash::instance().getFilenameHash(file2);
-	//SDL_assert_release(file1.id == Hash::instance().getFilenameHash(file2));
+	uint32_t abc2 = Hash::getFilenameHash(file2);
+	//SDL_assert_release(file1.id == Hash::getFilenameHash(file2));
 }
 
 void xbgFile::MaterialSlotToIndex::read(IBinaryArchive & fp) {
@@ -220,7 +220,7 @@ void xbgFile::MaterialSlotToIndex::read(IBinaryArchive & fp) {
 void xbgFile::MaterialSlotToIndex::Slot::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 }
 
@@ -231,7 +231,7 @@ void xbgFile::SkinNames::read(IBinaryArchive & fp) {
 void xbgFile::SkinNames::Skin::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 }
 
 void xbgFile::BonePalettes::read(IBinaryArchive & fp) {
@@ -271,7 +271,7 @@ void xbgFile::SkelResources::SkelResource::read(IBinaryArchive & fp) {
 	node.read(fp);
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 }
 
 void xbgFile::ReflexSystem::read(IBinaryArchive &fp) {
@@ -325,7 +325,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitive
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SSphereDesc::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 	fp.serialize(fRadius);
 }
@@ -333,7 +333,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitive
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SCylinderDesc::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -343,7 +343,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitive
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SCapsuleDesc::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -353,7 +353,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitive
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SInfinitePlaneDesc::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -371,7 +371,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::read(IBina
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SSphereLimitDesc::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -380,7 +380,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SSphereLim
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SBoxLimitDesc::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -389,7 +389,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SBoxLimitD
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SCylinderLimitDesc::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -405,7 +405,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitParticles::read(IB
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitParticles::SSMParticleDesc::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -415,7 +415,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitParticles::SSMPart
 void xbgFile::CMeshNameID::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::instance().getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 }
 
 void xbgFile::ProceduralNodes::read(IBinaryArchive & fp) {

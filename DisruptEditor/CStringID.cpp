@@ -1,14 +1,15 @@
 #include "CStringID.h"
 
 #include "Hash.h"
+#include "DB.h"
 #include "Serialization.h"
 
 CStringID::CStringID(const std::string &filename) {
-	id = Hash::instance().getFilenameHash(filename);
+	id = Hash::getFilenameHash(filename);
 }
 
 std::string CStringID::getReverseName() {
-	return Hash::instance().getReverseHash(id);
+	return DB::instance().getStrFromCRC(id);
 }
 
 void CStringID::registerMembers(MemberStructure & ms) {
@@ -22,7 +23,7 @@ void CStringID::registerMembers(MemberStructure & ms) {
 		if (temp[0] == '_')
 			sscanf(temp.c_str(), "_%08x", &id);
 		else
-			id = Hash::instance().getHash(temp.c_str());
+			id = Hash::getHash(temp.c_str());
 		break;
 	}
 	default:
