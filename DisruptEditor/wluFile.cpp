@@ -318,6 +318,19 @@ void wluFile::draw(bool drawImgui, bool draw3D) {
 				case Types::VEC4:
 					ImGui::DragFloat4(name, (float*)attr.buffer.data());
 					break;
+				case Types::BOOL:
+					if (attr.buffer.size() == 0) {
+						bool a = false;
+						ImGui::Checkbox(name, &a);
+						if (a) {
+							attr.buffer.resize(1);
+							attr.buffer[0] = 1;
+						}
+					}
+					else {
+						ImGui::Checkbox(name, (bool*)attr.buffer.data());
+					}
+					break;
 				default:
 					ImGui::LabelText(name, "BinHex %u", attr.buffer.size());
 					break;

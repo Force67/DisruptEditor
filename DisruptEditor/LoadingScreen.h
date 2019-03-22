@@ -12,6 +12,7 @@ typedef uint32_t SDL_AudioDeviceID;
 #include <string>
 #include <mutex>
 #include "Vector.h"
+#include <future>
 
 class LoadingScreen {
 public:
@@ -23,6 +24,7 @@ public:
 	void setTitle(const std::string &title, const std::string &message = std::string(), float percentage = -1.f);
 	void setProgress(const std::string &message, float percentage = -1.f);
 	SDL_Window* getWindow() { return window; }
+	void waitForFuture(std::future<void> &future);
 private:
 	float percentage = 0.f;
 	short *audioData;

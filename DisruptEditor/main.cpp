@@ -215,14 +215,16 @@ int main(int argc, char **argv) {
 
 	{
 		loadingScreen->setTitle("Setting Up Database");
-		FH::Init();
-		DB::instance();
+		std::future<void> f = std::async(FH::Init);
+		loadingScreen->waitForFuture(f);
 
-		SDL_PumpEvents();
+		f = std::async([]() { DB::instance(); });
+		loadingScreen->waitForFuture(f);
+
 		loadingScreen->setTitle("Loading Entity Library");
-		loadEntityLibrary();
+		f = std::async(loadEntityLibrary);
+		loadingScreen->waitForFuture(f);
 
-		SDL_PumpEvents();
 		loadingScreen->setTitle("Loading Language Files");
 		//Dialog::instance();
 

@@ -154,6 +154,14 @@ void LoadingScreen::setProgress(const std::string &message, float percentage) {
 	mutex.unlock();
 }
 
+void LoadingScreen::waitForFuture(std::future<void>& future) {
+	std::future_status status;
+	do {
+		SDL_PumpEvents();
+		status = future.wait_for(std::chrono::milliseconds(60));
+	} while (status != std::future_status::ready);
+}
+
 void LoadingScreen::drawText(float x, float y, const char *str) {
 	while (*str) {
 		if (*str >= 32 && *str < 128) {

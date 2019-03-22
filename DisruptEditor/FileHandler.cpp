@@ -66,13 +66,39 @@ Vector<FileInfo> FH::getFileListFromAbsDir(const std::string & fullDir, const st
 	return outFiles;
 }
 
+static int mem_close(SDL_RWops * context) {
+	if (context) {
+		free(context->hidden.mem.base);
+		SDL_FreeRW(context);
+	}
+	return 0;
+}
+
 SDL_RWops * FH::openFile(const std::string & path) {
 	SDL_RWops *fp = SDL_RWFromFile(getAbsoluteFilePath(path).c_str(), "rb");
+	if (!fp) return NULL;
+	size_t size = SDL_RWsize(fp);
+	void *data = malloc(size);
+	SDL_RWread(fp, data, 1, size);
+	SDL_RWclose(fp);
+
+	fp = SDL_RWFromConstMem(data, size);
+	fp->close = mem_close;
+
 	return fp;
 }
 
 SDL_RWops * FH::openFile(uint32_t path) {
 	SDL_RWops *fp = SDL_RWFromFile(getAbsoluteFilePath(path).c_str(), "rb");
+	if (!fp) return NULL;
+	size_t size = SDL_RWsize(fp);
+	void *data = malloc(size);
+	SDL_RWread(fp, data, 1, size);
+	SDL_RWclose(fp);
+
+	fp = SDL_RWFromConstMem(data, size);
+	fp->close = mem_close;
+
 	return fp;
 }
 

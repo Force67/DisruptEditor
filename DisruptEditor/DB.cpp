@@ -3,6 +3,7 @@
 #include <sqlite_modern_cpp.h>
 #include "Hash.h"
 #include "Version.h"
+#include "SDL_log.h"
 
 DB::DB() {
 	db = new sqlite::database("Disrupt1.db");
@@ -40,14 +41,22 @@ std::unique_ptr<DB::File> DB::getFileByPath(const char* path) {
 }
 
 std::string DB::getStrFromCRC(uint32_t hash) {
+	//Yes, I know we have a DB for this, but it's just too slow otherwise
+	static std::unordered_map<uint32_t, std::string> cache;
+	auto it = cache.find(hash);
+	if (it != cache.end())
+		return it->second;
+
 	try {
 		std::string str;
 		*db << "select str from hashes where hash=?;" << hash >> str;
+		cache[hash] = str;
 		return str;
 	}
 	catch (...) {
 		char buffer[12];
 		snprintf(buffer, sizeof(buffer), "_%08x", hash);
+		cache[hash] = buffer;
 		return std::string(buffer);
 	}
 }
@@ -65,8 +74,8 @@ void DB::reinit() {
 
 	*db <<
 		"create table if not exists files ("
-		"   hash integer not null,"
-		"   path text not null,"
+		"   hash integer unique not null,"
+		"   path text primary key not null,"
 		"   type text not null"
 		");";
 
@@ -79,8 +88,13 @@ void DB::reinit() {
 	while (fgets(buffer, sizeof(buffer), fp)) {
 		buffer[strlen(buffer) - 1] = '\0';
 		hash = Hash::getFilenameHash(buffer);
-		ps << hash << buffer << "";
-		ps++;
+		try {
+			ps << hash << buffer << "";
+			ps++;
+		}
+		catch (...) {
+			SDL_Log("Duplicate key %u %s", hash, buffer);
+		}
 	}
 	fclose(fp);
 
@@ -89,8 +103,13 @@ void DB::reinit() {
 	while (fgets(buffer, sizeof(buffer), fp)) {
 		buffer[strlen(buffer) - 1] = '\0';
 		hash = Hash::getFilenameHash(buffer);
-		ps << hash << buffer << "CArchetypeResource";
-		ps++;
+		try {
+			ps << hash << buffer << "CArchetypeResource";
+			ps++;
+		}
+		catch (...) {
+			SDL_Log("Duplicate key %u %s", hash, buffer);
+		}
 	}
 	fclose(fp);
 
@@ -98,8 +117,13 @@ void DB::reinit() {
 	while (fgets(buffer, sizeof(buffer), fp)) {
 		buffer[strlen(buffer) - 1] = '\0';
 		hash = Hash::getFilenameHash(buffer);
-		ps << hash << buffer << "CArchetypeResource";
-		ps++;
+		try {
+			ps << hash << buffer << "CArchetypeResource";
+			ps++;
+		}
+		catch (...) {
+			SDL_Log("Duplicate key %u %s", hash, buffer);
+		}
 	}
 	fclose(fp);
 	ps.used(true);
@@ -107,8 +131,8 @@ void DB::reinit() {
 	//CRC Hash Table
 	*db <<
 		"create table if not exists hashes ("
-		"   hash integer not null,"
-		"   str text not null,"
+		"   hash integer unique not null,"
+		"   str text primary key not null,"
 		"   type text not null"
 		");";
 
@@ -134,8 +158,13 @@ void DB::handleCRCFile(const char *file, const char* type) {
 		line[strlen(line) - 1] = '\0';
 
 		uint32_t hash = Hash::crc32buf((const char*)line, strlen(line));
-		ps << hash << line << type;
-		ps++;
+		try {
+			ps << hash << line << type;
+			ps++;
+		}
+		catch (...) {
+			SDL_Log("Duplicate key %u %s", hash, line);
+		}
 	}
 	ps.used(true);
 
