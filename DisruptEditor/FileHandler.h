@@ -3,10 +3,6 @@
 #include "Vector.h"
 struct SDL_RWops;
 
-void seekpad(SDL_RWops *fp, long pad);
-
-void writepad(SDL_RWops *fp, long pad);
-
 struct FileInfo {
 	std::string fullPath;
 	std::string name;

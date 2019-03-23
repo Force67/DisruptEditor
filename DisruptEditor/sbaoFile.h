@@ -25,7 +25,6 @@ public:
 	void save(const char* filename);
 	Vector<uint8_t> save();
 	Vector<sbaoLayer> layers;
-	uint32_t id;
 private:
 	void fillCache();
 };

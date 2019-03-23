@@ -5,7 +5,7 @@
 #include <SDL_endian.h>
 #include "Hash.h"
 #include "HexBase64.h"
-#include "DB.h"
+#include "IBinaryArchive.h"
 
 uint32_t ReadCountA(SDL_RWops *fp, bool &isOffset, bool bigEndian) {
 	uint8_t value = SDL_ReadU8(fp);
@@ -177,7 +177,6 @@ void Node::deserialize(SDL_RWops* fp, bool bigEndian) {
 		deserialize(fp, bigEndian);
 		SDL_RWseek(fp, pos + 4, RW_SEEK_SET);
 	} else {
-		offset = pos;
 		name.id = bigEndian ? SDL_ReadBE32(fp) : SDL_ReadLE32(fp);
 
 		uint16_t num1 = bigEndian ? SDL_ReadBE16(fp) : SDL_ReadLE16(fp);
@@ -226,7 +225,6 @@ void Node::deserialize(SDL_RWops* fp, bool bigEndian) {
 void Node::deserializeA(SDL_RWops * fp, Vector<Node*> &list, bool bigEndian) {
 	bool isOffset;
 	uint32_t childCount = ReadCountA(fp, isOffset, bigEndian);
-	offset = SDL_RWtell(fp);
 
 	if (isOffset) {
 		SDL_assert_release(list.size() > childCount);
@@ -376,48 +374,48 @@ std::string Node::getHashName() {
 	return name.getReverseName();
 }
 
-Node readFCB(const char * filename) {
-	Node node;
-
-	SDL_RWops *fp = SDL_RWFromFile(filename, "rb");
-	if (!fp)
-		return node;
-
-	node = readFCB(fp);
-
-	SDL_RWclose(fp);
-
-	return node;
+Node readFCB(SDL_RWops * fp) {
+	Node root;
+	readFCB(CBinaryArchiveReader(fp), root);
+	return root;
 }
 
-Node readFCB(SDL_RWops * fp) {
-	Node node;
+void readFCB(IBinaryArchive & fp, Node &root) {
+	SDL_assert_release(fp.isReading());
+
+	bool orig_bigEndian = fp.bigEndian;
+	bool orig_paddingEnabled = fp.paddingEnabled;
+
+	root = Node();
 
 	fcbHeader head;
-	SDL_RWread(fp, &head, sizeof(head), 1);
-	bool bigEndian = false;
+	fp.memBlock(&head, sizeof(head), 1);
+	fp.bigEndian = false;
 
 	if (memcmp(head.magic, "nbCF", 4) != 0) {
 		if (memcmp(head.magic, "FCbn", 4) == 0) {
-			bigEndian = true;
+			fp.bigEndian = true;
 			head.swapEndian();
-		} else {
-			return node;
+		}
+		else {
+			SDL_assert_release(false);
+			return;
 		}
 	}
 
 	if (head.version == 16389) {
-		bool bailOut = false;
-		node.deserialize(fp, bigEndian);
-	} else if (head.version == 3) {
+		root.deserialize(fp.fp, fp.bigEndian);
+	}
+	else if (head.version == 3) {
 		Vector<Node*> list;
-		node.deserializeA(fp, list, bigEndian);
+		root.deserializeA(fp.fp, list, fp.bigEndian);
 	}
 
-	if (SDL_RWsize(fp) != SDL_RWtell(fp))
+	if (fp.size() != fp.tell())
 		SDL_Log("Warning: Extra data at the end of fcb");
 
-	return node;
+	fp.bigEndian = orig_bigEndian;
+	fp.paddingEnabled = orig_paddingEnabled;
 }
 
 void writeFCBB(SDL_RWops *fp, Node &node) {

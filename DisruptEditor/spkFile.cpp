@@ -2,51 +2,37 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <SDL_assert.h>
-#include <SDL_log.h>
-#include "Vector.h"
-#include "Common.h"
-#include "FileHandler.h"
+#include "IBinaryArchive.h"
 
 const uint32_t spkMagic = 1397771010;
 
-void spkFile::open(const char * filename) {
-	if (!filename) return;
-	SDL_RWops *fp = SDL_RWFromFile(filename, "rb");
-	if (!fp) return;
-	uint32_t magic = SDL_ReadLE32(fp);
+void spkFile::open(IBinaryArchive &fp) {
+	uint32_t magic = spkMagic;
+	fp.serialize(magic);
 	SDL_assert_release(magic == spkMagic);
 
-	uint32_t count = SDL_ReadLE32(fp);
-	std::vector<uint32_t> soundIds(count);
-	SDL_RWread(fp, soundIds.data(), sizeof(uint32_t), count);
-
+	uint32_t count = ids.size();
+	fp.serialize(count);
+	ids.resize(count);
 	objs.resize(count);
+
+	for (uint32_t i = 0; i < count; ++i)
+		fp.serialize(ids[i]);
+
 	for (uint32_t i = 0; i < count; ++i) {
-		uint32_t size = SDL_ReadLE32(fp);
-		objs[i].open(fp);
-		objs[i].id = soundIds[i];
-		seekpad(fp, 4);
+		uint32_t size;
+		if (fp.isReading()) {
+			fp.serialize(size);
+			uint32_t nextOffset = SDL_RWtell(fp.fp) + size;
+			//objs[i].open(fp);
+			SDL_RWseek(fp.fp, nextOffset, RW_SEEK_SET);
+		} else {
+			Vector<uint8_t> data = objs[i].save();
+			size = data.size();
+			fp.serialize(size);
+			fp.memBlock(data.data(), 1, size);
+		}
+		
+		fp.pad(4);
 	}
-
-	SDL_RWclose(fp);
-}
-
-void spkFile::save(const char * filename) {
-	if (!filename) return;
-	SDL_RWops *fp = SDL_RWFromFile(filename, "wb");
-	if (!fp) return;
-	SDL_WriteLE32(fp, spkMagic);
-	SDL_WriteLE32(fp, objs.size());
-	for (size_t i = 0; i < objs.size(); ++i)
-		SDL_WriteLE32(fp, objs[i].id);
-
-	for (size_t i = 0; i < objs.size(); ++i) {
-		Vector<uint8_t> data = objs[i].save();
-		SDL_WriteLE32(fp, data.size());
-		SDL_RWwrite(fp, data.data(), 1, data.size());
-		writepad(fp, 4);
-	}
-
-	SDL_RWclose(fp);
 }

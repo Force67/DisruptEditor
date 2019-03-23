@@ -98,7 +98,7 @@ GLuint generateEntityIcon(Node *entity) {
 
 		if (fileModel) {
 			auto &model = loadXBG(*(uint32_t*)fileModel->buffer.data());
-			if (!model.meshes.empty()) {
+			/*if (!model.meshes.empty()) {
 				glBindFramebuffer(GL_FRAMEBUFFER, RenderInterface::instance().fbo);
 				glClearColor(0.f, 0.f, 0.f, 0.f);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -112,7 +112,7 @@ GLuint generateEntityIcon(Node *entity) {
 
 				RenderInterface::instance().saveFBO(savePath);
 				return loadResTexture(path);
-			}
+			}*/
 		}
 	}
 

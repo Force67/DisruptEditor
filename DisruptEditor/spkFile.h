@@ -2,13 +2,13 @@
 
 #include "sbaoFile.h"
 
+class IBinaryArchive;
+
 class spkFile {
 public:
-	void open(const char* filename);
-	void save(const char* filename);
+	void open(IBinaryArchive &fp);
 
 	Vector<sbaoFile> objs;
-
-	uint32_t file;
+	Vector<uint32_t> ids;
 };
 

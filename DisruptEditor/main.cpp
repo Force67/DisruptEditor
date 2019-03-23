@@ -3,8 +3,6 @@
 #include "Implementation.h"
 #include "Common.h"
 #include "DDRenderInterface.h"
-#include "spkFile.h"
-#include "sbaoFile.h"
 #include "cseqFile.h"
 #include "wluFile.h"
 #include "xbgFile.h"
@@ -37,6 +35,7 @@
 #include "IBinaryArchive.h"
 #include "HexBase64.h"
 #include "DB.h"
+#include "DARE.h"
 
 int main(int argc, char **argv) {
 	SDL_Init(SDL_INIT_EVERYTHING);
@@ -86,6 +85,8 @@ int main(int argc, char **argv) {
 	//Debug
 #if _DEBUG
 	{
+		DARE::instance().addSoundResource(0x0012a611);
+
 		//locFile loc;
 		//loc.open("Z:\\scratch\\bin\\common\\languages\\main_english.loc");
 
@@ -131,7 +132,7 @@ int main(int argc, char **argv) {
 
 		{
 			xbgFile xbg;
-			SDL_RWops *fp = SDL_RWFromFile("C:\\Users\\Jonathan\\Desktop\\helicopter_01.xbg", "rb");
+			SDL_RWops *fp = SDL_RWFromFile("C:\\Users\\Jonathan\\Desktop\\char01.xbg", "rb");
 			CBinaryArchiveReader reader(fp);
 			xbg.open(reader);
 			SDL_RWclose(fp);
@@ -141,7 +142,7 @@ int main(int argc, char **argv) {
 		try {
 			SDL_RWops* fp = SDL_RWFromFile("C:\\Program Files\\Ubisoft\\WATCH_DOGS\\bin\\patch\\worlds\\windy_city\\generated\\batchmeshentity\\batchmeshentity_c2_i0_xn0767_yp0513_xn0641_yp0639_compound.cbatch", "rb");
 			CBinaryArchiveReader reader(fp);
-			bf.open(reader);
+			//bf.open(reader);
 			SDL_RWclose(fp);
 
 			//bf.componentMBP.batchProcessors.clear();

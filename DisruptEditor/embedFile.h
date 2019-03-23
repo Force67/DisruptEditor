@@ -2,8 +2,9 @@
 
 class IBinaryArchive;
 
-class mabFile {
+class embedFile {
 public:
 	void open(IBinaryArchive &fp);
+
 };
 

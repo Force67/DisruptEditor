@@ -72,14 +72,7 @@ public:
 		uint32_t unk13;
 		//uint32_t unk14;
 
-		struct SLOD { //CSceneGeometry::SLOD 16 bytes
-			float unk1;
-			float unk2;
-			float unk3;
-			float unk4;
-			void read(IBinaryArchive &fp);
-		};
-		Vector<SLOD> lods;
+		Vector<float> lods;
 
 		float unk15;
 		bool unk16;
@@ -91,7 +84,7 @@ public:
 	SceneGeometryParams geomParams;
 
 	struct MaterialResources {
-		Vector<uint32_t> unk1;
+		Vector<float> unk1;
 		struct MaterialFile {
 			CPathID file1;
 			std::string file2;
@@ -99,14 +92,13 @@ public:
 		};
 		Vector<MaterialFile> materials;
 
-		void read(IBinaryArchive &fp, size_t lods);
+		void read(IBinaryArchive &fp);
 	};
 	MaterialResources materialResources;
 
 	struct MaterialSlotToIndex {
 		struct Slot {
-			CStringID name1;
-			std::string name2;
+			CMeshNameID name;
 			uint32_t unk1;
 			void read(IBinaryArchive &fp);
 		};
@@ -117,12 +109,7 @@ public:
 	MaterialSlotToIndex materialSlotToIndex;
 
 	struct SkinNames {
-		struct Skin {
-			CStringID name1;
-			std::string name2;
-			void read(IBinaryArchive &fp);
-		};
-		Vector<Skin> skins;
+		Vector<CMeshNameID> skins;
 
 		void read(IBinaryArchive &fp);
 	};
@@ -150,8 +137,7 @@ public:
 
 		struct SkelResource {
 			SRawNode node;
-			CStringID name1;
-			std::string name2;
+			CMeshNameID name;
 			void read(IBinaryArchive &fp);
 		};
 
@@ -196,8 +182,7 @@ public:
 
 			struct SecondaryMotionUnitCollisionPrimitives {
 				struct SSphereDesc {
-					CStringID name1;
-					std::string name2;
+					CMeshNameID name;
 					glm::mat4 unk1;
 					float fRadius;
 					void read(IBinaryArchive &fp);
@@ -205,8 +190,7 @@ public:
 				Vector<SSphereDesc> spheres;
 
 				struct SCylinderDesc {
-					CStringID name1;
-					std::string name2;
+					CMeshNameID name;
 					glm::mat4 unk1;
 					float unk2;
 					glm::vec3 unk3;
@@ -216,8 +200,7 @@ public:
 				Vector<SCylinderDesc> cylinders;
 
 				struct SCapsuleDesc {
-					CStringID name1;
-					std::string name2;
+					CMeshNameID name;
 					glm::mat4 unk1;
 					float unk2;
 					glm::vec3 unk3;
@@ -227,8 +210,7 @@ public:
 				Vector<SCapsuleDesc> capsules;
 
 				struct SInfinitePlaneDesc {
-					CStringID name1;
-					std::string name2;
+					CMeshNameID name;
 					glm::mat4 unk1;
 					glm::vec3 unk2;
 					glm::vec3 unk3;
@@ -242,8 +224,7 @@ public:
 
 			struct SecondaryMotionUnitLimits {
 				struct SSphereLimitDesc {
-					CStringID name1;
-					std::string name2;
+					CMeshNameID name;
 					uint16_t unk1;
 					glm::vec3 unk2;
 					float unk3;
@@ -252,8 +233,7 @@ public:
 				Vector<SSphereLimitDesc> spheres;
 
 				struct SBoxLimitDesc {
-					CStringID name1;
-					std::string name2;
+					CMeshNameID name;
 					uint16_t unk1;
 					glm::vec3 unk2;
 					glm::vec3 unk3;
@@ -262,8 +242,7 @@ public:
 				Vector<SBoxLimitDesc> boxes;
 
 				struct SCylinderLimitDesc {
-					CStringID name1;
-					std::string name2;
+					CMeshNameID name;
 					uint16_t unk1;
 					glm::vec3 unk2;
 					glm::vec3 unk3;
@@ -279,8 +258,7 @@ public:
 
 			struct SecondaryMotionUnitParticles {
 				struct SSMParticleDesc {
-					CStringID name1;
-					std::string name2;
+					CMeshNameID name;
 					float unk1;
 					bool unk2;
 					uint16_t unk3;
@@ -293,6 +271,45 @@ public:
 				void read(IBinaryArchive &fp);
 			};
 			SecondaryMotionUnitParticles secondaryMotionUnitParticles;
+
+			struct SecondaryMotionUnitTriangles {
+				struct Triangle {
+					uint16_t p1;
+					uint16_t p2;
+					uint16_t p3;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<Triangle> triangles;
+
+				void read(IBinaryArchive &fp);
+			};
+			SecondaryMotionUnitTriangles secondaryMotionUnitTriangles;
+
+			struct SecondaryMotionUnitConnectivities {
+				struct SSMParticleConnectivity {
+					void read(IBinaryArchive &fp);
+				};
+				Vector<SSMParticleConnectivity> connectivity;
+
+				void read(IBinaryArchive &fp);
+			};
+			SecondaryMotionUnitConnectivities secondaryMotionUnitConnectivities;
+
+			struct SecondaryMotionUnitSpringDescs {
+				struct Spring {
+					uint16_t unk1;
+					uint16_t unk2;
+					uint16_t unk3;
+					void read(IBinaryArchive &fp);
+				};
+				Vector<Spring> springs;
+
+				void read(IBinaryArchive &fp);
+			};
+			SecondaryMotionUnitSpringDescs secondaryMotionUnitSpringDescs;
+
+			uint16_t unk1;
+			bool unk2;
 
 			void read(IBinaryArchive &fp);
 		};
@@ -311,13 +328,50 @@ public:
 	};
 	ProceduralNodes proceduralNodes;
 
-	struct Mesh {
-		uint16_t vertexStride, matID, vertexCount, totalVertexCount, faceCount, UVFlag, scaleFlag, boneMapID;
-		std::string mat;
-		Vector<uint16_t> buffer, index;
-		VertexBuffer vbo, ibo;
+	struct CBasicDrawCallRange {
+		uint32_t unk1;
+		uint32_t unk2;
+		uint32_t unk3;
+		uint32_t unk4;
+		uint32_t unk5;
+		uint32_t unk6;
+		uint32_t unk7;
+
+		void read(IBinaryArchive &fp);
 	};
-	Vector<Mesh> meshes;
+
+	struct LOD {
+		struct CSceneMesh {
+			glm::vec3 unk1;
+			float unk2;
+			glm::vec3 unk3;
+			glm::vec3 unk4;
+			uint32_t unk5;
+			uint16_t unk6;
+			uint16_t unk7;
+			uint8_t unk8;
+			uint8_t unk9;
+			uint16_t unk10;
+			uint32_t unk11;
+			CBasicDrawCallRange drawCall;
+			uint32_t count;
+			uint32_t unk12;
+			uint32_t unk13;
+
+			void read(IBinaryArchive &fp);
+		};
+		Vector<CSceneMesh> meshes;
+
+		void read(IBinaryArchive &fp);
+	};
+	Vector<LOD> lods;
+
+	uint32_t unk3;
+
+	struct SGfxBuffers {
+		void read(IBinaryArchive &fp);
+	};
+	Vector<SGfxBuffers> buffers;
 
 	void draw();
 };

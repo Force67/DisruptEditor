@@ -6,7 +6,8 @@
 #include <SDL_rwops.h>
 #include "CStringID.h"
 
-#pragma pack(push, 1)
+class IBinaryArchive;
+
 struct fcbHeader {
 	char magic[4];
 	uint16_t version;
@@ -15,7 +16,6 @@ struct fcbHeader {
 	uint32_t totalValueCount;
 	void swapEndian();
 };
-#pragma pack(pop)
 
 class Attribute {
 public:
@@ -55,16 +55,14 @@ public:
 	int countNodes();
 
 	std::string getHashName();
-
-	size_t offset;
 	CStringID name;
 
 	Vector<Node> children;
 	Vector<Attribute> attributes;
 };
 
-Node readFCB(const char* filename);
 Node readFCB(SDL_RWops *fp);
+void readFCB(IBinaryArchive &fp, Node &root);
 
 void writeFCBB(SDL_RWops *fp, Node &node);
 

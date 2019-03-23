@@ -18,9 +18,9 @@ const uint32_t sbaoMagic = 207362;
 struct sbaoHeader {
 	uint32_t magic = sbaoMagic;
 	uint32_t unk1 = 0;
-	uint32_t unk2 = 0;
-	uint32_t unk3 = 0;
-	uint32_t unk4 = 0;
+	uint32_t unk2 = 0;//first arg
+	uint32_t unk3;
+	uint32_t unk4;
 	uint32_t unk5 = 1342177280;
 	uint32_t unk6 = 2;
 };
@@ -72,6 +72,7 @@ void sbaoFile::open(SDL_RWops *fp) {
 	SDL_assert_release(head.magic == sbaoMagic);
 	//SDL_assert_release(head.unk5 == 1342177280 || head.unk5 == 805306368);
 	SDL_assert_release(head.unk6 == 2);
+	return;
 
 	//Read First 4 bytes
 	uint32_t type = SDL_ReadLE32(fp);

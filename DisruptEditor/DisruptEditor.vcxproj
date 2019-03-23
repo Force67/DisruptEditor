@@ -173,13 +173,16 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bundleFile.cpp" />
     <ClCompile Include="CBATCHWindow.cpp" />
     <ClCompile Include="CPathID.cpp" />
     <ClCompile Include="CStringID.cpp" />
+    <ClCompile Include="DARE.cpp" />
     <ClCompile Include="DAREWindow.cpp" />
     <ClCompile Include="DB.cpp" />
     <ClCompile Include="DisruptTypes.cpp" />
     <ClCompile Include="DominoWindow.cpp" />
+    <ClCompile Include="embedFile.cpp" />
     <ClCompile Include="EntityLibraryWindow.cpp" />
     <ClCompile Include="HexBase64.cpp" />
     <ClCompile Include="IBinaryArchive.cpp" />
@@ -229,10 +232,13 @@
     <ClCompile Include="xbtFile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bundleFile.h" />
     <ClInclude Include="CPathID.h" />
     <ClInclude Include="CStringID.h" />
+    <ClInclude Include="DARE.h" />
     <ClInclude Include="DB.h" />
     <ClInclude Include="DisruptTypes.h" />
+    <ClInclude Include="embedFile.h" />
     <ClInclude Include="HexBase64.h" />
     <ClInclude Include="IBinaryArchive.h" />
     <ClInclude Include="imconfig.h" />

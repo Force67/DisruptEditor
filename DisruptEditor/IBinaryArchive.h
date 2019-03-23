@@ -9,26 +9,26 @@ class IBinaryArchive {
 public:
 	IBinaryArchive();
 
-	virtual void serialize(bool& value) = 0;
-	virtual void serialize(uint8_t& value) = 0;
-	virtual void serialize(int8_t& value) = 0;
-	virtual void serialize(uint16_t& value) = 0;
-	virtual void serialize(int16_t& value) = 0;
-	virtual void serialize(uint32_t& value) = 0;
-	virtual void serialize(int32_t& value) = 0;
-	virtual void serialize(uint64_t& value) = 0;
-	virtual void serialize(int64_t& value) = 0;
-	virtual void serialize(float& value) = 0;
-	virtual void serialize(double& value) = 0;
-	virtual void serialize(glm::vec2& value) = 0;
-	virtual void serialize(glm::vec3& value) = 0;
-	virtual void serialize(glm::vec4& value) = 0;
-	virtual void serialize(glm::mat4& value) = 0;
-	virtual void serialize(std::string& value) = 0;
+	void serialize(bool& value);
+	void serialize(uint8_t& value);
+	void serialize(int8_t& value);
+	void serialize(uint16_t& value);
+	void serialize(int16_t& value);
+	void serialize(uint32_t& value);
+	void serialize(int32_t& value);
+	void serialize(uint64_t& value);
+	void serialize(int64_t& value);
+	void serialize(float& value);
+	void serialize(double& value);
+	void serialize(glm::vec2& value);
+	void serialize(glm::vec3& value);
+	void serialize(glm::vec4& value);
+	void serialize(glm::mat4& value);
+	void serialize(std::string& value);
 	virtual bool isReading() const = 0;
 	virtual void pad(size_t padding) = 0;
-	virtual size_t size() = 0;
-	virtual size_t tell() = 0;
+	size_t size();
+	size_t tell();
 	virtual void memBlock(void* ptr, size_t objSize, size_t objCount) = 0;
 
 	template<typename T>
@@ -42,6 +42,7 @@ public:
 
 	SDL_RWops* fp;
 	bool bigEndian = false;
+	bool paddingEnabled = true;
 };
 
 
@@ -49,26 +50,8 @@ class CBinaryArchiveReader : public IBinaryArchive {
 public:
 	CBinaryArchiveReader(SDL_RWops* _fp);
 
-	virtual void serialize(bool& value);
-	virtual void serialize(uint8_t& value);
-	virtual void serialize(int8_t& value);
-	virtual void serialize(uint16_t& value);
-	virtual void serialize(int16_t& value);
-	virtual void serialize(uint32_t& value);
-	virtual void serialize(int32_t& value);
-	virtual void serialize(uint64_t& value);
-	virtual void serialize(int64_t& value);
-	virtual void serialize(float& value);
-	virtual void serialize(double& value);
-	virtual void serialize(glm::vec2& value);
-	virtual void serialize(glm::vec3& value);
-	virtual void serialize(glm::vec4& value);
-	virtual void serialize(glm::mat4& value);
-	virtual void serialize(std::string& value);
 	virtual bool isReading() const;
 	virtual void pad(size_t padding);
-	virtual size_t size();
-	virtual size_t tell();
 	virtual void memBlock(void* ptr, size_t objSize, size_t objCount);
 };
 
@@ -76,26 +59,8 @@ class CBinaryArchiveWriter : public IBinaryArchive {
 public:
 	CBinaryArchiveWriter(SDL_RWops* _fp);
 
-	virtual void serialize(bool& value);
-	virtual void serialize(uint8_t& value);
-	virtual void serialize(int8_t& value);
-	virtual void serialize(uint16_t& value);
-	virtual void serialize(int16_t& value);
-	virtual void serialize(uint32_t& value);
-	virtual void serialize(int32_t& value);
-	virtual void serialize(uint64_t& value);
-	virtual void serialize(int64_t& value);
-	virtual void serialize(float& value);
-	virtual void serialize(double& value);
-	virtual void serialize(glm::vec2& value);
-	virtual void serialize(glm::vec3& value);
-	virtual void serialize(glm::vec4& value);
-	virtual void serialize(glm::mat4& value);
-	virtual void serialize(std::string& value);
 	virtual bool isReading() const;
 	virtual void pad(size_t padding);
-	virtual size_t size();
-	virtual size_t tell();
 	virtual void memBlock(void* ptr, size_t objSize, size_t objCount);
 };
 
@@ -109,7 +74,7 @@ inline void IBinaryArchive::serializeNdVectorExternal(Vector<T>& vec) {
 			vec[i].read(*this);
 	}
 	else {
-		uint32_t count = vec.size();
+		uint32_t count = (uint32_t)vec.size();
 		serialize(count);
 		for (uint32_t i = 0; i < count; ++i)
 			vec[i].read(*this);
@@ -126,7 +91,7 @@ inline void IBinaryArchive::serializeNdVectorExternal_pod(Vector<T>& vec) {
 			serialize(vec[i]);
 	}
 	else {
-		uint32_t count = vec.size();
+		uint32_t count = (uint32_t)vec.size();
 		serialize(count);
 		for (uint32_t i = 0; i < count; ++i)
 			serialize(vec[i]);

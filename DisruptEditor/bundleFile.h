@@ -2,7 +2,7 @@
 
 class IBinaryArchive;
 
-class mabFile {
+class bundleFile {
 public:
 	void open(IBinaryArchive &fp);
 };

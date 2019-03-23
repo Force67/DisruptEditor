@@ -42,7 +42,7 @@ void xbgFile::open(IBinaryArchive &fp) {
 	geomParams.read(fp);
 
 	SDL_Log("MaterialResources: %u", fp.tell());
-	materialResources.read(fp, geomParams.lods.size());
+	materialResources.read(fp);
 
 	SDL_Log("MaterialSlotToIndex: %u", fp.tell());
 	materialSlotToIndex.read(fp);
@@ -65,38 +65,14 @@ void xbgFile::open(IBinaryArchive &fp) {
 	SDL_Log("ProceduralNodes: %u", fp.tell());
 	proceduralNodes.read(fp);
 
-	uint32_t r0 = 0, r1 = 0, r2 = 0, r3 = 0, r4 = 0, r5 = 0, r6 = 0, r7 = 0, r8 = 0, r9 = 0, r10 = 0, r11 = 0, r12 = 0;
+	//<unnamed>::ReadLOD(unsigned long, const unsigned char *&, CSceneGeometryLOD &, CPreAllocator &, ndVectorExternal<CSkelResource, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>> &, ndVectorExternal<CBonePalette, NoLock, ndVectorTracker<(unsigned long)18, (unsigned long)4, (unsigned long)9>> &, bool);
+	SDL_Log("ReadLOD: %u", fp.tell());
+	lods.resize(geomParams.lods.size());
+	for (uint32_t i = 0; i < geomParams.lods.size(); ++i)
+		lods[i].read(fp);
 
-	/*
-	First Time
-	
-	r5 = r4 + 3;
-	r11 = r5 & 0xFFFFFFFC;
-	r6 = r11 + 7;
-	r11 = r6 & 0xFFFFFFFC;
-	r7 = r11 + 7;
-	r8 = r7 & 0xFFFFFFFC;
-	r0 = r8 + 7;
-	r9 = r0 & 0xFFFFFFFC;
-	r10 = r9 + 7;
-	//lwz       r31, 0(r11)   # gets value at base + 4 + 7
-	r11 = r10 & 0xFFFFFFFC;
-	r4 = r11 + 4;//r4 is at 20
-	//stw       r4, 0x188 + ptrcur(r1)
-	*/
-
-	/*r7 = r8 + 3;
-	r9 = r7 & 0xFFFFFFFC;
-	r0 = r9 + 7;
-	r12 = r0 & 0xFFFFFFFC;
-	r9 = r12 + 7;
-	r10 = r9 & 0xFFFFFFFC;
-	r0 = r10 + 7;
-	r5 = r0 & 0xFFFFFFFC;
-	r0 = r5 + 7;
-	r11 = r0 & 0xFFFFFFFC;*/
-
-	int b = 0;
+	fp.serialize(unk3);
+	fp.serializeNdVectorExternal(buffers);
 }
 
 void xbgFile::draw() {
@@ -185,8 +161,7 @@ void xbgFile::SceneGeometryParams::read(IBinaryArchive &fp) {
 	fp.serialize(unk13);
 	//fp.serialize(unk14);
 
-	SDL_assert_release(fp.tell() == 112);
-	fp.serializeNdVectorExternal(lods);
+	fp.serializeNdVectorExternal_pod(lods);
 
 	fp.serialize(unk15);
 	fp.serialize(unk16);
@@ -194,14 +169,8 @@ void xbgFile::SceneGeometryParams::read(IBinaryArchive &fp) {
 	fp.serialize(unk18);
 }
 
-void xbgFile::SceneGeometryParams::SLOD::read(IBinaryArchive & fp) {
-	fp.serialize(unk1);
-}
-
-void xbgFile::MaterialResources::read(IBinaryArchive & fp, size_t lods) {
-	unk1.resize(lods);
-	for (size_t i = 0; i < lods; ++i)
-		fp.serialize(unk1[i]);
+void xbgFile::MaterialResources::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal_pod(unk1);
 	fp.serializeNdVectorExternal(materials);
 }
 
@@ -218,20 +187,12 @@ void xbgFile::MaterialSlotToIndex::read(IBinaryArchive & fp) {
 }
 
 void xbgFile::MaterialSlotToIndex::Slot::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 	fp.serialize(unk1);
 }
 
 void xbgFile::SkinNames::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(skins);
-}
-
-void xbgFile::SkinNames::Skin::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
 }
 
 void xbgFile::BonePalettes::read(IBinaryArchive & fp) {
@@ -269,16 +230,19 @@ void xbgFile::SkelResources::SRawNode::read(IBinaryArchive & fp) {
 
 void xbgFile::SkelResources::SkelResource::read(IBinaryArchive & fp) {
 	node.read(fp);
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 }
 
 void xbgFile::ReflexSystem::read(IBinaryArchive &fp) {
 	fp.serialize(has);
 	if (has) {
 		fp.serialize(size);
-		root = readFCB(fp.fp);
+		size_t offset = fp.tell();
+		readFCB(fp, root);
+		fp.pad(4);
+		SDL_assert_release(offset + size == fp.tell());
+
+		//DEBUG
 		tinyxml2::XMLPrinter printer;
 		root.serializeXML(printer);
 		const char* str = printer.CStr();
@@ -290,10 +254,22 @@ void xbgFile::SecondaryMotionObjects::read(IBinaryArchive & fp) {
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::read(IBinaryArchive & fp) {
+	SDL_Log("simulationParams: %u", fp.tell());
 	simulationParams.read(fp);
+	SDL_Log("secondaryMotionUnitCollisionPrimitives: %u", fp.tell());
 	secondaryMotionUnitCollisionPrimitives.read(fp);
+	SDL_Log("secondaryMotionUnitLimits: %u", fp.tell());
 	secondaryMotionUnitLimits.read(fp);
+	SDL_Log("secondaryMotionUnitParticles: %u", fp.tell());
 	secondaryMotionUnitParticles.read(fp);
+	SDL_Log("secondaryMotionUnitTriangles: %u", fp.tell());
+	secondaryMotionUnitTriangles.read(fp);
+	SDL_Log("secondaryMotionUnitConnectivities: %u", fp.tell());
+	secondaryMotionUnitConnectivities.read(fp);
+	SDL_Log("secondaryMotionUnitSpringDescs: %u", fp.tell());
+	secondaryMotionUnitSpringDescs.read(fp);
+	fp.serialize(unk1);
+	fp.serialize(unk2);
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SSMSimulationParametersDesc::read(IBinaryArchive & fp) {
@@ -314,26 +290,26 @@ void xbgFile::SecondaryMotionObjects::SMO::SSMSimulationParametersDesc::read(IBi
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::read(IBinaryArchive & fp) {
+	SDL_Log("Spheres: %u", fp.tell());
 	fp.serializeNdVectorExternal(spheres);
+	SDL_Log("Cylinders: %u", fp.tell());
 	fp.serializeNdVectorExternal(cylinders);
+	SDL_Log("Capsules: %u", fp.tell());
 	fp.serializeNdVectorExternal(capsules);
+	SDL_Log("Planes: %u", fp.tell());
 	fp.serializeNdVectorExternal(planes);
 
 	SDL_Log("%u", fp.tell());
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SSphereDesc::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 	fp.serialize(unk1);
 	fp.serialize(fRadius);
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SCylinderDesc::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -341,9 +317,8 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitive
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SCapsuleDesc::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	SDL_Log("Capsule: %u", fp.tell());
+	name.read(fp);
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -351,9 +326,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitive
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitCollisionPrimitives::SInfinitePlaneDesc::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -369,27 +342,21 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::read(IBina
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SSphereLimitDesc::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SBoxLimitDesc::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitLimits::SCylinderLimitDesc::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
@@ -403,19 +370,46 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitParticles::read(IB
 }
 
 void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitParticles::SSMParticleDesc::read(IBinaryArchive & fp) {
-	fp.serialize(name1.id);
-	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	name.read(fp);
 	fp.serialize(unk1);
 	fp.serialize(unk2);
 	fp.serialize(unk3);
 	fp.serialize(unk4);
 }
 
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitTriangles::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(triangles);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitTriangles::Triangle::read(IBinaryArchive & fp) {
+	fp.serialize(p1);
+	fp.serialize(p2);
+	fp.serialize(p3);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitConnectivities::read(IBinaryArchive & fp) {
+	//TODO:!
+	fp.serializeNdVectorExternal(connectivity);
+	SDL_assert_release(connectivity.empty());
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitConnectivities::SSMParticleConnectivity::read(IBinaryArchive & fp) {
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitSpringDescs::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(springs);
+}
+
+void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitSpringDescs::Spring::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+}
+
 void xbgFile::CMeshNameID::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()));
+	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()) || name1.id == -1);
 }
 
 void xbgFile::ProceduralNodes::read(IBinaryArchive & fp) {
@@ -423,4 +417,49 @@ void xbgFile::ProceduralNodes::read(IBinaryArchive & fp) {
 	if (has) {
 		SDL_assert_release(false);
 	}
+}
+
+void xbgFile::LOD::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(meshes);
+}
+
+void xbgFile::LOD::CSceneMesh::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+	fp.serialize(unk6);
+	fp.serialize(unk7);
+	fp.serialize(unk8);
+	fp.serialize(unk9);
+	fp.serialize(unk10);
+	fp.serialize(unk11);
+	drawCall.read(fp);
+
+	struct MeshData {
+		float u1[10];
+		uint16_t u2[20];
+		uint32_t matCount;
+		uint32_t u3[2];
+	};
+	sizeof(MeshData);
+	sizeof(CSceneMesh);
+}
+
+void xbgFile::CBasicDrawCallRange::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+	fp.serialize(unk5);
+	fp.serialize(unk6);
+	fp.serialize(unk7);
+}
+
+void xbgFile::SGfxBuffers::read(IBinaryArchive & fp) {
+	//<unnamed>::ReadGfxBuffers(const unsigned char *&, SGfxBuffers &, unsigned long, bool)
+	//CBufferRenderResource::Create(Device3D::EBufferType, const IRenderResourceCommandTrackerDecoratorFactory &, unsigned long, unsigned long, const void *, bool, bool, unsigned long, bool, bool)
+
+
 }

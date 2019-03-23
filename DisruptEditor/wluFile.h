@@ -6,6 +6,8 @@
 #include "Vector.h"
 #include "NBCF.h"
 
+class IBinaryArchive;
+
 #pragma pack(push, 1)
 struct wluHeader {
 	uint32_t magic;
@@ -41,13 +43,13 @@ public:
 	std::string shortName; //ex. wlu_data_01_loop_vigilante_01.xml.data.fcb
 	std::string origFilename; //ex. original filename opened with
 private:
-	bool openWD1(SDL_RWops *fp);
-	bool openWD2(SDL_RWops *fp);
+	bool openWD1(IBinaryArchive &fp);
+	bool openWD2(IBinaryArchive &fp);
 
 	bool isWD2 = false;
 	wluHeader wluhead;
 	Vector<uint8_t> extraData;
-	void handleHeaders(SDL_RWops *fp, size_t size);
+	void handleHeaders(IBinaryArchive &fp, size_t size);
 	Node* selectedEntity = NULL;
 };
 

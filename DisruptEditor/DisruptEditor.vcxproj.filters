@@ -182,6 +182,15 @@
     <ClCompile Include="Types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="embedFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bundleFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DARE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -378,6 +387,15 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Types.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="embedFile.h">
+      <Filter>Source Files\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="bundleFile.h">
+      <Filter>Source Files\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="DARE.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
