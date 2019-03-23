@@ -18,6 +18,7 @@ You may not use this file without permission
 #include "NBCF.h"
 
 class IBinaryArchive;
+class MemberStructure;
 
 class xbgFile {
 public:
@@ -32,6 +33,7 @@ public:
 		uint32_t unk2;
 		uint32_t unk3;
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	Header header;
 
@@ -39,6 +41,7 @@ public:
 		uint32_t unk1;
 		uint32_t unk2;
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	SMemoryNeed memoryNeeded;
 
@@ -49,6 +52,7 @@ public:
 		CStringID name1;
 		std::string name2;
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 
 	struct SceneGeometryParams {
@@ -80,6 +84,7 @@ public:
 		uint8_t unk18;
 
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	SceneGeometryParams geomParams;
 
@@ -89,22 +94,26 @@ public:
 			CPathID file1;
 			std::string file2;
 			void read(IBinaryArchive &fp);
+			void registerMembers(MemberStructure &ms);
 		};
 		Vector<MaterialFile> materials;
 
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	MaterialResources materialResources;
 
 	struct MaterialSlotToIndex {
 		struct Slot {
 			CMeshNameID name;
-			uint32_t unk1;
+			uint32_t slot;
 			void read(IBinaryArchive &fp);
+			void registerMembers(MemberStructure &ms);
 		};
 		Vector<Slot> slots;
 
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	MaterialSlotToIndex materialSlotToIndex;
 
@@ -112,6 +121,7 @@ public:
 		Vector<CMeshNameID> skins;
 
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	SkinNames skinNames;
 
@@ -119,10 +129,12 @@ public:
 		struct BonesPallet {
 			Vector<uint16_t> unk1;
 			void read(IBinaryArchive &fp);
+			void registerMembers(MemberStructure &ms);
 		};
 		Vector<BonesPallet> pallets;
 
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	BonePalettes bonePalettes;
 
@@ -133,12 +145,14 @@ public:
 			glm::vec4 rot;
 			uint32_t unk9;
 			void read(IBinaryArchive &fp);
+			void registerMembers(MemberStructure &ms);
 		};
 
 		struct SkelResource {
 			SRawNode node;
 			CMeshNameID name;
 			void read(IBinaryArchive &fp);
+			void registerMembers(MemberStructure &ms);
 		};
 
 		uint32_t unk1;
@@ -147,14 +161,15 @@ public:
 		Vector<glm::mat4> mats;
 
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	SkelResources skelResources;
 
 	struct ReflexSystem {
 		uint32_t has;
-		uint32_t size;
 		Node root;
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	ReflexSystem relfexSystem;
 
@@ -335,9 +350,20 @@ public:
 		uint32_t unk4;
 		uint32_t unk5;
 		uint32_t unk6;
-		uint32_t unk7;
+		//uint32_t unk7;
 
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
+	};
+
+	struct CSphere {
+		float unk1;
+		float unk2;
+		float unk3;
+		float unk4;
+
+		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 
 	struct LOD {
@@ -346,33 +372,72 @@ public:
 			float unk2;
 			glm::vec3 unk3;
 			glm::vec3 unk4;
+
 			uint32_t unk5;
+
 			uint16_t unk6;
 			uint16_t unk7;
+
 			uint8_t unk8;
 			uint8_t unk9;
 			uint16_t unk10;
+
 			uint32_t unk11;
+
 			CBasicDrawCallRange drawCall;
-			uint32_t count;
+
 			uint32_t unk12;
 			uint32_t unk13;
 
+			struct CDrawCallRange {
+				CBasicDrawCallRange drawCall;
+				CSphere sphere;
+				glm::vec3 unk1;
+				glm::vec3 unk2;
+				CMeshNameID name;
+				uint16_t unk3;
+				uint16_t unk4;
+
+				void read(IBinaryArchive &fp);
+				void registerMembers(MemberStructure &ms);
+			};
+			Vector<CDrawCallRange> drawCalls;
+
 			void read(IBinaryArchive &fp);
+			void registerMembers(MemberStructure &ms);
 		};
 		Vector<CSceneMesh> meshes;
 
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	Vector<LOD> lods;
 
 	uint32_t unk3;
 
 	struct SGfxBuffers {
+		Vector<uint8_t> vertex;
+		Vector<uint8_t> index;
 		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
 	};
 	Vector<SGfxBuffers> buffers;
 
+	struct GeomMips {
+		uint32_t unk1;
+		uint32_t unk2;
+
+		uint32_t name1;
+		std::string name2;
+
+		void read(IBinaryArchive &fp);
+		void registerMembers(MemberStructure &ms);
+	};
+	Vector<GeomMips> mips;
+
+	uint32_t clothWrinkleControlPatchBundles;
+
 	void draw();
+	void registerMembers(MemberStructure &ms);
 };
 

@@ -20,6 +20,8 @@ You may not use this file without permission
 #include "FileHandler.h"
 #include "IBinaryArchive.h"
 #include "Hash.h"
+#include "Serialization.h"
+#include "HexBase64.h"
 
 void xbgFile::open(IBinaryArchive &fp) {
 	header.read(fp);
@@ -72,7 +74,14 @@ void xbgFile::open(IBinaryArchive &fp) {
 		lods[i].read(fp);
 
 	fp.serialize(unk3);
+	SDL_Log("SGfxBuffers: %u", fp.tell());
 	fp.serializeNdVectorExternal(buffers);
+
+	SDL_Log("GeometryMips: %u", fp.tell());
+	fp.serializeNdVectorExternal(mips);
+
+	fp.serialize(clothWrinkleControlPatchBundles);
+	SDL_assert_release(fp.tell() == fp.size());
 }
 
 void xbgFile::draw() {
@@ -137,9 +146,23 @@ void xbgFile::Header::read(IBinaryArchive & fp) {
 	fp.serialize(unk3);
 }
 
+void xbgFile::Header::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(magic);
+	REGISTER_MEMBER(majorVersion);
+	REGISTER_MEMBER(minorVersion);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+}
+
 void xbgFile::SMemoryNeed::read(IBinaryArchive & fp) {
 	fp.serialize(unk1);
 	fp.serialize(unk2);
+}
+
+void xbgFile::SMemoryNeed::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
 }
 
 void xbgFile::SceneGeometryParams::read(IBinaryArchive &fp) {
@@ -169,9 +192,35 @@ void xbgFile::SceneGeometryParams::read(IBinaryArchive &fp) {
 	fp.serialize(unk18);
 }
 
+void xbgFile::SceneGeometryParams::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
+	REGISTER_MEMBER(unk8);
+	REGISTER_MEMBER(unk9);
+	REGISTER_MEMBER(unk10);
+	REGISTER_MEMBER(unk11);
+	REGISTER_MEMBER(unk12);
+	REGISTER_MEMBER(unk13);
+	REGISTER_MEMBER(lods);
+	REGISTER_MEMBER(unk15);
+	REGISTER_MEMBER(unk16);
+	REGISTER_MEMBER(unk17);
+	REGISTER_MEMBER(unk18);
+}
+
 void xbgFile::MaterialResources::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal_pod(unk1);
 	fp.serializeNdVectorExternal(materials);
+}
+
+void xbgFile::MaterialResources::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(materials);
 }
 
 void xbgFile::MaterialResources::MaterialFile::read(IBinaryArchive & fp) {
@@ -182,25 +231,51 @@ void xbgFile::MaterialResources::MaterialFile::read(IBinaryArchive & fp) {
 	//SDL_assert_release(file1.id == Hash::getFilenameHash(file2));
 }
 
+void xbgFile::MaterialResources::MaterialFile::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, file2);
+	file1 = file2;
+}
+
 void xbgFile::MaterialSlotToIndex::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(slots);
 }
 
+void xbgFile::MaterialSlotToIndex::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, slots);
+}
+
 void xbgFile::MaterialSlotToIndex::Slot::read(IBinaryArchive & fp) {
 	name.read(fp);
-	fp.serialize(unk1);
+	fp.serialize(slot);
+}
+
+void xbgFile::MaterialSlotToIndex::Slot::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(name);
+	REGISTER_MEMBER(slot);
 }
 
 void xbgFile::SkinNames::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(skins);
 }
 
+void xbgFile::SkinNames::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, skins);
+}
+
 void xbgFile::BonePalettes::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(pallets);
 }
 
+void xbgFile::BonePalettes::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, pallets);
+}
+
 void xbgFile::BonePalettes::BonesPallet::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal_pod(unk1);
+}
+
+void xbgFile::BonePalettes::BonesPallet::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, unk1);
 }
 
 void xbgFile::SkelResources::read(IBinaryArchive & fp) {
@@ -221,6 +296,13 @@ void xbgFile::SkelResources::read(IBinaryArchive & fp) {
 	}
 }
 
+void xbgFile::SkelResources::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(resources);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(mats);
+}
+
 void xbgFile::SkelResources::SRawNode::read(IBinaryArchive & fp) {
 	fp.serialize(unk1);
 	fp.serialize(pos);
@@ -228,24 +310,49 @@ void xbgFile::SkelResources::SRawNode::read(IBinaryArchive & fp) {
 	fp.serialize(unk9);
 }
 
+void xbgFile::SkelResources::SRawNode::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(pos);
+	REGISTER_MEMBER(rot);
+	REGISTER_MEMBER(unk9);
+}
+
 void xbgFile::SkelResources::SkelResource::read(IBinaryArchive & fp) {
 	node.read(fp);
 	name.read(fp);
 }
 
+void xbgFile::SkelResources::SkelResource::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, node);
+	REGISTER_MEMBER(name);
+}
+
 void xbgFile::ReflexSystem::read(IBinaryArchive &fp) {
 	fp.serialize(has);
 	if (has) {
-		fp.serialize(size);
-		size_t offset = fp.tell();
-		readFCB(fp, root);
-		fp.pad(4);
-		SDL_assert_release(offset + size == fp.tell());
+		if (fp.isReading()) {
+			uint32_t size;
+			fp.serialize(size);
+			size_t offset = fp.tell();
+			readFCB(fp, root);
+			fp.pad(4);
+			SDL_assert_release(offset + size == fp.tell());
+		}
+		else {
+			SDL_assert_release(false);
+		}
+	}
+}
 
-		//DEBUG
-		tinyxml2::XMLPrinter printer;
-		root.serializeXML(printer);
-		const char* str = printer.CStr();
+void xbgFile::ReflexSystem::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(has);
+	if (has) {
+		if (ms.type == ms.TOXML) {
+			root.serializeXML(*ms.printer);
+		} else if (ms.type == ms.FROMXML) {
+			//TODO!
+			SDL_assert_release(false);
+		}
 	}
 }
 
@@ -412,6 +519,14 @@ void xbgFile::CMeshNameID::read(IBinaryArchive & fp) {
 	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()) || name1.id == -1);
 }
 
+void xbgFile::CMeshNameID::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, name2);
+	if (name2.empty())
+		name1 = -1;
+	else
+		name1 = name2;
+}
+
 void xbgFile::ProceduralNodes::read(IBinaryArchive & fp) {
 	fp.serialize(has);//either 0 or 1
 	if (has) {
@@ -421,6 +536,10 @@ void xbgFile::ProceduralNodes::read(IBinaryArchive & fp) {
 
 void xbgFile::LOD::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(meshes);
+}
+
+void xbgFile::LOD::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, meshes);
 }
 
 void xbgFile::LOD::CSceneMesh::read(IBinaryArchive & fp) {
@@ -437,14 +556,45 @@ void xbgFile::LOD::CSceneMesh::read(IBinaryArchive & fp) {
 	fp.serialize(unk11);
 	drawCall.read(fp);
 
+	uint32_t count = drawCalls.size();
+	fp.serialize(count);
+	drawCalls.resize(count);
+
+	fp.serialize(unk12);
+	fp.serialize(unk13);
+
+	for (uint32_t i = 0; i < count; ++i)
+		drawCalls[i].read(fp);
+
+#pragma pack(push, 1)
 	struct MeshData {
 		float u1[10];
 		uint16_t u2[20];
 		uint32_t matCount;
 		uint32_t u3[2];
 	};
+#pragma pack(pop)
 	sizeof(MeshData);
 	sizeof(CSceneMesh);
+	sizeof(CDrawCallRange);
+}
+
+void xbgFile::LOD::CSceneMesh::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	REGISTER_MEMBER(unk7);
+	REGISTER_MEMBER(unk8);
+	REGISTER_MEMBER(unk9);
+	REGISTER_MEMBER(unk10);
+	REGISTER_MEMBER(unk11);
+	REGISTER_MEMBER(drawCall);
+	REGISTER_MEMBER(unk12);
+	REGISTER_MEMBER(unk13);
+	REGISTER_MEMBER(drawCalls);
 }
 
 void xbgFile::CBasicDrawCallRange::read(IBinaryArchive & fp) {
@@ -454,12 +604,107 @@ void xbgFile::CBasicDrawCallRange::read(IBinaryArchive & fp) {
 	fp.serialize(unk4);
 	fp.serialize(unk5);
 	fp.serialize(unk6);
-	fp.serialize(unk7);
+	//fp.serialize(unk7);
+}
+
+void xbgFile::CBasicDrawCallRange::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(unk6);
+	//REGISTER_MEMBER(unk7);
 }
 
 void xbgFile::SGfxBuffers::read(IBinaryArchive & fp) {
 	//<unnamed>::ReadGfxBuffers(const unsigned char *&, SGfxBuffers &, unsigned long, bool)
+	
+	fp.serializeNdVectorExternal_pod(vertex);
 	//CBufferRenderResource::Create(Device3D::EBufferType, const IRenderResourceCommandTrackerDecoratorFactory &, unsigned long, unsigned long, const void *, bool, bool, unsigned long, bool, bool)
 
+	fp.serializeNdVectorExternal_pod(index);
+	//CBufferRenderResource::Create(Device3D::EBufferType, const IRenderResourceCommandTrackerDecoratorFactory &, unsigned long, unsigned long, const void *, bool, bool, unsigned long, bool, bool)
+}
 
+void xbgFile::SGfxBuffers::registerMembers(MemberStructure & ms) {
+	if (ms.type == ms.TOXML) {
+		std::string v = toBase64String(vertex.data(), vertex.size());
+		ms.registerMember("vertex", v);
+
+		v = toBase64String(index.data(), index.size());
+		ms.registerMember("index", v);
+	} else if(ms.type == ms.FROMXML) {
+		SDL_assert_release(false);
+	}
+}
+
+void xbgFile::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(header);
+	REGISTER_MEMBER(memoryNeeded);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(geomParams);
+	REGISTER_MEMBER(materialResources);
+	REGISTER_MEMBER(materialSlotToIndex);
+	REGISTER_MEMBER(skinNames);
+	REGISTER_MEMBER(bonePalettes);
+	REGISTER_MEMBER(skelResources);
+	REGISTER_MEMBER(relfexSystem);
+	//REGISTER_MEMBER(secondaryMotionObjects);
+	//REGISTER_MEMBER(proceduralNodes);
+	REGISTER_MEMBER(lods);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(buffers);
+	REGISTER_MEMBER(mips);
+	REGISTER_MEMBER(clothWrinkleControlPatchBundles);
+}
+
+void xbgFile::CSphere::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+}
+
+void xbgFile::CSphere::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+}
+
+void xbgFile::LOD::CSceneMesh::CDrawCallRange::read(IBinaryArchive & fp) {
+	SDL_Log("CDrawCallRange: %u", fp.tell());
+	drawCall.read(fp);
+	sphere.read(fp);
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	name.read(fp);
+	fp.serialize(unk3);
+	fp.serialize(unk4);
+}
+
+void xbgFile::LOD::CSceneMesh::CDrawCallRange::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(drawCall);
+	REGISTER_MEMBER(sphere);
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(name);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+}
+
+void xbgFile::GeomMips::read(IBinaryArchive & fp) {
+	fp.serialize(unk1);
+	fp.serialize(unk2);
+	fp.serialize(name1);
+	fp.serialize(name2);
+}
+
+void xbgFile::GeomMips::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	ms.registerMember("name", name2);
+	//name1 = name2;
 }
