@@ -115,62 +115,55 @@ inline Shader loadShaders(const char *program) {
 	return shader;
 }
 
-enum VertexBufferOptions { BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM };
+enum VertexBufferOptions { BUFFER_STATIC = GL_STATIC_DRAW, BUFFER_DYNAMIC = GL_DYNAMIC_DRAW, BUFFER_STREAM = GL_STREAM_DRAW
+};
 
 class VertexBuffer {
 public:
-	bool loaded() { return buffer_id != 0; }
-	uint32_t buffer_id = 0;
+	~VertexBuffer() {
+		glDeleteBuffers(1, &buffer_id);
+	}
+	bool loaded() { return buffer_id != -1; }
+	void bind() {
+		glBindBuffer(target, buffer_id);
+	}
+	uint32_t buffer_id = -1;
 	unsigned long size = 0, maxsize = 0;
 	VertexBufferOptions type;
+	GLenum target;
 };
 
-inline VertexBuffer createVertexBuffer(const void *data, unsigned long size, VertexBufferOptions type) {
-	VertexBuffer oglvb;
-	glGenBuffers(1, &oglvb.buffer_id);
-	glBindBuffer(GL_ARRAY_BUFFER, oglvb.buffer_id);
-	oglvb.type = type;
-	switch (type) {
-		case BUFFER_STATIC:
-			glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-			break;
+inline std::shared_ptr<VertexBuffer> createVertexBuffer(const void *data, unsigned long size, VertexBufferOptions type, GLenum target = GL_ARRAY_BUFFER) {
+	std::shared_ptr<VertexBuffer> oglvb = std::make_shared<VertexBuffer>();
+	glGenBuffers(1, &oglvb->buffer_id);
+	oglvb->bind();
+	oglvb->type = type;
+	oglvb->target = target;
+	glBufferData(target, size, data, type);
 
-		case BUFFER_DYNAMIC:
-			glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
-			break;
-
-		case BUFFER_STREAM:
-			glBufferData(GL_ARRAY_BUFFER, size, data, GL_STREAM_DRAW);
-			break;
-	}
-
-	oglvb.maxsize = size;
-	oglvb.size = size;
+	oglvb->maxsize = size;
+	oglvb->size = size;
 
 	return oglvb;
 }
 
-inline void updateVertexBuffer(const void *data, unsigned long size, VertexBuffer &buffer) {
-	SDL_assert_release(buffer.buffer_id != 0);
+inline void updateVertexBuffer(const void *data, unsigned long size, std::shared_ptr<VertexBuffer> buffer) {
+	SDL_assert_release(buffer->loaded());
 
-	glBindBuffer(GL_ARRAY_BUFFER, buffer.buffer_id);
-	if (buffer.maxsize < size) {
-		buffer.maxsize = size;
-		switch (buffer.type) {
-			case BUFFER_STATIC:
-				glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
-				break;
-
-			case BUFFER_DYNAMIC:
-				glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
-				break;
-
-			case BUFFER_STREAM:
-				glBufferData(GL_ARRAY_BUFFER, size, data, GL_STREAM_DRAW);
-				break;
-		}
+	buffer->bind();
+	if (buffer->maxsize < size) {
+		buffer->maxsize = size;
+		glBufferData(buffer->target, size, data, buffer->type);
 	} else {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+		glBufferSubData(buffer->target, 0, size, data);
 	}
-	buffer.size = size;
+	buffer->size = size;
+}
+
+inline Vector<uint8_t> getVertexBuffer(std::shared_ptr<VertexBuffer> buffer) {
+	SDL_assert_release(buffer->loaded());
+	buffer->bind();
+	Vector<uint8_t> data(buffer->size);
+	glGetBufferSubData(buffer->target, 0, buffer->size, data.data());
+	return data;
 }

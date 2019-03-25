@@ -191,6 +191,9 @@
     <ClCompile Include="DARE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="xbgMipFile.cpp">
+      <Filter>Source Files\File Formats</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -397,6 +400,9 @@
     </ClInclude>
     <ClInclude Include="DARE.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xbgMipFile.h">
+      <Filter>Source Files\File Formats</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

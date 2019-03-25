@@ -5,7 +5,7 @@
 #include "Serialization.h"
 
 CStringID::CStringID(const std::string &filename) {
-	id = Hash::getFilenameHash(filename);
+	id = Hash::getHash(filename.c_str());
 }
 
 std::string CStringID::getReverseName() {

@@ -344,13 +344,13 @@ public:
 	ProceduralNodes proceduralNodes;
 
 	struct CBasicDrawCallRange {
-		uint32_t unk1;
-		uint32_t unk2;
-		uint32_t unk3;
-		uint32_t unk4;
-		uint32_t unk5;
-		uint32_t unk6;
-		//uint32_t unk7;
+		uint32_t unk1;//8, 9, 0xC
+		uint32_t unk2;//10, 11, 0x10
+		uint32_t primitiveCount;//12, 13, 0x14
+		uint32_t unk4;//14, 15, 0x18
+		uint32_t unk5;//16, 17, 0x1C
+		uint32_t unk6;//18, 19, 0x20, vertexCount
+		//uint32_t unk7;//0x24 maxIndexValue
 
 		void read(IBinaryArchive &fp);
 		void registerMembers(MemberStructure &ms);
@@ -373,18 +373,18 @@ public:
 			glm::vec3 unk3;
 			glm::vec3 unk4;
 
-			uint32_t unk5;
+			uint32_t primitiveType;//0, 1, 0x38
 
-			uint16_t unk6;
-			uint16_t unk7;
+			uint16_t unk6;//2, 0x3C
+			uint16_t vertexFormat;//3, 0x3E
 
-			uint8_t unk8;
-			uint8_t unk9;
-			uint16_t unk10;
+			uint8_t vertexStride;//4 Vertex Stride, 0x40
+			uint8_t unk9;//0x41
+			uint16_t unk10;//5, 0x46
 
-			uint32_t unk11;
+			uint32_t unk11;//6, 7
 
-			CBasicDrawCallRange drawCall;
+			CBasicDrawCallRange drawCall;//0xC
 
 			uint32_t unk12;
 			uint32_t unk13;
@@ -416,8 +416,8 @@ public:
 	uint32_t unk3;
 
 	struct SGfxBuffers {
-		Vector<uint8_t> vertex;
-		Vector<uint8_t> index;
+		std::shared_ptr<VertexBuffer> vertex;
+		std::shared_ptr<VertexBuffer> index;
 		void read(IBinaryArchive &fp);
 		void registerMembers(MemberStructure &ms);
 	};
@@ -427,7 +427,7 @@ public:
 		uint32_t unk1;
 		uint32_t unk2;
 
-		uint32_t name1;
+		CPathID name1;
 		std::string name2;
 
 		void read(IBinaryArchive &fp);

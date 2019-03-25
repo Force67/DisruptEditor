@@ -2,8 +2,10 @@
 	<uniform name="MVP" type="mat4" />
 	<vertex>
 #version 330
-layout(location = 0) in vec3 vertexPosition;
-layout(location = 1) in vec2 vertexUV;
+layout(location = 0) in vec3 CS_Position;
+layout(location = 1) in vec3 CS_Normal;
+layout(location = 3) in vec3 CS_Color;
+layout(location = 8) in vec2 CS_DiffuseUV;
 
 out vec3 pos;
 out vec2 uv;
@@ -11,9 +13,9 @@ out vec2 uv;
 uniform mat4 MVP;
 
 void main(){
-	gl_Position = MVP * vec4(vertexPosition,1);
-	pos = vertexPosition;
-	uv = vertexUV;
+	gl_Position = MVP * vec4(CS_Position,1);
+	pos = CS_Position;
+	uv = CS_DiffuseUV;
 }
 	</vertex>
 	<uniform name="diffuse" type="sampler2D" />

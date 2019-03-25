@@ -19,7 +19,6 @@ You may not use this file without permission
 #include <SDL_rwops.h>
 #include "FileHandler.h"
 #include "IBinaryArchive.h"
-#include "Hash.h"
 #include "Serialization.h"
 #include "HexBase64.h"
 
@@ -82,50 +81,6 @@ void xbgFile::open(IBinaryArchive &fp) {
 
 	fp.serialize(clothWrinkleControlPatchBundles);
 	SDL_assert_release(fp.tell() == fp.size());
-}
-
-void xbgFile::draw() {
-	/*auto material = materials.begin();
-	for (auto &mesh : meshes) {
-		auto &mat = loadMaterial(material->file);
-		if (!mat.entries.empty()) {
-			auto &texture = loadTexture(mat.entries.begin()->texture);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, texture.id);
-		}
-
-		glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo.buffer_id);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.ibo.buffer_id);
-		// 1rst attribute buffer : vertices
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(
-			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-			3,                  // size
-			GL_SHORT,  // type
-			GL_TRUE,           // normalized?
-			mesh.vertexStride,  // stride
-			(void*)0            // array buffer offset
-		);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(
-			1,                  // attribute. No particular reason for 0, but must match the layout in the shader.
-			2,                  // size
-			GL_SHORT,  // type
-			GL_TRUE,           // normalized?
-			mesh.vertexStride,  // stride
-			(void*)(8)            // array buffer offset
-		);
-
-		// Draw the triangles
-		GLint id;
-		glGetIntegerv(GL_CURRENT_PROGRAM, &id);
-		glDrawElements(GL_TRIANGLES, mesh.faceCount * 3, GL_UNSIGNED_SHORT, 0);
-
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-
-		++material;
-	}*/
 }
 
 void xbgFile::Header::read(IBinaryArchive & fp) {
@@ -226,9 +181,7 @@ void xbgFile::MaterialResources::registerMembers(MemberStructure & ms) {
 void xbgFile::MaterialResources::MaterialFile::read(IBinaryArchive & fp) {
 	fp.serialize(file1.id);
 	fp.serialize(file2);
-	std::string abc = file1.getReverseFilename();
-	uint32_t abc2 = Hash::getFilenameHash(file2);
-	//SDL_assert_release(file1.id == Hash::getFilenameHash(file2));
+	SDL_assert_release(file1 == CPathID(file2));
 }
 
 void xbgFile::MaterialResources::MaterialFile::registerMembers(MemberStructure & ms) {
@@ -516,7 +469,7 @@ void xbgFile::SecondaryMotionObjects::SMO::SecondaryMotionUnitSpringDescs::Sprin
 void xbgFile::CMeshNameID::read(IBinaryArchive & fp) {
 	fp.serialize(name1.id);
 	fp.serialize(name2);
-	SDL_assert_release(name1.id == Hash::getHash(name2.c_str()) || name1.id == -1);
+	SDL_assert_release(name1 == CStringID(name2) || name1.id == -1);
 }
 
 void xbgFile::CMeshNameID::registerMembers(MemberStructure & ms) {
@@ -547,10 +500,10 @@ void xbgFile::LOD::CSceneMesh::read(IBinaryArchive & fp) {
 	fp.serialize(unk2);
 	fp.serialize(unk3);
 	fp.serialize(unk4);
-	fp.serialize(unk5);
+	fp.serialize(primitiveType);
 	fp.serialize(unk6);
-	fp.serialize(unk7);
-	fp.serialize(unk8);
+	fp.serialize(vertexFormat);
+	fp.serialize(vertexStride);
 	fp.serialize(unk9);
 	fp.serialize(unk10);
 	fp.serialize(unk11);
@@ -565,18 +518,6 @@ void xbgFile::LOD::CSceneMesh::read(IBinaryArchive & fp) {
 
 	for (uint32_t i = 0; i < count; ++i)
 		drawCalls[i].read(fp);
-
-#pragma pack(push, 1)
-	struct MeshData {
-		float u1[10];
-		uint16_t u2[20];
-		uint32_t matCount;
-		uint32_t u3[2];
-	};
-#pragma pack(pop)
-	sizeof(MeshData);
-	sizeof(CSceneMesh);
-	sizeof(CDrawCallRange);
 }
 
 void xbgFile::LOD::CSceneMesh::registerMembers(MemberStructure & ms) {
@@ -584,10 +525,10 @@ void xbgFile::LOD::CSceneMesh::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk2);
 	REGISTER_MEMBER(unk3);
 	REGISTER_MEMBER(unk4);
-	REGISTER_MEMBER(unk5);
+	REGISTER_MEMBER(primitiveType);
 	REGISTER_MEMBER(unk6);
-	REGISTER_MEMBER(unk7);
-	REGISTER_MEMBER(unk8);
+	REGISTER_MEMBER(vertexFormat);
+	REGISTER_MEMBER(vertexStride);
 	REGISTER_MEMBER(unk9);
 	REGISTER_MEMBER(unk10);
 	REGISTER_MEMBER(unk11);
@@ -600,7 +541,7 @@ void xbgFile::LOD::CSceneMesh::registerMembers(MemberStructure & ms) {
 void xbgFile::CBasicDrawCallRange::read(IBinaryArchive & fp) {
 	fp.serialize(unk1);
 	fp.serialize(unk2);
-	fp.serialize(unk3);
+	fp.serialize(primitiveCount);
 	fp.serialize(unk4);
 	fp.serialize(unk5);
 	fp.serialize(unk6);
@@ -610,30 +551,56 @@ void xbgFile::CBasicDrawCallRange::read(IBinaryArchive & fp) {
 void xbgFile::CBasicDrawCallRange::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(unk2);
-	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(primitiveCount);
 	REGISTER_MEMBER(unk4);
 	REGISTER_MEMBER(unk5);
 	REGISTER_MEMBER(unk6);
 	//REGISTER_MEMBER(unk7);
 }
 
+enum EBufferType {
+	VERTEX_BUFFER = 0,
+	INDEX_BUFFER = 1,
+	UNIFORM_BLOCK = 2,
+	SHADER_PROGRAM = 3,
+	STREAM_OUTPUT = 4,
+	DISPLAY_LIST = 5
+};
+
 void xbgFile::SGfxBuffers::read(IBinaryArchive & fp) {
 	//<unnamed>::ReadGfxBuffers(const unsigned char *&, SGfxBuffers &, unsigned long, bool)
 	
-	fp.serializeNdVectorExternal_pod(vertex);
-	//CBufferRenderResource::Create(Device3D::EBufferType, const IRenderResourceCommandTrackerDecoratorFactory &, unsigned long, unsigned long, const void *, bool, bool, unsigned long, bool, bool)
+	//CBufferRenderResource::Create(Device3D::EBufferType 0, const IRenderResourceCommandTrackerDecoratorFactory & (addi r4, r27, unk_107D7CDA@l), unsigned long, unsigned long 1, const void *, bool 0, bool 0, unsigned long 0, bool, bool)
+	fp.pad(4);
+	if (fp.isReading()) {
+		Vector<uint8_t> data;
+		fp.serializeNdVectorExternal_pod(data);
+		vertex = createVertexBuffer(data.data(), data.size(), BUFFER_STATIC, GL_ARRAY_BUFFER);
+	} else {
+		SDL_assert_release(false);
+	}
+	
+	//CBufferRenderResource::Create(Device3D::EBufferType 1, const IRenderResourceCommandTrackerDecoratorFactory &, unsigned long, unsigned long, const void *, bool, bool, unsigned long, bool, bool)
+	fp.pad(4);
+	if (fp.isReading()) {
+		Vector<uint8_t> data;
+		fp.serializeNdVectorExternal_pod(data);
+		index = createVertexBuffer(data.data(), data.size(), BUFFER_STATIC, GL_ELEMENT_ARRAY_BUFFER);
+	}
+	else {
+		SDL_assert_release(false);
+	}
 
-	fp.serializeNdVectorExternal_pod(index);
-	//CBufferRenderResource::Create(Device3D::EBufferType, const IRenderResourceCommandTrackerDecoratorFactory &, unsigned long, unsigned long, const void *, bool, bool, unsigned long, bool, bool)
+	//Device3D::CBuffer::Create(Device3D::EBufferType, Device3D::EBufferUsage, unsigned long elementSize, unsigned long elementCount, const void * ptr, bool)
 }
 
 void xbgFile::SGfxBuffers::registerMembers(MemberStructure & ms) {
 	if (ms.type == ms.TOXML) {
-		std::string v = toBase64String(vertex.data(), vertex.size());
+		/*std::string v = toBase64String(vertex.data(), vertex.size());
 		ms.registerMember("vertex", v);
 
 		v = toBase64String(index.data(), index.size());
-		ms.registerMember("index", v);
+		ms.registerMember("index", v);*/
 	} else if(ms.type == ms.FROMXML) {
 		SDL_assert_release(false);
 	}
@@ -698,7 +665,7 @@ void xbgFile::LOD::CSceneMesh::CDrawCallRange::registerMembers(MemberStructure &
 void xbgFile::GeomMips::read(IBinaryArchive & fp) {
 	fp.serialize(unk1);
 	fp.serialize(unk2);
-	fp.serialize(name1);
+	name1.read(fp);
 	fp.serialize(name2);
 }
 
@@ -706,5 +673,58 @@ void xbgFile::GeomMips::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(unk1);
 	REGISTER_MEMBER(unk2);
 	ms.registerMember("name", name2);
-	//name1 = name2;
+	name1 = name2;
 }
+
+void xbgFile::draw() {
+	if (lods.empty()) return;
+
+	LOD &lod = lods[0];
+
+	for (int i = 0; i < 16; ++i)
+		glDisableVertexAttribArray(i);
+
+	for (auto &mesh : lod.meshes) {
+		/*auto &mat = loadMaterial(material->file);
+		if (!mat.entries.empty()) {
+			auto &texture = loadTexture(mat.entries.begin()->texture);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, texture.id);
+		}*/
+
+		buffers[0].vertex->bind();
+		buffers[0].index->bind();
+
+		SDL_assert_release(buffers[0].vertex->size % mesh.vertexStride == 0);
+		SDL_assert_release(buffers[0].index->size % sizeof(short) == 0);
+
+		// 1rst attribute buffer : vertices
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(
+			0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+			3,                  // size
+			GL_SHORT,  // type
+			GL_TRUE,           // normalized?
+			mesh.vertexStride,  // stride
+			(void*)0            // array buffer offset
+		);
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(
+			8,                  // attribute. No particular reason for 0, but must match the layout in the shader.
+			2,                  // size
+			GL_SHORT,  // type
+			GL_TRUE,           // normalized?
+			mesh.vertexStride,  // stride
+			(void*)(8)            // array buffer offset
+		);
+
+		// Draw the triangles
+		GLint id;
+		glGetIntegerv(GL_CURRENT_PROGRAM, &id);
+		glDrawElements(GL_TRIANGLES, buffers[0].index->size / sizeof(short), GL_UNSIGNED_SHORT, 0);
+
+		for(int i = 0; i < 16; ++i)
+			glDisableVertexAttribArray(i);
+	}
+}
+

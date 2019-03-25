@@ -39,7 +39,7 @@ public:
 
 	GLuint VertexArrayID;
 	Shader lines, tex, model;
-	VertexBuffer linesBuffer, texBuffer;
+	std::shared_ptr<VertexBuffer> linesBuffer, texBuffer;
 
 	glm::mat4 View, Projection, VP;
 	glm::ivec2 windowSize;

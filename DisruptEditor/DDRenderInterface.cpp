@@ -47,7 +47,7 @@ void RenderInterface::drawPointList(const dd::DrawVertex *points, int count, boo
 	glUniformMatrix4fv(lines.uniforms["MVP"], 1, GL_FALSE, &VP[0][0]);
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, linesBuffer.buffer_id);
+	linesBuffer->bind();
 	glVertexAttribPointer(
 		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 		3,                  // size
@@ -81,7 +81,7 @@ void RenderInterface::drawLineList(const dd::DrawVertex *points, int count, bool
 	glUniformMatrix4fv(lines.uniforms["MVP"], 1, GL_FALSE, &VP[0][0]);
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, linesBuffer.buffer_id);
+	linesBuffer->bind();
 	glVertexAttribPointer(
 		0,                  // attribute. No particular reason for 0, but must match the layout in the shader.
 		3,                  // size
@@ -113,7 +113,7 @@ void RenderInterface::drawGlyphList(const dd::DrawVertex * glyphs, int count, dd
 
 	tex.use();
 	glUniform2f(tex.uniforms["windowSize"], (float)windowSize.x, (float)windowSize.y);
-	glBindBuffer(GL_ARRAY_BUFFER, texBuffer.buffer_id);
+	texBuffer->bind();
 	// 1rst attribute buffer : vertices
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(
