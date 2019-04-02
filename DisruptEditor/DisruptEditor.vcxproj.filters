@@ -182,9 +182,6 @@
     <ClCompile Include="Types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="embedFile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="bundleFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -192,6 +189,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="xbgMipFile.cpp">
+      <Filter>Source Files\File Formats</Filter>
+    </ClCompile>
+    <ClCompile Include="embedFile.cpp">
       <Filter>Source Files\File Formats</Filter>
     </ClCompile>
   </ItemGroup>

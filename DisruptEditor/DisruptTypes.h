@@ -215,14 +215,6 @@ struct CSceneLight { //2461405956
 	void registerMembers(MemberStructure& ms);
 };
 
-struct STerrainSectorPackedData {
-	uint8_t unk[0x5ab0];
-};
-
-struct STerrainSectorPackedElementInfo {
-	uint8_t unk[0xc];
-};
-
 struct CBatchedInstanceID {
 	uint32_t id;
 

@@ -20,6 +20,7 @@ IBinaryArchive::IBinaryArchive() {
 
 void IBinaryArchive::serialize(bool& value) {
 	serializePOD(*this, value);
+	SDL_assert_release(value == 0 || value == 1);
 }
 
 void IBinaryArchive::serialize(uint8_t& value) {
@@ -128,11 +129,16 @@ bool CBinaryArchiveReader::isReading() const {
 void CBinaryArchiveReader::pad(size_t padding) {
 	Sint64 size = SDL_RWtell(fp);
 	Sint64 seek = (padding - (size % padding)) % padding;
-	SDL_RWseek(fp, seek, RW_SEEK_CUR);
+
+	Vector<uint8_t> data(seek);
+	memBlock(data.data(), 1, seek);
+	for (Sint64 i = 0; i < seek; ++i)
+		SDL_assert_release(data[i] == 0);
 }
 
 void CBinaryArchiveReader::memBlock(void* ptr, size_t objSize, size_t objCount) {
-	SDL_RWread(fp, ptr, objSize, objCount);
+	size_t ret = SDL_RWread(fp, ptr, objSize, objCount);
+	SDL_assert_release(ret == objCount);
 }
 
 CBinaryArchiveWriter::CBinaryArchiveWriter(SDL_RWops* _fp) {
@@ -151,5 +157,6 @@ void CBinaryArchiveWriter::pad(size_t padding) {
 }
 
 void CBinaryArchiveWriter::memBlock(void* ptr, size_t objSize, size_t objCount) {
-	SDL_RWwrite(fp, ptr, objSize, objCount);
+	size_t ret = SDL_RWwrite(fp, ptr, objSize, objCount);
+	SDL_assert_release(ret == objCount);
 }
