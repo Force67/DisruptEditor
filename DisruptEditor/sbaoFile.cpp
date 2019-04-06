@@ -13,48 +13,15 @@
 #define STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
 
-const uint32_t sbaoMagic = 207362;
-
-#pragma pack(push, 1)
-struct sbaoHeader {
-	uint32_t magic = sbaoMagic;
-	uint32_t unk1 = 0;
-	uint32_t unk2 = 0;//first arg
-	uint32_t unk3;
-	uint32_t unk4;
-	uint32_t unk5 = 1342177280;
-	uint32_t unk6 = 2;
-};
-struct oggPageHeader {
-	uint32_t magic = 0;
-	uint8_t version = 0;
-	uint8_t headerType = 0;
-	uint64_t granulePos = 0;
-	uint32_t serialNo = 0;
-	uint32_t pageSeqNum = 0;
-	uint32_t checksum = 0;
-	uint8_t numSegments = 0;
-};
-#pragma pack(pop)
-
-size_t getOggPageSize(uint8_t *ptr) {
-	oggPageHeader *header = (oggPageHeader*)ptr;
-	ptr += sizeof(*header);
-
-	SDL_assert_release(header->magic == 1399285583);
-
-	size_t packetSize = 0;
-	for (uint8_t i = 0; i < header->numSegments; ++i) {
-		packetSize += *ptr;
-		++ptr;
+static void StreamValidationPoint(IBinaryArchive & fp) {
+	//Dare::StreamValidationPoint((SndGear::Serializer &))
+	//TODO: CRC Hash?
+	if (fp.isReading()) {
+		uint32_t crc;
+		fp.serialize(crc);
+	} else {
+		SDL_assert_release(false);
 	}
-
-	return sizeof(*header) + header->numSegments + packetSize;
-}
-
-void writeZero(SDL_RWops *fp, size_t num) {
-	for (size_t i = 0; i < num; ++i)
-		SDL_WriteU8(fp, 0);
 }
 
 sbaoFile::sbaoFile() {
@@ -92,6 +59,9 @@ void sbaoFile::open(IBinaryArchive & fp) {
 	if (typeName == "ResourceDescriptor") {
 		resourceDescriptor = std::make_shared<ResourceDescriptor>();
 		resourceDescriptor->read(fp);
+	} else if (typeName == "PlayEventDescriptor") {
+		playEventDescriptor = std::make_shared<PlayEventDescriptor>();
+		playEventDescriptor->read(fp);
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
@@ -279,4 +249,38 @@ void tdstRandomElement::read(IBinaryArchive & fp) {
 	fp.serialize(prob);
 	fp.serialize(bCanBeChosenTwice);
 	fp.serialize(bHasPlayed);
+}
+
+void PlayEventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(pBase);
+	fp.serialize(resourceRef);
+	fp.serialize(fDeTuneDelta);
+	fp.serialize(fValPitchStat);
+	fp.serialize(fFadeDuration);
+	fp.serialize(eFadeType);
+	StreamValidationPoint(fp);
+}
+
+void EventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(Id);
+	fp.serialize(eType);
+	fp.serialize(globalLimiterInfo);
+	fp.serialize(perSoundObjectLimiterInfo);
+	fp.serialize(bDynamic);
+	fp.serialize(bLinkable);
+	fp.serialize(bSynthable);
+	fp.serialize(applyVirtBehaviorWhenInaudible);
+	fp.serialize(virtualizationLogic);
+	fp.serialize(lPrio);
+	fp.serialize(delay);
+	fp.serialize(rtpcId);
+	fp.serialize(isLoopingChildResource);
+	fp.serialize(tempoBPM);
+	fp.serialize(tempoTimeSignature);
+	fp.serialize(playOnCue);
+}
+
+void Delay::read(IBinaryArchive & fp) {
+	fp.serialize(delayTime);
+	fp.serialize(delayTimeDelta);
 }

@@ -157,6 +157,44 @@ struct ResourceDescriptor {
 	void read(IBinaryArchive &fp);
 };
 
+struct Delay {
+	float delayTime;
+	float delayTimeDelta;
+	void read(IBinaryArchive &fp);
+};
+
+struct EventDescriptor {
+	uint32_t Id;
+	uint32_t eType;
+	LimiterInfoDescriptor globalLimiterInfo;
+	LimiterInfoDescriptor perSoundObjectLimiterInfo;
+	bool bDynamic;
+	bool bLinkable;
+	bool bSynthable;
+	uint32_t applyVirtBehaviorWhenInaudible;
+	uint32_t virtualizationLogic;
+	int32_t lPrio;
+	Delay delay;
+	uint32_t rtpcId;
+	int32_t isLoopingChildResource;
+	uint32_t tempoBPM;
+	uint32_t tempoTimeSignature;
+	uint32_t playOnCue;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct PlayEventDescriptor {
+	EventDescriptor pBase;
+	CObjectReference<ResourceDescriptor> resourceRef;
+	float fDeTuneDelta;
+	float fValPitchStat;
+	float fFadeDuration;
+	uint32_t eFadeType;
+
+	void read(IBinaryArchive &fp);
+};
+
 class sbaoFile {
 public:
 	sbaoFile();
@@ -172,5 +210,6 @@ public:
 	CDobbsID type;
 
 	std::shared_ptr<ResourceDescriptor> resourceDescriptor;
+	std::shared_ptr<PlayEventDescriptor> playEventDescriptor;
 };
 
