@@ -62,7 +62,24 @@ std::string DB::getStrFromCRC(uint32_t hash) {
 }
 
 std::string DB::getStrFromDobbs(uint32_t hash) {
-	return std::string();
+	//Yes, I know we have a DB for this, but it's just too slow otherwise
+	static std::unordered_map<uint32_t, std::string> cache;
+	auto it = cache.find(hash);
+	if (it != cache.end())
+		return it->second;
+
+	try {
+		std::string str;
+		*db << "select str from hashes where dobbs=?;" << hash >> str;
+		cache[hash] = str;
+		return str;
+	}
+	catch (...) {
+		char buffer[12];
+		snprintf(buffer, sizeof(buffer), "_%08x", hash);
+		cache[hash] = buffer;
+		return std::string(buffer);
+	}
 }
 
 void DB::reinit() {
