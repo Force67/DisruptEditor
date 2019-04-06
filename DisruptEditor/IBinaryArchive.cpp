@@ -145,6 +145,7 @@ void CBinaryArchiveReader::pad(size_t padding) {
 void CBinaryArchiveReader::memBlock(void* ptr, size_t objSize, size_t objCount) {
 	size_t ret = SDL_RWread(fp, ptr, objSize, objCount);
 	SDL_assert_release(ret == objCount);
+	offset = SDL_RWtell(fp);
 }
 
 CBinaryArchiveWriter::CBinaryArchiveWriter(SDL_RWops* _fp) {
@@ -165,4 +166,5 @@ void CBinaryArchiveWriter::pad(size_t padding) {
 void CBinaryArchiveWriter::memBlock(void* ptr, size_t objSize, size_t objCount) {
 	size_t ret = SDL_RWwrite(fp, ptr, objSize, objCount);
 	SDL_assert_release(ret == objCount);
+	offset = SDL_RWtell(fp);
 }

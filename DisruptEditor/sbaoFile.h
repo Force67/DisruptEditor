@@ -86,6 +86,23 @@ struct SampleResourceDescriptor {
 	void read(IBinaryArchive &fp);
 };
 
+struct tdstRandomElement {
+	uint32_t resourceId;
+	float prob;
+	bool bCanBeChosenTwice;
+	bool bHasPlayed;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct RandomResourceDescriptor {
+	bool bUseShuffle;
+
+	Vector<tdstRandomElement> elements;
+
+	void read(IBinaryArchive &fp);
+};
+
 struct EmitterSpec {
 
 };
@@ -97,6 +114,7 @@ struct BaseResourceDescriptor {
 	Vector< CObjectReference<EmitterSpec> > emitterSpecs;
 
 	std::shared_ptr<SampleResourceDescriptor> sampleResourceDescriptor;
+	std::shared_ptr<RandomResourceDescriptor> randomResourceDescriptor;
 
 	void read(IBinaryArchive &fp);
 };

@@ -48,6 +48,9 @@ public:
 	enum PaddingType { PADDING_NONE, PADDING_IBINARYARCHIVE, PADDING_GEAR
 	};
 	PaddingType padding = PADDING_IBINARYARCHIVE;
+
+protected:
+	Sint64 offset = 0;//Usefull for debugging
 };
 
 

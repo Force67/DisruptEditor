@@ -93,6 +93,9 @@ void sbaoFile::open(IBinaryArchive & fp) {
 		resourceDescriptor = std::make_shared<ResourceDescriptor>();
 		resourceDescriptor->read(fp);
 	}
+	else if (typeName[0] != '_') {
+		SDL_assert_release(false);
+	}
 
 	fp.padding = IBinaryArchive::PADDING_IBINARYARCHIVE;
 }
@@ -180,6 +183,9 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	if (typeName == "SampleResourceDescriptor") {
 		sampleResourceDescriptor = std::make_shared<SampleResourceDescriptor>();
 		sampleResourceDescriptor->read(fp);
+	} else if (typeName == "RandomResourceDescriptor") {
+		randomResourceDescriptor = std::make_shared<RandomResourceDescriptor>();
+		randomResourceDescriptor->read(fp);
 	}
 	else {
 		SDL_assert_release(false);
@@ -252,4 +258,25 @@ void DynamicIndexedPropertyContainer::read(IBinaryArchive & fp) {
 }
 
 void tdstWaveMarkerElement::read(IBinaryArchive & fp) {
+}
+
+void RandomResourceDescriptor::read(IBinaryArchive & fp) {
+	uint32_t ulNbElements = elements.size();
+	fp.serialize(ulNbElements);
+	fp.serialize(bUseShuffle);
+
+	uint32_t ulNbElements2 = ulNbElements;
+	fp.serialize(ulNbElements2);
+	SDL_assert_release(ulNbElements2 == ulNbElements);
+
+	elements.resize(ulNbElements);
+	for (uint32_t i = 0; i < ulNbElements; ++i)
+		fp.serialize(elements[i]);
+}
+
+void tdstRandomElement::read(IBinaryArchive & fp) {
+	fp.serialize(resourceId);
+	fp.serialize(prob);
+	fp.serialize(bCanBeChosenTwice);
+	fp.serialize(bHasPlayed);
 }
