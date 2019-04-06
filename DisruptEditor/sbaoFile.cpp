@@ -70,6 +70,21 @@ void sbaoFile::open(IBinaryArchive & fp) {
 	fp.padding = IBinaryArchive::PADDING_IBINARYARCHIVE;
 }
 
+void sbaoFile::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(unk1);
+	REGISTER_MEMBER(unk2);
+	REGISTER_MEMBER(unk3);
+	REGISTER_MEMBER(unk4);
+	REGISTER_MEMBER(unk5);
+
+	REGISTER_MEMBER(type);
+	std::string typeName = type.getReverseName();
+	if (typeName == "ResourceDescriptor")
+		REGISTER_MEMBER(*resourceDescriptor);
+	else if (typeName == "PlayEventDescriptor")
+		REGISTER_MEMBER(*playEventDescriptor);
+}
+
 void sbaoLayer::fillCache() {
 	if (type != VORBIS) return;
 	int error;
@@ -130,6 +145,16 @@ void ResourceDescriptor::read(IBinaryArchive & fp) {
 	pResourceDesc.read(fp);
 }
 
+void ResourceDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(Id);
+	REGISTER_MEMBER(resVolume);
+	REGISTER_MEMBER(bLocalised);
+	REGISTER_MEMBER(globalLimiterInfo);
+	REGISTER_MEMBER(perSoundObjectLimiterInfo);
+	REGISTER_MEMBER(eType);
+	REGISTER_MEMBER(pResourceDesc);
+}
+
 void ResourceVolume::read(IBinaryArchive & fp) {
 	vol.read(fp);
 	//SndGear::Serializer &SndGear::operator <<<T1>(SndGear::Serializer &, T1 &) [with T1=Dare::TVolume<(long)0, Dare::NonPositiveVolumeTraits>]
@@ -137,10 +162,21 @@ void ResourceVolume::read(IBinaryArchive & fp) {
 	fp.serialize(randomProbDist);
 }
 
+void ResourceVolume::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(vol);
+	REGISTER_MEMBER(delta_dB);
+	REGISTER_MEMBER(randomProbDist);
+}
+
 void RTPCVolume::read(IBinaryArchive & fp) {
 	m_rtpc.read(fp);
 	//SndGear::Serializer &SndGear::operator <<<T1>(SndGear::Serializer &, T1 &) [with T1=Dare::TVolume<(long)1, Dare::NonPositiveVolumeTraits>]
 	fp.serialize(m_volume_dB);
+}
+
+void RTPCVolume::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(m_rtpc);
+	REGISTER_MEMBER(m_volume_dB);
 }
 
 void BaseResourceDescriptor::read(IBinaryArchive & fp) {
@@ -162,13 +198,33 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	}
 }
 
+void BaseResourceDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(type);
+	REGISTER_MEMBER(emitterSpecs);
+
+	std::string typeName = type.getReverseName();
+	if (typeName == "SampleResourceDescriptor")
+		REGISTER_MEMBER(*sampleResourceDescriptor);
+	if (typeName == "RandomResourceDescriptor")
+		REGISTER_MEMBER(*randomResourceDescriptor);
+}
+
 void RTPC::read(IBinaryArchive & fp) {
 	fp.serialize(rtpcID);
+}
+
+void RTPC::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, rtpcID);
 }
 
 void LimiterInfoDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(m_maxCount);
 	fp.serialize(m_limitationRule);
+}
+
+void LimiterInfoDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(m_maxCount);
+	REGISTER_MEMBER(m_limitationRule);
 }
 
 void SampleResourceDescriptor::read(IBinaryArchive & fp) {
@@ -193,6 +249,28 @@ void SampleResourceDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(ulLoopLengthByte);
 }
 
+void SampleResourceDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(bLooping);
+	REGISTER_MEMBER(bTool);
+	REGISTER_MEMBER(bIsNotifying);
+	REGISTER_MEMBER(ulLoopByte);
+	REGISTER_MEMBER(ulLoopSample);
+	REGISTER_MEMBER(ulBitRate);
+	REGISTER_MEMBER(ulResNotificationUserData);
+	REGISTER_MEMBER(CompressionFormat);
+	REGISTER_MEMBER(ulNbChannels);
+	REGISTER_MEMBER(ulFreq);
+	REGISTER_MEMBER(stToolSourceFormat);
+	REGISTER_MEMBER(stWaveMarkerList);
+	REGISTER_MEMBER(autoDuckingSetPresetEventId);
+	REGISTER_MEMBER(busId);
+	REGISTER_MEMBER(platformSpecificProperties);
+	REGISTER_MEMBER(ulAttackLengthSample);
+	REGISTER_MEMBER(ulAttackLengthByte);
+	REGISTER_MEMBER(ulLoopLengthSample);
+	REGISTER_MEMBER(ulLoopLengthByte);
+}
+
 void SND_tdstToolSourceFormat::read(IBinaryArchive & fp) {
 	fp.serialize(lTransferRate);
 	fp.serialize(ulNbBytes);
@@ -204,6 +282,15 @@ void SND_tdstToolSourceFormat::read(IBinaryArchive & fp) {
 	fp.serialize(dataRef);
 }
 
+void SND_tdstToolSourceFormat::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(lTransferRate);
+	REGISTER_MEMBER(ulNbBytes);
+	REGISTER_MEMBER(ulNbSamples);
+	REGISTER_MEMBER(isMTTInterlaced);
+	REGISTER_MEMBER(bStream);
+	REGISTER_MEMBER(dataRef);
+}
+
 void tdstWaveMarkerList::read(IBinaryArchive & fp) {
 	stringPoolSize = 0;
 	fp.serialize(stringPoolSize);
@@ -211,6 +298,11 @@ void tdstWaveMarkerList::read(IBinaryArchive & fp) {
 
 	fp.serializeNdVectorExternal(m_waveMarkers);
 	SDL_assert_release(m_waveMarkers.size() == 0);//TODO
+}
+
+void tdstWaveMarkerList::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(stringPoolSize);
+	REGISTER_MEMBER(m_waveMarkers);
 }
 
 void DynamicIndexedPropertyContainer::read(IBinaryArchive & fp) {
@@ -227,7 +319,14 @@ void DynamicIndexedPropertyContainer::read(IBinaryArchive & fp) {
 	}
 }
 
+void DynamicIndexedPropertyContainer::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(isBlob);
+}
+
 void tdstWaveMarkerElement::read(IBinaryArchive & fp) {
+}
+
+void tdstWaveMarkerElement::registerMembers(MemberStructure & ms) {
 }
 
 void RandomResourceDescriptor::read(IBinaryArchive & fp) {
@@ -244,11 +343,23 @@ void RandomResourceDescriptor::read(IBinaryArchive & fp) {
 		fp.serialize(elements[i]);
 }
 
+void RandomResourceDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(bUseShuffle);
+	REGISTER_MEMBER(elements);
+}
+
 void tdstRandomElement::read(IBinaryArchive & fp) {
 	fp.serialize(resourceId);
 	fp.serialize(prob);
 	fp.serialize(bCanBeChosenTwice);
 	fp.serialize(bHasPlayed);
+}
+
+void tdstRandomElement::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(resourceId);
+	REGISTER_MEMBER(prob);
+	REGISTER_MEMBER(bCanBeChosenTwice);
+	REGISTER_MEMBER(bHasPlayed);
 }
 
 void PlayEventDescriptor::read(IBinaryArchive & fp) {
@@ -259,6 +370,15 @@ void PlayEventDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(fFadeDuration);
 	fp.serialize(eFadeType);
 	StreamValidationPoint(fp);
+}
+
+void PlayEventDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(pBase);
+	REGISTER_MEMBER(resourceRef);
+	REGISTER_MEMBER(fDeTuneDelta);
+	REGISTER_MEMBER(fValPitchStat);
+	REGISTER_MEMBER(fFadeDuration);
+	REGISTER_MEMBER(eFadeType);
 }
 
 void EventDescriptor::read(IBinaryArchive & fp) {
@@ -280,7 +400,34 @@ void EventDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(playOnCue);
 }
 
+void EventDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(Id);
+	REGISTER_MEMBER(eType);
+	REGISTER_MEMBER(globalLimiterInfo);
+	REGISTER_MEMBER(perSoundObjectLimiterInfo);
+	REGISTER_MEMBER(bDynamic);
+	REGISTER_MEMBER(bLinkable);
+	REGISTER_MEMBER(bSynthable);
+	REGISTER_MEMBER(applyVirtBehaviorWhenInaudible);
+	REGISTER_MEMBER(virtualizationLogic);
+	REGISTER_MEMBER(lPrio);
+	REGISTER_MEMBER(delay);
+	REGISTER_MEMBER(rtpcId);
+	REGISTER_MEMBER(isLoopingChildResource);
+	REGISTER_MEMBER(tempoBPM);
+	REGISTER_MEMBER(tempoTimeSignature);
+	REGISTER_MEMBER(playOnCue);
+}
+
 void Delay::read(IBinaryArchive & fp) {
 	fp.serialize(delayTime);
 	fp.serialize(delayTimeDelta);
+}
+
+void Delay::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(delayTime);
+	REGISTER_MEMBER(delayTimeDelta);
+}
+
+void EmitterSpec::registerMembers(MemberStructure & ms) {
 }

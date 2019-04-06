@@ -32,6 +32,9 @@ struct CObjectReference {
 	void read(IBinaryArchive &fp) {
 		fp.serialize(refAtomicId);
 	}
+	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, refAtomicId);
+	}
 };
 
 struct SND_tdstToolSourceFormat {
@@ -43,10 +46,12 @@ struct SND_tdstToolSourceFormat {
 	CObjectReference<SndData> dataRef;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct tdstWaveMarkerElement {
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct tdstWaveMarkerList {
@@ -54,12 +59,14 @@ struct tdstWaveMarkerList {
 	Vector<tdstWaveMarkerElement> m_waveMarkers;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct DynamicIndexedPropertyContainer {
 	int32_t isBlob;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct SampleResourceDescriptor {
@@ -70,6 +77,7 @@ struct SampleResourceDescriptor {
 	uint32_t ulLoopSample;
 	uint32_t ulBitRate;
 	uint32_t ulResNotificationUserData;
+	//2 - ADPCM
 	uint32_t CompressionFormat;
 	uint32_t ulNbChannels;
 	uint32_t ulFreq;
@@ -84,6 +92,7 @@ struct SampleResourceDescriptor {
 	uint32_t ulLoopLengthByte;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct tdstRandomElement {
@@ -93,6 +102,7 @@ struct tdstRandomElement {
 	bool bHasPlayed;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct RandomResourceDescriptor {
@@ -101,10 +111,11 @@ struct RandomResourceDescriptor {
 	Vector<tdstRandomElement> elements;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct EmitterSpec {
-
+	void registerMembers(MemberStructure &ms);
 };
 
 struct BaseResourceDescriptor {
@@ -117,25 +128,31 @@ struct BaseResourceDescriptor {
 	std::shared_ptr<RandomResourceDescriptor> randomResourceDescriptor;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct RTPC {
 	uint32_t rtpcID;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct RTPCVolume {
 	RTPC m_rtpc;
 	float m_volume_dB;
+
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct ResourceVolume {
 	RTPCVolume vol;
 	float delta_dB;
 	uint32_t randomProbDist;
+
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct LimiterInfoDescriptor {
@@ -143,6 +160,7 @@ struct LimiterInfoDescriptor {
 	int32_t m_limitationRule;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct ResourceDescriptor {
@@ -155,12 +173,15 @@ struct ResourceDescriptor {
 	BaseResourceDescriptor pResourceDesc;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct Delay {
 	float delayTime;
 	float delayTimeDelta;
+
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct EventDescriptor {
@@ -182,6 +203,7 @@ struct EventDescriptor {
 	uint32_t playOnCue;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 struct PlayEventDescriptor {
@@ -193,6 +215,7 @@ struct PlayEventDescriptor {
 	uint32_t eFadeType;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 };
 
 class sbaoFile {
@@ -200,6 +223,7 @@ public:
 	sbaoFile();
 	~sbaoFile();
 	void open(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
 
 	uint32_t unk1;
 	uint32_t unk2;

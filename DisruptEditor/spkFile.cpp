@@ -36,3 +36,11 @@ void spkFile::open(IBinaryArchive &fp) {
 		fp.pad(4);
 	}
 }
+
+void spkFile::registerMembers(MemberStructure & ms) {
+	for (uint32_t i = 0; i < objs.size(); ++i) {
+		char buffer[16];
+		snprintf(buffer, sizeof(buffer), "%08x", ids[i]);
+		ms.registerMember(buffer, objs[i]);
+	}
+}

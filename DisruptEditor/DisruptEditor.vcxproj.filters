@@ -155,9 +155,6 @@
     <ClCompile Include="CStringID.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DisruptTypes.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ImguiWindows.cpp">
       <Filter>Source Files\Windows</Filter>
     </ClCompile>
@@ -182,9 +179,6 @@
     <ClCompile Include="Types.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="bundleFile.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DARE.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -196,6 +190,12 @@
     </ClCompile>
     <ClCompile Include="CDobbsID.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bundleFile.cpp">
+      <Filter>Source Files\File Formats</Filter>
+    </ClCompile>
+    <ClCompile Include="DisruptTypes.cpp">
+      <Filter>Source Files\File Formats</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -370,9 +370,6 @@
     <ClInclude Include="CStringID.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="DisruptTypes.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Pair.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -409,6 +406,9 @@
     </ClInclude>
     <ClInclude Include="CDobbsID.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DisruptTypes.h">
+      <Filter>Source Files\File Formats</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
