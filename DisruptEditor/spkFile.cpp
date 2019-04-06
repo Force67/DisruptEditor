@@ -24,13 +24,13 @@ void spkFile::open(IBinaryArchive &fp) {
 		if (fp.isReading()) {
 			fp.serialize(size);
 			uint32_t nextOffset = SDL_RWtell(fp.fp) + size;
-			//objs[i].open(fp);
+			objs[i].open(fp);
 			SDL_RWseek(fp.fp, nextOffset, RW_SEEK_SET);
 		} else {
-			Vector<uint8_t> data = objs[i].save();
+			/*Vector<uint8_t> data = objs[i].save();
 			size = data.size();
 			fp.serialize(size);
-			fp.memBlock(data.data(), 1, size);
+			fp.memBlock(data.data(), 1, size);*/
 		}
 		
 		fp.pad(4);

@@ -8,5 +8,6 @@ namespace Hash {
 	uint32_t getHash(const char* str);
 	uint32_t getFilenameHash(std::string str);
 	uint64_t getFilenameHash64(std::string str);
+	uint32_t gearDobbsHash(const unsigned char* ptr, size_t size);
 };
 

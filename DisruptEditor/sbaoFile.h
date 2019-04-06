@@ -4,6 +4,8 @@
 #include <SDL_rwops.h>
 #include "Vector.h"
 
+class IBinaryArchive;
+
 struct sbaoLayer {
 	Vector<uint8_t> data;
 
@@ -20,12 +22,12 @@ struct sbaoLayer {
 
 class sbaoFile {
 public:
-	void open(const char* filename);
-	void open(SDL_RWops* fp);
-	void save(const char* filename);
-	Vector<uint8_t> save();
-	Vector<sbaoLayer> layers;
-private:
-	void fillCache();
+	void open(IBinaryArchive &fp);
+
+	uint32_t unk1;
+	uint32_t unk2;
+	uint32_t unk3;
+	uint32_t unk4;
+	uint32_t unk5;
 };
 

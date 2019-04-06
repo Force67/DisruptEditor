@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <vector>
 #include "CPathID.h"
+#include "GLHelper.h"
 
 class IBinaryArchive;
 class MemberStructure;
@@ -32,6 +33,8 @@ public:
 
 		void read(IBinaryArchive& fp);
 		void draw();
+		std::shared_ptr<VertexBuffer> createVertex();
+		std::shared_ptr<VertexBuffer> createIndex();
 	};
 
 	uint32_t unk1;

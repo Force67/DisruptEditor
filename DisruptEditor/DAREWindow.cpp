@@ -15,10 +15,8 @@ void UI::displayDARE() {
 		return;
 	}
 
-	static sbaoFile file;
-	static spkFile spkFile;
 	static int currentSound = 0;
-	if (ImGui::Button("Open")) {
+	/*if (ImGui::Button("Open")) {
 		//spkFile.open(noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "spk\0*.spk\0sbao\0*.sbao\0", NULL, NULL));
 		//file = spkFile.sbao;
 		file.open(noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "sbao\0*.sbao\0", NULL, NULL));
@@ -74,7 +72,7 @@ void UI::displayDARE() {
 
 		ImGui::PopID();
 		layerNum++;
-	}
+	}*/
 
 	ImGui::End();
 }

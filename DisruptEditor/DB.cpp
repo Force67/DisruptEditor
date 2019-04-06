@@ -61,6 +61,10 @@ std::string DB::getStrFromCRC(uint32_t hash) {
 	}
 }
 
+std::string DB::getStrFromDobbs(uint32_t hash) {
+	return std::string();
+}
+
 void DB::reinit() {
 	if (db)
 		delete db;
@@ -132,6 +136,7 @@ void DB::reinit() {
 	*db <<
 		"create table if not exists hashes ("
 		"   hash integer unique not null,"
+		"   dobbs integer not null,"
 		"   str text primary key not null,"
 		"   type text not null"
 		");";
@@ -153,13 +158,14 @@ void DB::handleCRCFile(const char *file, const char* type) {
 	FILE *fp = fopen(file, "r");
 
 	char line[512];
-	auto ps = *db << "insert into hashes (hash,str,type) values (?,?,?);";
+	auto ps = *db << "insert into hashes (hash,dobbs,str,type) values (?,?,?,?);";
 	while (fgets(line, sizeof(line), fp)) {
 		line[strlen(line) - 1] = '\0';
 
 		uint32_t hash = Hash::crc32buf((const char*)line, strlen(line));
+		uint32_t dobbs = Hash::gearDobbsHash((const unsigned char*)line, strlen(line));
 		try {
-			ps << hash << line << type;
+			ps << hash << dobbs << line << type;
 			ps++;
 		}
 		catch (...) {

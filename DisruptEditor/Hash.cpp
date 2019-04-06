@@ -239,3 +239,125 @@ uint64_t Hash::getFilenameHash64(std::string str) {
 
 	return hash64 & 0x1FFFFFFFFFFFFFFF | 0xA000000000000000;
 }
+
+typedef uint8_t _BYTE;
+
+uint32_t Hash::gearDobbsHash(const unsigned char * ptr, size_t size) {
+	//TODO: Check that this the same one Gear uses: SndGear::Hash::Dobbs(const unsigned char *, unsigned long)
+	//Used for things such as SerializerLabel
+	int v2; // er8@1
+	int v3; // er9@1
+	unsigned int v4; // ebx@1
+	__int64 v5; // r11@1
+	unsigned int v6; // edi@1
+	int v7; // er10@1
+	__int64 v8; // rdx@2
+	int v9; // eax@3
+	int v10; // ecx@3
+	int v11; // er8@3
+	unsigned int v12; // er9@3
+	int v13; // er10@3
+	int v14; // er8@3
+	int v15; // er9@3
+	int v16; // er10@3
+	int v17; // er8@3
+	int v18; // er9@3
+	unsigned int v19; // er9@4
+	int v20; // er10@16
+	int v21; // er8@16
+	int v22; // er9@16
+	int v23; // er10@16
+	int v24; // er8@16
+	int v25; // er9@16
+	int v26; // er10@16
+
+	v2 = -1640531527;
+	v3 = 0;
+	v4 = size;
+	v5 = (long long)ptr;
+	v6 = size;
+	v7 = -1640531527;
+	if (size >= 0xC) {
+		v8 = size / 0xC;
+		do {
+			v9 = *(_BYTE *)(v5 + 6);
+			v10 = *(_BYTE *)(v5 + 7);
+			v5 += 12i64;
+			v6 -= 12;
+			v11 = ((*(_BYTE *)(v5 - 7) + ((v9 + (v10 << 8)) << 8)) << 8) + *(_BYTE *)(v5 - 8) + v2;
+			v12 = ((*(_BYTE *)(v5 - 3) + ((*(_BYTE *)(v5 - 2) + (*(_BYTE *)(v5 - 1) << 8)) << 8)) << 8)
+				+ *(_BYTE *)(v5 - 4)
+				+ v3;
+			v13 = (v12 >> 13) ^ (*(_BYTE *)(v5 - 12)
+				+ ((*(_BYTE *)(v5 - 11) + ((*(_BYTE *)(v5 - 10) + (*(_BYTE *)(v5 - 9) << 8)) << 8)) << 8)
+				- v12
+				- v11
+				+ v7);
+			v14 = (v13 << 8) ^ (v11 - v12 - v13);
+			v15 = ((unsigned int)v14 >> 13) ^ (v12 - v14 - v13);
+			v16 = ((unsigned int)v15 >> 12) ^ (v13 - v15 - v14);
+			v17 = (v16 << 16) ^ (v14 - v15 - v16);
+			v18 = ((unsigned int)v17 >> 5) ^ (v15 - v17 - v16);
+			v7 = ((unsigned int)v18 >> 3) ^ (v16 - v18 - v17);
+			v2 = (v7 << 10) ^ (v17 - v18 - v7);
+			v3 = ((unsigned int)v2 >> 15) ^ (v18 - v2 - v7);
+			--v8;
+		} while (v8);
+	}
+	v19 = v4 + v3;
+	switch (v6) {
+	case 0xBu:
+		v19 += *(_BYTE *)(v5 + 10) << 24;
+		goto LABEL_6;
+	case 0xAu:
+	LABEL_6:
+		v19 += *(_BYTE *)(v5 + 9) << 16;
+		goto LABEL_7;
+	case 9u:
+	LABEL_7:
+		v19 += *(_BYTE *)(v5 + 8) << 8;
+		goto LABEL_8;
+	case 8u:
+	LABEL_8:
+		v2 += *(_BYTE *)(v5 + 7) << 24;
+		goto LABEL_9;
+	case 7u:
+	LABEL_9:
+		v2 += *(_BYTE *)(v5 + 6) << 16;
+		goto LABEL_10;
+	case 6u:
+	LABEL_10:
+		v2 += *(_BYTE *)(v5 + 5) << 8;
+		goto LABEL_11;
+	case 5u:
+	LABEL_11:
+		v2 += *(_BYTE *)(v5 + 4);
+		goto LABEL_12;
+	case 4u:
+	LABEL_12:
+		v7 += *(_BYTE *)(v5 + 3) << 24;
+		goto LABEL_13;
+	case 3u:
+	LABEL_13:
+		v7 += *(_BYTE *)(v5 + 2) << 16;
+		goto LABEL_14;
+	case 2u:
+	LABEL_14:
+		v7 += *(_BYTE *)(v5 + 1) << 8;
+		goto LABEL_15;
+	case 1u:
+	LABEL_15:
+		v7 += *(_BYTE *)v5;
+		break;
+	default:
+		break;
+	}
+	v20 = (v19 >> 13) ^ (v7 - v19 - v2);
+	v21 = (v20 << 8) ^ (v2 - v19 - v20);
+	v22 = ((unsigned int)v21 >> 13) ^ (v19 - v21 - v20);
+	v23 = ((unsigned int)v22 >> 12) ^ (v20 - v22 - v21);
+	v24 = (v23 << 16) ^ (v21 - v22 - v23);
+	v25 = ((unsigned int)v24 >> 5) ^ (v22 - v24 - v23);
+	v26 = ((unsigned int)v25 >> 3) ^ (v23 - v25 - v24);
+	return (((v26 << 10) ^ (unsigned int)(v24 - v25 - v26)) >> 15) ^ (v25 - ((v26 << 10) ^ (v24 - v25 - v26)) - v26);
+}
