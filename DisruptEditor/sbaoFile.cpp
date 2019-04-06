@@ -57,7 +57,15 @@ void writeZero(SDL_RWops *fp, size_t num) {
 		SDL_WriteU8(fp, 0);
 }
 
+sbaoFile::sbaoFile() {
+}
+
+sbaoFile::~sbaoFile() {
+}
+
 void sbaoFile::open(IBinaryArchive & fp) {
+	fp.padding = IBinaryArchive::PADDING_GEAR;
+
 	//Header Size: 0x1C
 	uint32_t magic = 207362;
 	fp.serialize(magic);
@@ -74,7 +82,19 @@ void sbaoFile::open(IBinaryArchive & fp) {
 	SDL_assert_release(two == 2);
 
 	//SndGear::Serializer &SndGear::operator <<<T1>(SndGear::Serializer &, T1 *&) [with T1=Dare::Private::AtomicObject]
+	
+	//We need to know ahead of time if this is audio data or a object
 
+	//This is for object
+	fp.serialize(type.id);
+	std::string typeName = type.getReverseName();
+
+	if (typeName == "ResourceDescriptor") {
+		resourceDescriptor = std::make_shared<ResourceDescriptor>();
+		resourceDescriptor->read(fp);
+	}
+
+	fp.padding = IBinaryArchive::PADDING_IBINARYARCHIVE;
 }
 
 void sbaoLayer::fillCache() {
@@ -122,4 +142,114 @@ int sbaoLayer::play(bool loop) {
 	int ref = Audio::instance().addSound(sampleRate, channels, output, ret * channels * sizeof(short), loop);
 	free(output);
 	return ref;
+}
+
+void ResourceDescriptor::read(IBinaryArchive & fp) {
+	SDL_Log("%u", fp.tell());
+
+	fp.serialize(Id);
+	resVolume.read(fp);
+	SDL_Log("%u", fp.tell());
+	fp.serialize(bLocalised);
+	globalLimiterInfo.read(fp);
+	perSoundObjectLimiterInfo.read(fp);
+	fp.serialize(eType);
+	pResourceDesc.read(fp);
+}
+
+void ResourceVolume::read(IBinaryArchive & fp) {
+	vol.read(fp);
+	//SndGear::Serializer &SndGear::operator <<<T1>(SndGear::Serializer &, T1 &) [with T1=Dare::TVolume<(long)0, Dare::NonPositiveVolumeTraits>]
+	fp.serialize(delta_dB);
+	fp.serialize(randomProbDist);
+}
+
+void RTPCVolume::read(IBinaryArchive & fp) {
+	m_rtpc.read(fp);
+	//SndGear::Serializer &SndGear::operator <<<T1>(SndGear::Serializer &, T1 &) [with T1=Dare::TVolume<(long)1, Dare::NonPositiveVolumeTraits>]
+	fp.serialize(m_volume_dB);
+}
+
+void BaseResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(type.id);
+	std::string typeName = type.getReverseName();
+
+	//Base Attributes
+	fp.serializeNdVectorExternal(emitterSpecs);
+
+	if (typeName == "SampleResourceDescriptor") {
+		sampleResourceDescriptor = std::make_shared<SampleResourceDescriptor>();
+		sampleResourceDescriptor->read(fp);
+	}
+	else {
+		SDL_assert_release(false);
+	}
+}
+
+void RTPC::read(IBinaryArchive & fp) {
+	fp.serialize(rtpcID);
+}
+
+void LimiterInfoDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(m_maxCount);
+	fp.serialize(m_limitationRule);
+}
+
+void SampleResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(bLooping);
+	fp.serialize(bTool);
+	fp.serialize(bIsNotifying);
+	fp.serialize(ulLoopByte);
+	fp.serialize(ulLoopSample);
+	fp.serialize(ulBitRate);
+	fp.serialize(ulResNotificationUserData);
+	fp.serialize(CompressionFormat);
+	fp.serialize(ulNbChannels);
+	fp.serialize(ulFreq);
+	fp.serialize(stToolSourceFormat);
+	fp.serialize(stWaveMarkerList);
+	fp.serialize(autoDuckingSetPresetEventId);
+	fp.serialize(busId);
+	fp.serialize(platformSpecificProperties);
+	fp.serialize(ulAttackLengthSample);
+	fp.serialize(ulAttackLengthByte);
+	fp.serialize(ulLoopLengthSample);
+	fp.serialize(ulLoopLengthByte);
+}
+
+void SND_tdstToolSourceFormat::read(IBinaryArchive & fp) {
+	fp.serialize(lTransferRate);
+	fp.serialize(ulNbBytes);
+	fp.serialize(ulNbSamples);
+	fp.serialize(isMTTInterlaced);
+	fp.serialize(bStream);
+
+	//dataRef Path
+	fp.serialize(dataRef);
+}
+
+void tdstWaveMarkerList::read(IBinaryArchive & fp) {
+	stringPoolSize = 0;
+	fp.serialize(stringPoolSize);
+	SDL_assert_release(stringPoolSize == 0);//TODO
+
+	fp.serializeNdVectorExternal(m_waveMarkers);
+	SDL_assert_release(m_waveMarkers.size() == 0);//TODO
+}
+
+void DynamicIndexedPropertyContainer::read(IBinaryArchive & fp) {
+	int32_t size = 0;
+	fp.serialize(size);
+	SDL_assert_release(size == 0);//TODO
+
+	fp.serialize(isBlob);
+	if (isBlob) {
+		uint32_t unk1;
+		fp.serialize(unk1);
+	} else {
+		SDL_assert_release(false);//TODO
+	}
+}
+
+void tdstWaveMarkerElement::read(IBinaryArchive & fp) {
 }

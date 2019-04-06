@@ -311,10 +311,10 @@ std::shared_ptr<VertexBuffer> CSectorHighRes::CSceneTerrainSectorPackedData::cre
 void CSectorHighRes::STerrainSectorPackedElementInfo::read(IBinaryArchive & fp) {
 	SDL_Log("STerrainSectorPackedElementInfo: %u", fp.tell());
 	fp.pad(4);
-	fp.paddingEnabled = false;
+	fp.padding = IBinaryArchive::PADDING_NONE;
 	fp.serialize(unk1);
 	fp.serialize(unk2);
-	fp.paddingEnabled = true;
+	fp.padding = IBinaryArchive::PADDING_IBINARYARCHIVE;
 }
 
 void CSector::open(IBinaryArchive & fp) {

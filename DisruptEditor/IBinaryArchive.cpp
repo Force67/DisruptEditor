@@ -19,62 +19,68 @@ IBinaryArchive::IBinaryArchive() {
 }
 
 void IBinaryArchive::serialize(bool& value) {
+	if (padding == PADDING_GEAR)
+		pad(4);
 	serializePOD(*this, value);
 	SDL_assert_release(value == 0 || value == 1);
 }
 
 void IBinaryArchive::serialize(uint8_t& value) {
+	if (padding == PADDING_GEAR)
+		pad(4);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(int8_t& value) {
+	if (padding == PADDING_GEAR)
+		pad(4);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(uint16_t& value) {
-	if(paddingEnabled)
+	if (padding == PADDING_IBINARYARCHIVE || padding == PADDING_GEAR)
 		pad(2);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(int16_t& value) {
-	if (paddingEnabled)
+	if (padding == PADDING_IBINARYARCHIVE || padding == PADDING_GEAR)
 		pad(2);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(uint32_t& value) {
-	if (paddingEnabled)
+	if (padding == PADDING_IBINARYARCHIVE || padding == PADDING_GEAR)
 		pad(4);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(int32_t& value) {
-	if (paddingEnabled)
+	if (padding == PADDING_IBINARYARCHIVE || padding == PADDING_GEAR)
 		pad(4);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(uint64_t& value) {
-	if (paddingEnabled)
+	if (padding == PADDING_IBINARYARCHIVE || padding == PADDING_GEAR)
 		pad(8);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(int64_t& value) {
-	if (paddingEnabled)
+	if (padding == PADDING_IBINARYARCHIVE || padding == PADDING_GEAR)
 		pad(8);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(float& value) {
-	if (paddingEnabled)
+	if (padding == PADDING_IBINARYARCHIVE || padding == PADDING_GEAR)
 		pad(4);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(double& value) {
-	if (paddingEnabled)
+	if (padding == PADDING_IBINARYARCHIVE || padding == PADDING_GEAR)
 		pad(8);
 	serializePOD(*this, value);
 }

@@ -194,6 +194,9 @@
     <ClCompile Include="embedFile.cpp">
       <Filter>Source Files\File Formats</Filter>
     </ClCompile>
+    <ClCompile Include="CDobbsID.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -403,6 +406,9 @@
     </ClInclude>
     <ClInclude Include="xbgMipFile.h">
       <Filter>Source Files\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="CDobbsID.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

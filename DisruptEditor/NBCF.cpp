@@ -384,7 +384,7 @@ void readFCB(IBinaryArchive & fp, Node &root) {
 	SDL_assert_release(fp.isReading());
 
 	bool orig_bigEndian = fp.bigEndian;
-	bool orig_paddingEnabled = fp.paddingEnabled;
+	IBinaryArchive::PaddingType orig_padding = fp.padding;
 
 	root = Node();
 
@@ -415,7 +415,7 @@ void readFCB(IBinaryArchive & fp, Node &root) {
 		SDL_Log("Warning: Extra data at the end of fcb");
 
 	fp.bigEndian = orig_bigEndian;
-	fp.paddingEnabled = orig_paddingEnabled;
+	fp.padding = orig_padding;
 }
 
 void writeFCBB(SDL_RWops *fp, Node &node) {

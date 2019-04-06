@@ -40,9 +40,14 @@ public:
 	template<typename T>
 	void serializeNdVector(Vector<T>& vec, uint32_t typeId, uint32_t& unk);
 
+	template<typename T>
+	void serialize(T &value);
+
 	SDL_RWops* fp;
 	bool bigEndian = false;
-	bool paddingEnabled = true;
+	enum PaddingType { PADDING_NONE, PADDING_IBINARYARCHIVE, PADDING_GEAR
+	};
+	PaddingType padding = PADDING_IBINARYARCHIVE;
 };
 
 
@@ -119,4 +124,9 @@ inline void IBinaryArchive::serializeNdVector(Vector<T>& vec, uint32_t typeId, u
 	else {
 		//TODO
 	}
+}
+
+template<typename T>
+inline void IBinaryArchive::serialize(T & value) {
+	value.read(*this);
 }

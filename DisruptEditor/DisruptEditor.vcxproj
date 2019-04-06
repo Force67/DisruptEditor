@@ -175,6 +175,7 @@
   <ItemGroup>
     <ClCompile Include="bundleFile.cpp" />
     <ClCompile Include="CBATCHWindow.cpp" />
+    <ClCompile Include="CDobbsID.cpp" />
     <ClCompile Include="CPathID.cpp" />
     <ClCompile Include="CStringID.cpp" />
     <ClCompile Include="DARE.cpp" />
@@ -234,6 +235,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bundleFile.h" />
+    <ClInclude Include="CDobbsID.h" />
     <ClInclude Include="CPathID.h" />
     <ClInclude Include="CStringID.h" />
     <ClInclude Include="DARE.h" />
