@@ -175,6 +175,9 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	} else if (typeName == "MultiLayerResourceDescriptor") {
 		multiLayerResourceDescriptor = std::make_shared<MultiLayerResourceDescriptor>();
 		multiLayerResourceDescriptor->read(fp);
+	} else if (typeName == "SequenceResourceDescriptor") {
+		sequenceResourceDescriptor = std::make_shared<SequenceResourceDescriptor>();
+		sequenceResourceDescriptor->read(fp);
 	}
 	else {
 		SDL_assert_release(false);
@@ -353,8 +356,16 @@ void SND_tdstToolSourceFormat::read(IBinaryArchive & fp) {
 	fp.serialize(isMTTInterlaced);
 	fp.serialize(bStream);
 
-	//dataRef Path
-	fp.serialize(dataRef);
+	if (bStream) {
+		fp.serialize(bZeroLatency);
+		fp.serialize(ZLMemPartInBytes);
+		fp.serialize(ulOffsetData);
+		fp.serialize(dataId);
+		fp.serialize(streamRef);
+		fp.serialize(uSndDataZeroLatencyMemPart);
+	} else {
+		fp.serialize(dataRef);
+	}
 }
 
 void SND_tdstToolSourceFormat::registerMembers(MemberStructure & ms) {
@@ -372,7 +383,6 @@ void tdstWaveMarkerList::read(IBinaryArchive & fp) {
 	SDL_assert_release(stringPoolSize == 0);//TODO
 
 	fp.serializeNdVectorExternal(m_waveMarkers);
-	SDL_assert_release(m_waveMarkers.size() == 0);//TODO
 }
 
 void tdstWaveMarkerList::registerMembers(MemberStructure & ms) {
@@ -381,16 +391,18 @@ void tdstWaveMarkerList::registerMembers(MemberStructure & ms) {
 }
 
 void DynamicIndexedPropertyContainer::read(IBinaryArchive & fp) {
-	int32_t size = 0;
 	fp.serialize(size);
-	SDL_assert_release(size == 0);//TODO
+	SDL_assert_release(size == 0);
 
 	fp.serialize(isBlob);
 	if (isBlob) {
 		uint32_t unk1;
 		fp.serialize(unk1);
 	} else {
-		SDL_assert_release(false);//TODO
+		//Dare::DynamicIndexedPropertyContainer::NormalSerialize((SndGear::Serializer &, long))
+		if (size > 0) {
+			fp.serialize(rawSize);
+		}
 	}
 }
 
@@ -399,6 +411,7 @@ void DynamicIndexedPropertyContainer::registerMembers(MemberStructure & ms) {
 }
 
 void tdstWaveMarkerElement::read(IBinaryArchive & fp) {
+	fp.serialize(fTimePos);
 }
 
 void tdstWaveMarkerElement::registerMembers(MemberStructure & ms) {
@@ -643,4 +656,14 @@ void tdstCoordinate::read(IBinaryArchive & fp) {
 	fp.serialize(yFloat);
 	fp.serialize(curvType);
 	fp.serialize(curveFactor);
+}
+
+void SequenceResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(bLoop);
+	fp.serialize(ulStartLoop);
+	fp.serialize(ulEndLoop);
+	fp.serialize(ulNbLoops);
+	fp.serialize(fLength);
+	fp.serialize(fPosMainReLoop);
+	fp.serializeNdVectorExternal(sequences);
 }

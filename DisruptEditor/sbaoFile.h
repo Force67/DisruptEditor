@@ -31,6 +31,16 @@ struct SND_tdstToolSourceFormat {
 	uint32_t ulNbSamples;
 	uint32_t isMTTInterlaced;
 	bool bStream;
+
+	//bStream Info
+	bool bZeroLatency;
+	uint32_t ZLMemPartInBytes;
+	uint32_t ulOffsetData;
+	uint32_t dataId;
+	CObjectReference<SndData> streamRef;
+	CObjectReference<SndData> uSndDataZeroLatencyMemPart;
+
+	//!bStream Info
 	CObjectReference<SndData> dataRef;
 
 	void read(IBinaryArchive &fp);
@@ -38,6 +48,8 @@ struct SND_tdstToolSourceFormat {
 };
 
 struct tdstWaveMarkerElement {
+	float fTimePos;
+
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
 };
@@ -51,7 +63,11 @@ struct tdstWaveMarkerList {
 };
 
 struct DynamicIndexedPropertyContainer {
-	int32_t isBlob;
+	int32_t size;
+	bool isBlob;
+
+	//Normal Seralize
+	uint32_t rawSize;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
@@ -151,6 +167,18 @@ struct MultiLayerResourceDescriptor {
 	void registerMembers(MemberStructure &ms);
 };
 
+struct SequenceResourceDescriptor {
+	bool bLoop;
+	uint32_t ulStartLoop;
+	uint32_t ulEndLoop;
+	uint32_t ulNbLoops;
+	float fLength;
+	float fPosMainReLoop;
+	Vector< CObjectReference<ResourceDescriptor> > sequences;
+
+	void read(IBinaryArchive &fp);
+};
+
 struct EmitterSpec {
 	void registerMembers(MemberStructure &ms);
 };
@@ -165,6 +193,7 @@ struct BaseResourceDescriptor {
 	std::shared_ptr<RandomResourceDescriptor> randomResourceDescriptor;
 	std::shared_ptr<SilenceResourceDescriptor> silenceResourceDescriptor;
 	std::shared_ptr<MultiLayerResourceDescriptor> multiLayerResourceDescriptor;
+	std::shared_ptr<SequenceResourceDescriptor> sequenceResourceDescriptor;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
