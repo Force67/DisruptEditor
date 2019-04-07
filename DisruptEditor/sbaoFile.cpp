@@ -178,6 +178,9 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	} else if (typeName == "SequenceResourceDescriptor") {
 		sequenceResourceDescriptor = std::make_shared<SequenceResourceDescriptor>();
 		sequenceResourceDescriptor->read(fp);
+	} else if (typeName == "MultiTrackResourceDescriptor") {
+		multiTrackResourceDescriptor = std::make_shared<MultiTrackResourceDescriptor>();
+		multiTrackResourceDescriptor->read(fp);
 	}
 	else {
 		SDL_assert_release(false);
@@ -218,6 +221,8 @@ void LimiterInfoDescriptor::registerMembers(MemberStructure & ms) {
 }
 
 std::vector<short> SampleResourceDescriptor::decode() {
+	SDL_assert_release(!stToolSourceFormat.bStream);//TODO
+
 	std::vector<short> decoded;
 	switch (CompressionFormat) {
 	case 1: {//PCM
@@ -666,4 +671,41 @@ void SequenceResourceDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(fLength);
 	fp.serialize(fPosMainReLoop);
 	fp.serializeNdVectorExternal(sequences);
+}
+
+void MultiTrackResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(bLoop);
+	fp.serialize(bIsNotifying);
+	fp.serialize(ulNbTrack);
+	fp.serialize(ulResNotificationUserData);
+	fp.serialize(multiTrackChannelId);
+	fp.serialize(stToolSourceFormat);
+	fp.serialize(stWaveMarkerList);
+	fp.serialize(autoDuckingSetPresetEventId);
+	fp.serialize(busId);
+	fp.serializeNdVectorExternal(m_tracks);
+	fp.serialize(m_tracksRawData);
+	fp.serialize(platformSpecificProperties);
+	fp.serialize(currentResourceID);
+	StreamValidationPoint(fp);
+}
+
+void tdstMultiTrackElement::read(IBinaryArchive & fp) {
+	fp.serialize(ulFreq);
+	fp.serialize(ulNbChannels);
+	fp.serialize(CompressionFormat);
+	fp.serialize(trackVolume);
+	fp.serialize(ulNbSamples);
+	fp.serialize(ulNbBytes);
+	fp.serialize(ulBitRate);
+	fp.serialize(platformSpecificProperties);
+}
+
+void DataBlock::read(IBinaryArchive & fp) {
+	fp.serialize(m_size);
+	fp.serialize(m_allocInfos);
+	fp.serialize(m_allocatorType);
+	fp.serialize(m_memoryType);
+
+	SDL_assert_release(m_size == 0);//TODO
 }

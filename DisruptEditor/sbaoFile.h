@@ -25,6 +25,30 @@ struct CObjectReference {
 	}
 };
 
+struct RTPC {
+	uint32_t rtpcID;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
+struct RTPCVolume {
+	RTPC m_rtpc;
+	float m_volume_dB;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
+struct ResourceVolume {
+	RTPCVolume vol;
+	float delta_dB;
+	uint32_t randomProbDist;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
 struct SND_tdstToolSourceFormat {
 	int32_t lTransferRate;
 	uint32_t ulNbBytes;
@@ -179,6 +203,46 @@ struct SequenceResourceDescriptor {
 	void read(IBinaryArchive &fp);
 };
 
+struct tdstMultiTrackElement {
+	uint32_t ulFreq;
+	uint32_t ulNbChannels;
+	uint32_t CompressionFormat;
+	ResourceVolume trackVolume;
+	uint32_t ulNbSamples;
+	uint32_t ulNbBytes;
+	uint32_t ulBitRate;
+	DynamicIndexedPropertyContainer platformSpecificProperties;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct DataBlock {
+	uint32_t m_size;
+	uint32_t m_allocInfos;
+	uint32_t m_allocatorType;
+	uint32_t m_memoryType;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct MultiTrackResourceDescriptor {
+	bool bLoop;
+	bool bIsNotifying;
+	uint32_t ulNbTrack;
+	uint32_t ulResNotificationUserData;
+	uint32_t multiTrackChannelId;
+	SND_tdstToolSourceFormat stToolSourceFormat;
+	tdstWaveMarkerList stWaveMarkerList;
+	uint32_t autoDuckingSetPresetEventId;
+	uint32_t busId;
+	Vector<tdstMultiTrackElement> m_tracks;
+	DataBlock m_tracksRawData;
+	DynamicIndexedPropertyContainer platformSpecificProperties;
+	uint32_t currentResourceID;
+
+	void read(IBinaryArchive &fp);
+};
+
 struct EmitterSpec {
 	void registerMembers(MemberStructure &ms);
 };
@@ -194,30 +258,7 @@ struct BaseResourceDescriptor {
 	std::shared_ptr<SilenceResourceDescriptor> silenceResourceDescriptor;
 	std::shared_ptr<MultiLayerResourceDescriptor> multiLayerResourceDescriptor;
 	std::shared_ptr<SequenceResourceDescriptor> sequenceResourceDescriptor;
-
-	void read(IBinaryArchive &fp);
-	void registerMembers(MemberStructure &ms);
-};
-
-struct RTPC {
-	uint32_t rtpcID;
-
-	void read(IBinaryArchive &fp);
-	void registerMembers(MemberStructure &ms);
-};
-
-struct RTPCVolume {
-	RTPC m_rtpc;
-	float m_volume_dB;
-
-	void read(IBinaryArchive &fp);
-	void registerMembers(MemberStructure &ms);
-};
-
-struct ResourceVolume {
-	RTPCVolume vol;
-	float delta_dB;
-	uint32_t randomProbDist;
+	std::shared_ptr<MultiTrackResourceDescriptor> multiTrackResourceDescriptor;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
