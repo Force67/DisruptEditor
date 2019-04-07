@@ -120,6 +120,38 @@ struct RandomResourceDescriptor {
 	void registerMembers(MemberStructure &ms);
 };
 
+struct SilenceResourceDescriptor {
+	float fLength;
+	uint32_t busId;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
+struct tdstEffectGraph {
+
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
+struct tdstMultiLayerElement {
+	//CObjectReference<ResourceDescriptor> uRes;
+	uint32_t activationFlagId;
+	int32_t invFlag;
+	Vector<tdstEffectGraph> m_effectGraphs;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
+struct MultiLayerResourceDescriptor {
+	Vector<tdstMultiLayerElement> m_layers;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
 struct EmitterSpec {
 	void registerMembers(MemberStructure &ms);
 };
@@ -132,6 +164,8 @@ struct BaseResourceDescriptor {
 
 	std::shared_ptr<SampleResourceDescriptor> sampleResourceDescriptor;
 	std::shared_ptr<RandomResourceDescriptor> randomResourceDescriptor;
+	std::shared_ptr<SilenceResourceDescriptor> silenceResourceDescriptor;
+	std::shared_ptr<MultiLayerResourceDescriptor> multiLayerResourceDescriptor;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
@@ -224,6 +258,91 @@ struct PlayEventDescriptor {
 	void registerMembers(MemberStructure &ms);
 };
 
+struct MultiEventDescriptor {
+	EventDescriptor pBase;
+	Vector< CObjectReference<EventDescriptor> > m_events;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
+struct MicSpecDescriptor {
+	uint32_t micAtomicId;
+	float volumeInDecibels;
+	float fadeDuration;
+	int32_t fadeType;
+	uint32_t rolloffId;
+	int32_t useCone;
+	float cone_m_InnerAngle;
+	float cone_m_OuterAngle;
+	float cone_m_InnerVolumeDB;
+	float cone_m_OuterVolumeDB;
+	float cone_m_InnerLPF;
+	float cone_m_OuterLPF;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct MicPresetDescriptor {
+	uint32_t mask;
+	MicSpecDescriptor spec;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct EffectPresetInfo {
+	void read(IBinaryArchive &fp);
+};
+
+struct ParameterValue {
+	//0 -None? Calls Seralizer::End()
+	//1 -S32
+	//2 -Float
+	//3 - List of S32
+	//4 - List of Float
+	int32_t parameterType;
+	uint32_t parameterIndex;
+	uint32_t rtpcId;
+
+	int32_t valueSndS32;
+	float valueSndFloat;
+	Vector<int32_t> valueListSndS32;
+	Vector<float> valueListSndFloat;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct ParamInfo {
+	int32_t fadeInType;
+	float fadeInDuration;
+	float duration;
+	int32_t fadeOutType;
+	float fadeOutDuration;
+	int32_t absoluteChange;
+	ParameterValue paramValue;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct BusPresetInfo {
+	uint32_t busId;
+	Vector<ParamInfo> paramsToChange;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct PresetDescriptor {
+	uint32_t id;
+	int32_t type;
+	Vector<MicPresetDescriptor> micPresetList;
+	Vector<EffectPresetInfo> effectPresetInfos;
+	Vector<BusPresetInfo> busPresetInfos;
+	int32_t priority;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
 class sbaoFile {
 public:
 	sbaoFile();
@@ -241,6 +360,8 @@ public:
 
 	std::shared_ptr<ResourceDescriptor> resourceDescriptor;
 	std::shared_ptr<PlayEventDescriptor> playEventDescriptor;
+	std::shared_ptr<MultiEventDescriptor> multiEventDescriptor;
+	std::shared_ptr<PresetDescriptor> presetDescriptor;
 	std::shared_ptr<SndData> sndData;
 };
 

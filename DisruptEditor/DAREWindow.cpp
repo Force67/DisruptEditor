@@ -35,7 +35,7 @@ void UI::displayDARE() {
 					SampleResourceDescriptor &srd = *sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor;
 
 					uint32_t spkID = it.second.spkFile;
-					uint32_t sbaoID = it.first;
+					uint32_t sbaoID = srd.stToolSourceFormat.dataRef.refAtomicId;
 
 					char buffer[80];
 					snprintf(buffer, sizeof(buffer), "%08x_%08x.wav", spkID, sbaoID);

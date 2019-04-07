@@ -64,6 +64,12 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	} else if (typeName == "PlayEventDescriptor") {
 		playEventDescriptor = std::make_shared<PlayEventDescriptor>();
 		playEventDescriptor->read(fp);
+	} else if (typeName == "MultiEventDescriptor") {
+		multiEventDescriptor = std::make_shared<MultiEventDescriptor>();
+		multiEventDescriptor->read(fp);
+	} else if (typeName == "PresetDescriptor") {
+		presetDescriptor = std::make_shared<PresetDescriptor>();
+		presetDescriptor->read(fp);
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
@@ -93,6 +99,8 @@ void sbaoFile::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*resourceDescriptor);
 	else if (typeName == "PlayEventDescriptor")
 		REGISTER_MEMBER(*playEventDescriptor);
+	else if (typeName == "MultiEventDescriptor")
+		REGISTER_MEMBER(*multiEventDescriptor);
 }
 
 void sbaoLayer::fillCache() {
@@ -202,7 +210,13 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	} else if (typeName == "RandomResourceDescriptor") {
 		randomResourceDescriptor = std::make_shared<RandomResourceDescriptor>();
 		randomResourceDescriptor->read(fp);
-	}
+	} else if (typeName == "SilenceResourceDescriptor") {
+		silenceResourceDescriptor = std::make_shared<SilenceResourceDescriptor>();
+		silenceResourceDescriptor->read(fp);
+	} /*else if (typeName == "MultiLayerResourceDescriptor") {
+		multiLayerResourceDescriptor = std::make_shared<MultiLayerResourceDescriptor>();
+		multiLayerResourceDescriptor->read(fp);
+	}*/
 	else {
 		SDL_assert_release(false);
 	}
@@ -217,6 +231,10 @@ void BaseResourceDescriptor::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*sampleResourceDescriptor);
 	if (typeName == "RandomResourceDescriptor")
 		REGISTER_MEMBER(*randomResourceDescriptor);
+	if (typeName == "SilenceResourceDescriptor")
+		REGISTER_MEMBER(*silenceResourceDescriptor);
+	if (typeName == "MultiLayerResourceDescriptor")
+		REGISTER_MEMBER(*multiLayerResourceDescriptor);
 }
 
 void RTPC::read(IBinaryArchive & fp) {
@@ -471,7 +489,7 @@ void PlayEventDescriptor::read(IBinaryArchive & fp) {
 }
 
 void PlayEventDescriptor::registerMembers(MemberStructure & ms) {
-	REGISTER_MEMBER(pBase);
+	ms.registerMember(NULL, pBase);
 	REGISTER_MEMBER(resourceRef);
 	REGISTER_MEMBER(fDeTuneDelta);
 	REGISTER_MEMBER(fValPitchStat);
@@ -528,4 +546,114 @@ void Delay::registerMembers(MemberStructure & ms) {
 }
 
 void EmitterSpec::registerMembers(MemberStructure & ms) {
+}
+
+void SilenceResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(fLength);
+	fp.serialize(busId);
+}
+
+void SilenceResourceDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(fLength);
+	REGISTER_MEMBER(busId);
+}
+
+void MultiLayerResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(m_layers);
+}
+
+void MultiLayerResourceDescriptor::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(m_layers);
+}
+
+void tdstMultiLayerElement::read(IBinaryArchive & fp) {
+}
+
+void tdstMultiLayerElement::registerMembers(MemberStructure & ms) {
+}
+
+void tdstEffectGraph::read(IBinaryArchive & fp) {
+}
+
+void tdstEffectGraph::registerMembers(MemberStructure & ms) {
+}
+
+void MultiEventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(pBase);
+	fp.serializeNdVectorExternal(m_events);
+}
+
+void MultiEventDescriptor::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, pBase);
+	REGISTER_MEMBER(m_events);
+}
+
+void PresetDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(id);
+	fp.serialize(type);
+	fp.serializeNdVectorExternal(micPresetList);
+	fp.serializeNdVectorExternal(effectPresetInfos);
+	fp.serializeNdVectorExternal(busPresetInfos);
+	//SndGear::Serializer &DareSerializeMemberFilter<T1>(SndGear::Serializer &, const char *, T1 &) [with T1=long]
+	fp.serialize(priority);
+}
+
+void MicPresetDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(mask);
+	fp.serialize(spec);
+}
+
+void MicSpecDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(micAtomicId);
+	fp.serialize(volumeInDecibels);
+	fp.serialize(fadeDuration);
+	fp.serialize(fadeType);
+	fp.serialize(rolloffId);
+	fp.serialize(useCone);
+	fp.serialize(cone_m_InnerAngle);
+	fp.serialize(cone_m_OuterAngle);
+	fp.serialize(cone_m_InnerVolumeDB);
+	fp.serialize(cone_m_OuterVolumeDB);
+	fp.serialize(cone_m_InnerLPF);
+	fp.serialize(cone_m_OuterLPF);
+}
+
+void EffectPresetInfo::read(IBinaryArchive & fp) {
+}
+
+void BusPresetInfo::read(IBinaryArchive & fp) {
+	fp.serialize(busId);
+	fp.serializeNdVectorExternal(paramsToChange);
+}
+
+void ParamInfo::read(IBinaryArchive & fp) {
+	fp.serialize(fadeInType);
+	fp.serialize(fadeInDuration);
+	fp.serialize(duration);
+	fp.serialize(fadeOutType);
+	fp.serialize(fadeOutDuration);
+	fp.serialize(absoluteChange);
+	fp.serialize(paramValue);
+}
+
+void ParameterValue::read(IBinaryArchive & fp) {
+	fp.serialize(parameterType);
+	fp.serialize(parameterIndex);
+	fp.serialize(rtpcId);
+	switch (parameterType) {
+	case 1:
+		fp.serialize(valueSndS32);
+		break;
+	case 2:
+		fp.serialize(valueSndFloat);
+		break;
+	case 3:
+		fp.serializeNdVectorExternal_pod(valueListSndS32);
+		break;
+	case 4:
+		fp.serializeNdVectorExternal_pod(valueListSndFloat);
+		break;
+	default:
+		SDL_assert_release(false);
+	}
 }

@@ -26,7 +26,7 @@ void spkFile::open(IBinaryArchive &fp) {
 			fp.serialize(size);
 			uint32_t nextOffset = fp.tell() + size;
 			objs[i].open(fp, size);
-			//SDL_assert_release(fp.tell() == nextOffset);
+			SDL_assert_release(fp.tell() == nextOffset);
 			SDL_RWseek(fp.fp, nextOffset, RW_SEEK_SET);
 		} else {
 			/*Vector<uint8_t> data = objs[i].save();
