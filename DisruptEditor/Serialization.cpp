@@ -3,45 +3,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 
-template <typename T>
-void displayImGui(const char* name, T &value) {
-	ImGui::PushID(&value);
-	ImGui::AlignTextToFramePadding();
-	ImGui::TreeNodeEx(name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet, "%s", name);
-	ImGui::NextColumn();
-	ImGui::PushItemWidth(-1);
-	char buffer[60];
-	/*std::to_string(buffer, sizeof(buffer), value);
-	if (ImGui::InputText(name, buffer, sizeof(buffer)))
-		value = std::string<T>(buffer);*/
-	ImGui::NextColumn();
-	ImGui::PopID();
-}
-
-void displayImGui(const char* name, bool &value) {
-	ImGui::PushID(&value);
-	ImGui::Checkbox(name, &value);
-	ImGui::PopID();
-}
-
-void displayImGui(const char* name, int &value) {
-	ImGui::PushID(&value);
-	ImGui::InputInt(name, &value, 1);
-	ImGui::PopID();
-}
-
-void displayImGui(const char* name, float &value) {
-	ImGui::PushID(&value);
-	ImGui::InputFloat(name, &value, 1.f);
-	ImGui::PopID();
-}
-
-void displayImGui(const char* name, double &value) {
-	ImGui::PushID(&value);
-	ImGui::InputDouble(name, &value, 1.f);
-	ImGui::PopID();
-}
-
 //////////////String Serialization
 
 template <>
@@ -236,7 +197,39 @@ void fromString<std::string>(const char *buf, std::string &value) {
 		value = buf;
 }
 
+template <typename T>
+void displayImGui(const char* name, T &value) {
+	ImGui::PushID(&value);
+	char buffer[60];
+	toString(buffer, sizeof(buffer), value);
+	if (ImGui::InputText(name ? name : "", buffer, sizeof(buffer)))
+		fromString(buffer, value);
+	ImGui::PopID();
+}
 
+void displayImGui(const char* name, bool &value) {
+	ImGui::PushID(&value);
+	ImGui::Checkbox(name, &value);
+	ImGui::PopID();
+}
+
+void displayImGui(const char* name, int &value) {
+	ImGui::PushID(&value);
+	ImGui::InputInt(name, &value, 1);
+	ImGui::PopID();
+}
+
+void displayImGui(const char* name, float &value) {
+	ImGui::PushID(&value);
+	ImGui::InputFloat(name, &value, 1.f);
+	ImGui::PopID();
+}
+
+void displayImGui(const char* name, double &value) {
+	ImGui::PushID(&value);
+	ImGui::InputDouble(name, &value, 1.f);
+	ImGui::PopID();
+}
 
 #undef REG_MEMBER
 #define REG_MEMBER(x) \

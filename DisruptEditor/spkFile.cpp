@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <SDL_assert.h>
 #include "IBinaryArchive.h"
 
 const uint32_t spkMagic = 1397771010;
@@ -23,8 +24,9 @@ void spkFile::open(IBinaryArchive &fp) {
 		uint32_t size;
 		if (fp.isReading()) {
 			fp.serialize(size);
-			uint32_t nextOffset = SDL_RWtell(fp.fp) + size;
-			objs[i].open(fp);
+			uint32_t nextOffset = fp.tell() + size;
+			objs[i].open(fp, size);
+			//SDL_assert_release(fp.tell() == nextOffset);
 			SDL_RWseek(fp.fp, nextOffset, RW_SEEK_SET);
 		} else {
 			/*Vector<uint8_t> data = objs[i].save();

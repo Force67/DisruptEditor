@@ -7,7 +7,9 @@
 #include <SDL.h>
 #include "Vector.h"
 #include "IBinaryArchive.h"
-
+#include "Adpcm.h"
+#include "dr_wav.h"
+#include "DARE.h"
 #include "Hash.h"
 #include "Audio.h"
 #define STB_VORBIS_HEADER_ONLY
@@ -30,7 +32,7 @@ sbaoFile::sbaoFile() {
 sbaoFile::~sbaoFile() {
 }
 
-void sbaoFile::open(IBinaryArchive & fp) {
+void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	fp.padding = IBinaryArchive::PADDING_GEAR;
 
 	//Header Size: 0x1C
@@ -65,6 +67,14 @@ void sbaoFile::open(IBinaryArchive & fp) {
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
+	}
+	else {
+		//Assume this is sound data
+		SDL_RWseek(fp.fp, -4, RW_SEEK_CUR);
+		size_t rawDataSize = size - (7 * 4);
+		sndData = std::make_shared<SndData>();
+		sndData->rawData.resize(rawDataSize);
+		fp.memBlock(sndData->rawData.data(), 1, rawDataSize);
 	}
 
 	fp.padding = IBinaryArchive::PADDING_IBINARYARCHIVE;
@@ -225,6 +235,94 @@ void LimiterInfoDescriptor::read(IBinaryArchive & fp) {
 void LimiterInfoDescriptor::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(m_maxCount);
 	REGISTER_MEMBER(m_limitationRule);
+}
+
+std::vector<short> SampleResourceDescriptor::decode() {
+	std::vector<short> decoded;
+	switch (CompressionFormat) {
+	case 1: {//PCM
+		//Find the SourceObject
+		sbaoFile source = DARE::instance().loadAtomicObject(stToolSourceFormat.dataRef.refAtomicId);
+		SDL_assert_release(source.sndData);
+
+		decoded.resize(source.sndData->rawData.size() / sizeof(short));
+		memcpy(decoded.data(), source.sndData->rawData.data(), source.sndData->rawData.size());
+		break;
+	}
+	case 2: {//ADPCM
+		//Find the SourceObject
+		sbaoFile source = DARE::instance().loadAtomicObject(stToolSourceFormat.dataRef.refAtomicId);
+		SDL_assert_release(source.sndData);
+		decoded.resize(source.sndData->rawData.size() * 16);//This should be a good enough buffer for decoding
+
+		if (ulNbChannels == 2) {
+			SAdpcmStereoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = source.sndData->rawData.data() + (44 + 20 + 4);//44 + 20 is what i found made the ADPCM play with no glitches
+			param.InputLength = source.sndData->rawData.size() - (44 + 20 + 4);
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressStereoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		}
+		else if (ulNbChannels == 1) {
+			SAdpcmMonoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = source.sndData->rawData.data() + (44 + 20 + 4);//44 + 20 is what i found made the ADPCM play with no glitches
+			param.InputLength = source.sndData->rawData.size() - (44 + 20 + 4);
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressMonoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		} 
+		else {
+			SDL_assert_release(false);
+		}
+
+		break;
+	}
+	case 4: {//OGG
+		//Find the SourceObject
+		sbaoFile source = DARE::instance().loadAtomicObject(stToolSourceFormat.dataRef.refAtomicId);
+		SDL_assert_release(source.sndData);
+
+		int channels, sampleRate;
+		short *output;
+		int ret = stb_vorbis_decode_memory(source.sndData->rawData.data(), source.sndData->rawData.size(), &channels, &sampleRate, &output);
+		SDL_assert_release(channels == ulNbChannels);
+		SDL_assert_release(sampleRate == ulFreq);
+
+		decoded.resize(ret * channels);
+		memcpy(decoded.data(), output, ret * channels * sizeof(short));
+		free(output);
+
+		break;
+	}
+	default:
+		SDL_assert_release(false);
+	}
+	return decoded;
+}
+
+void SampleResourceDescriptor::play() {
+	std::vector<short> decoded = decode();
+
+}
+
+void SampleResourceDescriptor::saveDecoded(const char * file) {
+	std::vector<short> decoded = decode();
+
+	drwav_data_format format;
+	format.container = drwav_container_riff;
+	format.format = DR_WAVE_FORMAT_PCM;
+	format.channels = ulNbChannels;
+	format.sampleRate = ulFreq;
+	format.bitsPerSample = 16;
+	drwav* pWav = drwav_open_file_write(file, &format);
+	drwav_uint64 samplesWritten = drwav_write(pWav, decoded.size(), decoded.data());
+	drwav_close(pWav);
 }
 
 void SampleResourceDescriptor::read(IBinaryArchive & fp) {

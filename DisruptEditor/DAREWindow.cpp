@@ -6,6 +6,7 @@
 #include "spkFile.h"
 #include "Audio.h"
 #include "noc_file_dialog.h"
+#include "DARE.h"
 
 void UI::displayDARE() {
 	if (!settings.openWindows["DARE"])
@@ -15,64 +16,67 @@ void UI::displayDARE() {
 		return;
 	}
 
-	static int currentSound = 0;
-	/*if (ImGui::Button("Open")) {
-		//spkFile.open(noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "spk\0*.spk\0sbao\0*.sbao\0", NULL, NULL));
-		//file = spkFile.sbao;
-		file.open(noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "sbao\0*.sbao\0", NULL, NULL));
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Save")) {
-		file.save(noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "sbao\0*.sbao\0", NULL, NULL));
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Add Layer")) {
-		sbaoLayer &layer = file.layers.emplace_back();
-		layer.replace(noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "ogg\0*.ogg\0", NULL, NULL));
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Clear Layers")) {
-		file.layers.clear();
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Stop All")) {
-		Audio::instance().stopAll();
+	static uint64_t inputSpk;
+	ImGui::InputUInt64("Input", &inputSpk);
+	if (ImGui::Button("Add"))
+		DARE::instance().addSoundResource(inputSpk);
+	if (ImGui::Button("Clear")) {
+		DARE::instance().atomicObjects.clear();
 	}
 
-	int layerNum = 1;
-	for (auto it = file.layers.begin(); it != file.layers.end(); ++it) {
-		ImGui::PushID(it._Ptr);
-		ImGui::Text("%u", layerNum);
-		ImGui::SameLine();
-		if (ImGui::Button("Play")) {
-			Audio::instance().stopSound(currentSound);
-			currentSound = it->play(false);
+	if (ImGui::Button("Save All")) {
+		for (auto it : DARE::instance().atomicObjects) {
+			sbaoFile &sbao = it.second.ao;
+
+			//displayImGui(sbao);
+
+			if (sbao.resourceDescriptor) {
+				if (sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor) {
+					SampleResourceDescriptor &srd = *sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor;
+
+					uint32_t spkID = it.second.spkFile;
+					uint32_t sbaoID = it.first;
+
+					char buffer[80];
+					snprintf(buffer, sizeof(buffer), "%08x_%08x.wav", spkID, sbaoID);
+					srd.saveDecoded(buffer);
+				}
+			}
+
 		}
-		ImGui::SameLine();
-		if (ImGui::Button("Loop")) {
-			Audio::instance().stopSound(currentSound);
-			currentSound = it->play(true);
-		}
-		ImGui::SameLine();
-		ImGui::Text("Raw Size: %u, Samples: %i, Channels: %i, Sample Rate: %i", it->data.size(), it->samples, it->channels, it->sampleRate);
-		ImGui::SameLine();
-		if (ImGui::Button("Replace")) {
-			it->replace(noc_file_dialog_open(NOC_FILE_DIALOG_OPEN, "ogg\0*.ogg\0", NULL, NULL));
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Save")) {
-			it->save(noc_file_dialog_open(NOC_FILE_DIALOG_SAVE, "ogg\0*.ogg\0", NULL, NULL));
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Delete")) {
-			file.layers.erase(it);
-			ImGui::PopID();
-			break;
+	}
+
+	for (auto it : DARE::instance().atomicObjects) {
+		ImGui::Text("Atomic Object: %08x", it.first);
+		sbaoFile &sbao = it.second.ao;
+		ImGui::Text("Type: %s", sbao.type.getReverseName().c_str());
+
+		//displayImGui(sbao);
+		
+		if (sbao.resourceDescriptor) {
+			if (sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor) {
+				SampleResourceDescriptor &srd = *sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor;
+				
+				switch (srd.CompressionFormat) {
+				case 2:
+					ImGui::Text("ADPCM");
+					break;
+				case 4:
+					ImGui::Text("OGG");
+					break;
+				default:
+					ImGui::Text("Unknown audio format");
+				}
+
+				ImGui::PushID(&srd);
+				if (ImGui::Button("Save recording.wav"))
+					srd.saveDecoded("recording.wav");
+				ImGui::PopID();
+			}
 		}
 
-		ImGui::PopID();
-		layerNum++;
-	}*/
+		ImGui::Separator();
+	}
 
 	ImGui::End();
 }

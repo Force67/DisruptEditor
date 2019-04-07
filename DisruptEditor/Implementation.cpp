@@ -12,3 +12,6 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 #include "stb_truetype.h"
+
+#define DR_WAV_IMPLEMENTATION
+#include "dr_wav.h"

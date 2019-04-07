@@ -23,7 +23,7 @@ struct sbaoLayer {
 };
 
 struct SndData {
-
+	Vector<uint8_t> rawData;
 };
 
 template <typename T>
@@ -77,7 +77,9 @@ struct SampleResourceDescriptor {
 	uint32_t ulLoopSample;
 	uint32_t ulBitRate;
 	uint32_t ulResNotificationUserData;
+	//1 - PCM
 	//2 - ADPCM
+	//4 - OGG
 	uint32_t CompressionFormat;
 	uint32_t ulNbChannels;
 	uint32_t ulFreq;
@@ -90,6 +92,10 @@ struct SampleResourceDescriptor {
 	uint32_t ulAttackLengthByte;
 	uint32_t ulLoopLengthSample;
 	uint32_t ulLoopLengthByte;
+
+	std::vector<short> decode();
+	void play();
+	void saveDecoded(const char* file);
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
@@ -222,7 +228,7 @@ class sbaoFile {
 public:
 	sbaoFile();
 	~sbaoFile();
-	void open(IBinaryArchive &fp);
+	void open(IBinaryArchive &fp, size_t size);
 	void registerMembers(MemberStructure &ms);
 
 	uint32_t unk1;
@@ -235,5 +241,6 @@ public:
 
 	std::shared_ptr<ResourceDescriptor> resourceDescriptor;
 	std::shared_ptr<PlayEventDescriptor> playEventDescriptor;
+	std::shared_ptr<SndData> sndData;
 };
 

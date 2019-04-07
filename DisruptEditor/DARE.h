@@ -15,6 +15,7 @@ public:
 	};
 	std::unordered_map<uint32_t, atomicObject> atomicObjects;
 	std::unordered_map<uint32_t, Vector<uint32_t> > spks;
+	sbaoFile& loadAtomicObject(uint32_t res);
 
 	static DARE& instance();
 };

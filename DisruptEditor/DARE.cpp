@@ -27,11 +27,20 @@ void DARE::addAtomicObject(uint32_t res) {
 	snprintf(buffer, sizeof(buffer), "soundbinary/%08x.sbao", res);
 
 	SDL_RWops *fp = FH::openFile(buffer);
-	sbaoFile sbao;
-	sbao.open(CBinaryArchiveReader(fp));
-	SDL_RWclose(fp);
+	if (fp) {
+		sbaoFile sbao;
+		sbao.open(CBinaryArchiveReader(fp), SDL_RWsize(fp));
+		SDL_RWclose(fp);
+		atomicObjects[res] = { 0xFFFFFFFF, sbao };
+	}
+}
 
-	atomicObjects[res] = { 0xFFFFFFFF, sbao };
+sbaoFile& DARE::loadAtomicObject(uint32_t res) {
+	if (atomicObjects.count(res) == 0)
+		addAtomicObject(res);
+
+	SDL_assert_release(atomicObjects.count(res));
+	return atomicObjects[res].ao;
 }
 
 DARE & DARE::instance() {
