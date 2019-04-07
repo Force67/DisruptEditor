@@ -8,19 +8,7 @@
 #include "IBinaryArchive.h"
 #include "Serialization.h"
 
-struct sbaoLayer {
-	Vector<uint8_t> data;
-
-	//Cached Data
-	int channels, sampleRate, samples;
-	void fillCache();
-	void replace(const char* filename);
-	void save(const char* filename);
-
-	enum Type { VORBIS, PCM, ADPCM };
-	Type type;
-	int play(bool loop);
-};
+struct ResourceDescriptor;
 
 struct SndData {
 	Vector<uint8_t> rawData;
@@ -128,15 +116,26 @@ struct SilenceResourceDescriptor {
 	void registerMembers(MemberStructure &ms);
 };
 
-struct tdstEffectGraph {
+struct tdstCoordinate {
+	float xFloat;
+	float yFloat;
+	uint32_t curvType;
+	float curveFactor;
 
+	void read(IBinaryArchive &fp);
+};
+
+struct tdstEffectGraph {
+	uint32_t eEffectID;
+	uint32_t multiLayerParameterId;
+	Vector<tdstCoordinate> m_coordinates;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
 };
 
 struct tdstMultiLayerElement {
-	//CObjectReference<ResourceDescriptor> uRes;
+	CObjectReference<ResourceDescriptor> uRes;
 	uint32_t activationFlagId;
 	int32_t invFlag;
 	Vector<tdstEffectGraph> m_effectGraphs;

@@ -109,53 +109,6 @@ void sbaoFile::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*multiEventDescriptor);
 }
 
-void sbaoLayer::fillCache() {
-	if (type != VORBIS) return;
-	int error;
-	stb_vorbis *v = stb_vorbis_open_memory(data.data(), data.size(), &error, NULL);
-	SDL_assert_release(v);
-
-	stb_vorbis_info info = stb_vorbis_get_info(v);
-	channels = info.channels;
-	sampleRate = info.sample_rate;
-	samples = stb_vorbis_stream_length_in_samples(v);
-
-	stb_vorbis_close(v);
-}
-
-void sbaoLayer::replace(const char * filename) {
-	if (!filename) return;
-
-	SDL_RWops *fp = SDL_RWFromFile(filename, "rb");
-	if (!fp) return;
-
-	data.resize(SDL_RWsize(fp));
-	SDL_RWread(fp, data.data(), 1, data.size());
-	SDL_RWclose(fp);
-
-	fillCache();
-}
-
-void sbaoLayer::save(const char * filename) {
-	if (!filename) return;
-
-	SDL_RWops *fp = SDL_RWFromFile(filename, "wb");
-	if (!fp) return;
-
-	SDL_RWwrite(fp, data.data(), 1, data.size());
-	SDL_RWclose(fp);
-}
-
-int sbaoLayer::play(bool loop) {
-	int channels, sampleRate;
-	short *output;
-	int ret = stb_vorbis_decode_memory(data.data(), data.size(), &channels, &sampleRate, &output);
-	SDL_assert_release(ret > 0);
-	int ref = Audio::instance().addSound(sampleRate, channels, output, ret * channels * sizeof(short), loop);
-	free(output);
-	return ref;
-}
-
 void ResourceDescriptor::read(IBinaryArchive & fp) {
 	SDL_Log("%u", fp.tell());
 
@@ -219,10 +172,10 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	} else if (typeName == "SilenceResourceDescriptor") {
 		silenceResourceDescriptor = std::make_shared<SilenceResourceDescriptor>();
 		silenceResourceDescriptor->read(fp);
-	} /*else if (typeName == "MultiLayerResourceDescriptor") {
+	} else if (typeName == "MultiLayerResourceDescriptor") {
 		multiLayerResourceDescriptor = std::make_shared<MultiLayerResourceDescriptor>();
 		multiLayerResourceDescriptor->read(fp);
-	}*/
+	}
 	else {
 		SDL_assert_release(false);
 	}
@@ -573,12 +526,19 @@ void MultiLayerResourceDescriptor::registerMembers(MemberStructure & ms) {
 }
 
 void tdstMultiLayerElement::read(IBinaryArchive & fp) {
+	fp.serialize(uRes);
+	fp.serialize(activationFlagId);
+	fp.serialize(invFlag);
+	fp.serializeNdVectorExternal(m_effectGraphs);
 }
 
 void tdstMultiLayerElement::registerMembers(MemberStructure & ms) {
 }
 
 void tdstEffectGraph::read(IBinaryArchive & fp) {
+	fp.serialize(eEffectID);
+	fp.serialize(multiLayerParameterId);
+	fp.serializeNdVectorExternal(m_coordinates);
 }
 
 void tdstEffectGraph::registerMembers(MemberStructure & ms) {
@@ -676,4 +636,11 @@ void StopEventDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(fFadeDuration);
 	fp.serialize(eFadeType);
 	StreamValidationPoint(fp);
+}
+
+void tdstCoordinate::read(IBinaryArchive & fp) {
+	fp.serialize(xFloat);
+	fp.serialize(yFloat);
+	fp.serialize(curvType);
+	fp.serialize(curveFactor);
 }
