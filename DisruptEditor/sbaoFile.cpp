@@ -440,15 +440,12 @@ void SND_tdstToolSourceFormat::registerMembers(MemberStructure & ms) {
 }
 
 void tdstWaveMarkerList::read(IBinaryArchive & fp) {
-	stringPoolSize = 0;
-	fp.serialize(stringPoolSize);
-	SDL_assert_release(stringPoolSize == 0);//TODO
-
+	fp.serializeNdVectorExternal_pod(stringPool);
 	fp.serializeNdVectorExternal(m_waveMarkers);
 }
 
 void tdstWaveMarkerList::registerMembers(MemberStructure & ms) {
-	REGISTER_MEMBER(stringPoolSize);
+	REGISTER_MEMBER(stringPool);
 	REGISTER_MEMBER(m_waveMarkers);
 }
 

@@ -28,14 +28,10 @@ void IBinaryArchive::serialize(bool& value) {
 }
 
 void IBinaryArchive::serialize(uint8_t& value) {
-	if (padding == PADDING_GEAR)
-		pad(4);
 	serializePOD(*this, value);
 }
 
 void IBinaryArchive::serialize(int8_t& value) {
-	if (padding == PADDING_GEAR)
-		pad(4);
 	serializePOD(*this, value);
 }
 

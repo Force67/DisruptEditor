@@ -12,8 +12,6 @@ void DARE::addSoundResource(uint32_t res) {
 	spk.open(CBinaryArchiveReader(fp));
 	SDL_RWclose(fp);
 
-	std::string a = serializeToXML(spk);
-
 	//Add the atomic objects
 	for (size_t i = 0; i < spk.ids.size(); ++i) {
 		atomicObjects[spk.ids[i]] = { res, spk.objs[i] };

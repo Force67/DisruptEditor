@@ -25,7 +25,12 @@ void spkFile::open(IBinaryArchive &fp) {
 		if (fp.isReading()) {
 			fp.serialize(size);
 			uint32_t nextOffset = fp.tell() + size;
-			objs[i].open(fp, size);
+			try {
+				objs[i].open(fp, size);
+			}
+			catch (...) {
+				int a = 0;
+			}
 			SDL_assert_release(fp.tell() == nextOffset);
 			SDL_RWseek(fp.fp, nextOffset, RW_SEEK_SET);
 		} else {

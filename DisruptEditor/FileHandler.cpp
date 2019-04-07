@@ -180,6 +180,7 @@ std::string FH::getAbsoluteFilePath(const std::string &path) {
 			return it->second;
 	}
 
+	throw 3;
 	return std::string();
 }
 
@@ -200,6 +201,7 @@ std::string FH::getAbsoluteFilePath(uint32_t path) {
 			return it->second;
 	}
 
+	throw 3;
 	return "";
 }
 

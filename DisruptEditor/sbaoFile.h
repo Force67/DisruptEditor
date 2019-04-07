@@ -141,7 +141,7 @@ struct tdstWaveMarkerElement {
 };
 
 struct tdstWaveMarkerList {
-	uint32_t stringPoolSize;
+	Vector<int8_t> stringPool;
 	Vector<tdstWaveMarkerElement> m_waveMarkers;
 
 	void read(IBinaryArchive &fp);
