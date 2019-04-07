@@ -82,6 +82,12 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	} else if (typeName == "ProjectDesc") {
 		projectDesc = std::make_shared<ProjectDesc>();
 		projectDesc->read(fp);
+	} else if (typeName == "RolloffResourceDescriptor") {
+		rolloffResourceDescriptor = std::make_shared<RolloffResourceDescriptor>();
+		rolloffResourceDescriptor->read(fp);
+	} else if (typeName == "EmitterSpec") {
+		emitterSpec = std::make_shared<EmitterSpec>();
+		emitterSpec->read(fp);
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
@@ -531,6 +537,25 @@ void Delay::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(delayTimeDelta);
 }
 
+void EmitterSpec::read(IBinaryArchive & fp) {
+	fp.serialize(m_id);
+	fp.serialize(m_volume);
+	fp.serialize(m_volumesMatrices);
+	fp.serialize(m_positioned);
+	fp.serialize(m_dopplerEffect);
+	fp.serialize(m_speakerPanning);
+	fp.serialize(m_playOnWiimote);
+	fp.serialize(m_useEmitterCone);
+	fp.serialize(m_rolloffId);
+	fp.serialize(m_pSpreadFactor);
+	fp.serialize(m_pWetVolume);
+	fp.serialize(m_pLPFCutoffFrequency);
+	fp.serialize(m_emitterAudibilityCone);
+	fp.serializeNdVectorExternal_pod(m_effectIds);
+	fp.serialize(m_activeSpeakers);
+	StreamValidationPoint(fp);
+}
+
 void EmitterSpec::registerMembers(MemberStructure & ms) {
 }
 
@@ -603,12 +628,7 @@ void MicSpecDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(fadeType);
 	fp.serialize(rolloffId);
 	fp.serialize(useCone);
-	fp.serialize(cone_m_InnerAngle);
-	fp.serialize(cone_m_OuterAngle);
-	fp.serialize(cone_m_InnerVolumeDB);
-	fp.serialize(cone_m_OuterVolumeDB);
-	fp.serialize(cone_m_InnerLPF);
-	fp.serialize(cone_m_OuterLPF);
+	fp.serialize(cone);
 }
 
 void EffectPresetInfo::read(IBinaryArchive & fp) {
@@ -804,4 +824,42 @@ void tdstMultiLayerParameter::read(IBinaryArchive & fp) {
 	fp.serialize(Id);
 	fp.serialize(fMin);
 	fp.serialize(fMax);
+}
+
+void RolloffResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(m_pointList);
+	StreamValidationPoint(fp);
+}
+
+void tdstRollOffPoint::read(IBinaryArchive & fp) {
+	fp.serialize(m_distance);
+	fp.serialize(m_decibel);
+	fp.serialize(m_interpolationCurveType);
+	fp.serialize(m_interpolationCurveFactor);
+}
+
+void RTPCVolumeMatrices::read(IBinaryArchive & fp) {
+	for (int i = 0; i < 6; ++i)
+		fp.serialize(volume[i]);
+	for (int i = 0; i < 0xC; ++i)
+		fp.serialize(volume2[i]);
+}
+
+void SND_Cone::read(IBinaryArchive & fp) {
+	fp.serialize(m_InnerAngle);
+	fp.serialize(m_OuterAngle);
+	fp.serialize(m_InnerVolumeDB);
+	fp.serialize(m_OuterVolumeDB);
+	fp.serialize(m_InnerLPF);
+	fp.serialize(m_OuterLPF);
+}
+
+void RTPCCone::read(IBinaryArchive & fp) {
+	fp.serialize(cone);
+	fp.serialize(m_innerAngleRTPC);
+	fp.serialize(m_outerAngleRTPC);
+	fp.serialize(m_innerVolumeRTPC);
+	fp.serialize(m_outerVolumeRTPC);
+	fp.serialize(m_innerLPFRTPC);
+	fp.serialize(m_outerLPFRTPC);
 }

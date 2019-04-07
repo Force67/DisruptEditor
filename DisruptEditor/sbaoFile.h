@@ -40,6 +40,37 @@ struct RTPCVolume {
 	void registerMembers(MemberStructure &ms);
 };
 
+struct RTPCVolumeMatrices {
+	RTPCVolume volume[6];
+	RTPCVolume volume2[0xC];
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms);
+};
+
+struct SND_Cone {
+	float m_InnerAngle;
+	float m_OuterAngle;
+	float m_InnerVolumeDB;
+	float m_OuterVolumeDB;
+	float m_InnerLPF;
+	float m_OuterLPF;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct RTPCCone {
+	SND_Cone cone;
+	RTPC m_innerAngleRTPC;
+	RTPC m_outerAngleRTPC;
+	RTPC m_innerVolumeRTPC;
+	RTPC m_outerVolumeRTPC;
+	RTPC m_innerLPFRTPC;
+	RTPC m_outerLPFRTPC;
+
+	void read(IBinaryArchive &fp);
+};
+
 struct ResourceVolume {
 	RTPCVolume vol;
 	float delta_dB;
@@ -281,6 +312,23 @@ struct ThemeResourceDescriptor {
 };
 
 struct EmitterSpec {
+	uint32_t m_id;
+	RTPCVolume m_volume;
+	RTPCVolumeMatrices m_volumesMatrices;
+	uint32_t m_positioned;
+	uint32_t m_dopplerEffect;
+	uint32_t m_speakerPanning;
+	uint32_t m_playOnWiimote;
+	uint32_t m_useEmitterCone;
+	uint32_t m_rolloffId;
+	RTPC m_pSpreadFactor;
+	RTPC m_pWetVolume;
+	RTPC m_pLPFCutoffFrequency;
+	RTPCCone m_emitterAudibilityCone;
+	Vector<uint32_t> m_effectIds;
+	uint16_t m_activeSpeakers;
+
+	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
 };
 
@@ -380,12 +428,7 @@ struct MicSpecDescriptor {
 	int32_t fadeType;
 	uint32_t rolloffId;
 	int32_t useCone;
-	float cone_m_InnerAngle;
-	float cone_m_OuterAngle;
-	float cone_m_InnerVolumeDB;
-	float cone_m_OuterVolumeDB;
-	float cone_m_InnerLPF;
-	float cone_m_OuterLPF;
+	SND_Cone cone;
 
 	void read(IBinaryArchive &fp);
 };
@@ -538,6 +581,21 @@ struct ProjectDesc {
 	void read(IBinaryArchive &fp);
 };
 
+struct tdstRollOffPoint {
+	float m_distance;
+	float m_decibel;
+	int32_t m_interpolationCurveType;
+	float m_interpolationCurveFactor;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct RolloffResourceDescriptor {
+	Vector<tdstRollOffPoint> m_pointList;
+
+	void read(IBinaryArchive &fp);
+};
+
 class sbaoFile {
 public:
 	sbaoFile();
@@ -561,6 +619,8 @@ public:
 	std::shared_ptr<StopEventDescriptor> stopEventDescriptor;
 	std::shared_ptr<RemovePresetEventDescriptor> removePresetEventDescriptor;
 	std::shared_ptr<ProjectDesc> projectDesc;
+	std::shared_ptr<RolloffResourceDescriptor> rolloffResourceDescriptor;
+	std::shared_ptr<EmitterSpec> emitterSpec;
 	std::shared_ptr<SndData> sndData;
 };
 
