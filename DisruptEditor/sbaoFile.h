@@ -473,6 +473,71 @@ struct RemovePresetEventDescriptor {
 	void read(IBinaryArchive &fp);
 };
 
+struct tdstObstructionPreset {
+	bool bUseSoftwareFilterObstruction;
+	float fLowPassMinFreq;
+	float fLowPassMaxFreq;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct tdstOcclusionPortable {
+	float fBandPassCenterFrequency;
+	float fBandPassBandWidth;
+	float fGain;
+	uint32_t ulActiveFilters;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct tdstOcclusionPreset {
+	uint32_t materialId;
+	bool bUseSoftwareFilterOcclusion;
+	tdstOcclusionPortable Portable;
+	float fSoftwareOcclusion;
+	DynamicIndexedPropertyContainer platformSpecificProps;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct tdstSoundTexture {
+	uint32_t textureId;
+	uint32_t resourceId;
+	float fReadRate;
+	float fContactDuration;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct tdstMultiLayerParameter {
+	uint32_t Id;
+	float fMin;
+	float fMax;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct ProjectBusDataDescriptor {
+	void read(IBinaryArchive &fp);
+};
+
+struct ProjectDesc {
+	uint32_t serializerVersion;
+	int32_t lProjectVersion;
+	bool bLocalised;
+	float minStreamingPrefetchBufferLength;
+	tdstObstructionPreset stObstructionPreset;
+	Vector<tdstOcclusionPreset> stOcclusionPresetList;
+	Vector<uint32_t> stMTTChannelList;
+	Vector<tdstSoundTexture> stSoundTextureList;
+	Vector<tdstMultiLayerParameter> MultiLayerParameters;
+	uint8_t cTitleGuid[16];
+	uint8_t cProjectDataVersion[16];
+	ProjectBusDataDescriptor projectBusDataDescBin;
+
+	void read(IBinaryArchive &fp);
+};
+
 class sbaoFile {
 public:
 	sbaoFile();
@@ -495,6 +560,7 @@ public:
 	std::shared_ptr<PresetEventDescriptor> presetEventDescriptor;
 	std::shared_ptr<StopEventDescriptor> stopEventDescriptor;
 	std::shared_ptr<RemovePresetEventDescriptor> removePresetEventDescriptor;
+	std::shared_ptr<ProjectDesc> projectDesc;
 	std::shared_ptr<SndData> sndData;
 };
 

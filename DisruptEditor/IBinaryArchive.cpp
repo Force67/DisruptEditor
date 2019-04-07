@@ -142,6 +142,7 @@ void CBinaryArchiveReader::pad(size_t padding) {
 	memBlock(data.data(), 1, seek);
 	for (Sint64 i = 0; i < seek; ++i)
 		SDL_assert_release(data[i] == 0);
+	offset = SDL_RWtell(fp);
 }
 
 void CBinaryArchiveReader::memBlock(void* ptr, size_t objSize, size_t objCount) {
@@ -163,6 +164,7 @@ void CBinaryArchiveWriter::pad(size_t padding) {
 	Sint64 size = SDL_RWtell(fp);
 	Sint64 seek = (padding - (size % padding)) % padding;
 	SDL_RWwrite(fp, temp, 1, seek);
+	offset = SDL_RWtell(fp);
 }
 
 void CBinaryArchiveWriter::memBlock(void* ptr, size_t objSize, size_t objCount) {

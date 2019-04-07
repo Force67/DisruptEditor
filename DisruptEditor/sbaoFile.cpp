@@ -79,6 +79,9 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	} else if (typeName == "RemovePresetEventDescriptor") {
 		removePresetEventDescriptor = std::make_shared<RemovePresetEventDescriptor>();
 		removePresetEventDescriptor->read(fp);
+	} else if (typeName == "ProjectDesc") {
+		projectDesc = std::make_shared<ProjectDesc>();
+		projectDesc->read(fp);
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
@@ -753,4 +756,52 @@ void ThemePartDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(bLoopEnd);
 	fp.serialize(lNbLoops);
 	fp.serialize(fLength);
+}
+
+void ProjectDesc::read(IBinaryArchive & fp) {
+	fp.serialize(serializerVersion);
+	fp.serialize(lProjectVersion);
+	fp.serialize(bLocalised);
+	fp.serialize(minStreamingPrefetchBufferLength);
+	fp.serialize(stObstructionPreset);
+	fp.serializeNdVectorExternal(stOcclusionPresetList);
+	fp.serializeNdVectorExternal_pod(stMTTChannelList);
+	fp.serializeNdVectorExternal(stSoundTextureList);
+	fp.serializeNdVectorExternal(MultiLayerParameters);
+	fp.memBlock(cTitleGuid, 1, sizeof(cTitleGuid));
+	fp.memBlock(cProjectDataVersion, 1, sizeof(cProjectDataVersion));
+}
+
+void tdstObstructionPreset::read(IBinaryArchive & fp) {
+	fp.serialize(bUseSoftwareFilterObstruction);
+	fp.serialize(fLowPassMinFreq);
+	fp.serialize(fLowPassMaxFreq);
+}
+
+void tdstOcclusionPreset::read(IBinaryArchive & fp) {
+	fp.serialize(materialId);
+	fp.serialize(bUseSoftwareFilterOcclusion);
+	fp.serialize(Portable);
+	fp.serialize(fSoftwareOcclusion);
+	fp.serialize(platformSpecificProps);
+}
+
+void tdstOcclusionPortable::read(IBinaryArchive & fp) {
+	fp.serialize(fBandPassCenterFrequency);
+	fp.serialize(fBandPassBandWidth);
+	fp.serialize(fGain);
+	fp.serialize(ulActiveFilters);
+}
+
+void tdstSoundTexture::read(IBinaryArchive & fp) {
+	fp.serialize(textureId);
+	fp.serialize(resourceId);
+	fp.serialize(fReadRate);
+	fp.serialize(fContactDuration);
+}
+
+void tdstMultiLayerParameter::read(IBinaryArchive & fp) {
+	fp.serialize(Id);
+	fp.serialize(fMin);
+	fp.serialize(fMax);
 }
