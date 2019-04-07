@@ -197,6 +197,12 @@
     <ClCompile Include="DisruptTypes.cpp">
       <Filter>Source Files\File Formats</Filter>
     </ClCompile>
+    <ClCompile Include="ImCurveEdit.cpp">
+      <Filter>Externals</Filter>
+    </ClCompile>
+    <ClCompile Include="ImGradient.cpp">
+      <Filter>Externals</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -409,6 +415,12 @@
     </ClInclude>
     <ClInclude Include="DisruptTypes.h">
       <Filter>Source Files\File Formats</Filter>
+    </ClInclude>
+    <ClInclude Include="ImCurveEdit.h">
+      <Filter>Externals</Filter>
+    </ClInclude>
+    <ClInclude Include="ImGradient.h">
+      <Filter>Externals</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
