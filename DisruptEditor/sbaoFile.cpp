@@ -70,6 +70,12 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	} else if (typeName == "PresetDescriptor") {
 		presetDescriptor = std::make_shared<PresetDescriptor>();
 		presetDescriptor->read(fp);
+	} else if (typeName == "PresetEventDescriptor") {
+		presetEventDescriptor = std::make_shared<PresetEventDescriptor>();
+		presetEventDescriptor->read(fp);
+	} else if (typeName == "StopEventDescriptor") {
+		stopEventDescriptor = std::make_shared<StopEventDescriptor>();
+		stopEventDescriptor->read(fp);
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
@@ -656,4 +662,18 @@ void ParameterValue::read(IBinaryArchive & fp) {
 	default:
 		SDL_assert_release(false);
 	}
+}
+
+void PresetEventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(pBase);
+	fp.serialize(presetRef);
+	StreamValidationPoint(fp);
+}
+
+void StopEventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(pBase);
+	fp.serialize(uEvt);
+	fp.serialize(fFadeDuration);
+	fp.serialize(eFadeType);
+	StreamValidationPoint(fp);
 }

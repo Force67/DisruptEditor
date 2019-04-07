@@ -343,6 +343,22 @@ struct PresetDescriptor {
 	void registerMembers(MemberStructure &ms);
 };
 
+struct PresetEventDescriptor {
+	EventDescriptor pBase;
+	CObjectReference<PresetDescriptor> presetRef;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct StopEventDescriptor {
+	EventDescriptor pBase;
+	CObjectReference<EventDescriptor> uEvt;
+	float fFadeDuration;
+	uint32_t eFadeType;
+
+	void read(IBinaryArchive &fp);
+};
+
 class sbaoFile {
 public:
 	sbaoFile();
@@ -362,6 +378,8 @@ public:
 	std::shared_ptr<PlayEventDescriptor> playEventDescriptor;
 	std::shared_ptr<MultiEventDescriptor> multiEventDescriptor;
 	std::shared_ptr<PresetDescriptor> presetDescriptor;
+	std::shared_ptr<PresetEventDescriptor> presetEventDescriptor;
+	std::shared_ptr<StopEventDescriptor> stopEventDescriptor;
 	std::shared_ptr<SndData> sndData;
 };
 
