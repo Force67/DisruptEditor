@@ -17,6 +17,14 @@ struct SndData {
 	}
 };
 
+struct VolumeHelper {
+	float volume;
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, volume);
+	}
+};
+
 template <typename T>
 struct CObjectReference {
 	uint32_t refAtomicId;
@@ -749,9 +757,211 @@ struct tdstMultiLayerParameter {
 	}
 };
 
-struct ProjectBusDataDescriptor {
+struct BusVolumeTraits {
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms) {
+	}
+};
+
+template <int Size>
+struct ChannelVolumes {
+	VolumeHelper m_masterVolume;
+	std::array<VolumeHelper, Size> m_channelVolumes;
+
+	void read(IBinaryArchive &fp) {
+		fp.serialize(m_masterVolume);
+		for (int i = 0; i < Size; ++i)
+			fp.serialize(m_channelVolumes[i]);
+	}
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_masterVolume);
+		REGISTER_MEMBER(m_channelVolumes);
+	}
+};
+
+struct BusChannelVolumes {
+	VolumeHelper m_masterVolume;
+	ChannelVolumes<6> m_dryChannelsVolumes;
+	ChannelVolumes<1> m_wetChannelsVolumes;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_masterVolume);
+		REGISTER_MEMBER(m_dryChannelsVolumes);
+		REGISTER_MEMBER(m_wetChannelsVolumes);
+	}
+};
+
+struct BusDescriptor {
+	uint32_t id;
+	int32_t busType;
+	uint32_t parentBusId;
+	Vector<uint32_t> effectIds;
+	VolumeHelper preEffectVolume;
+	VolumeHelper connectedVoicesVolume;
+	BusChannelVolumes postEffectChannelVolumes;
+	float pitchSemiTone;
+	uint32_t processingStage;
+	uint32_t childBusesCount;
+	int32_t onReverbPath;
+	LimiterInfoDescriptor voiceLimiterInfo;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(id);
+		REGISTER_MEMBER(busType);
+		REGISTER_MEMBER(parentBusId);
+		REGISTER_MEMBER(effectIds);
+		REGISTER_MEMBER(preEffectVolume);
+		REGISTER_MEMBER(connectedVoicesVolume);
+		REGISTER_MEMBER(postEffectChannelVolumes);
+		REGISTER_MEMBER(pitchSemiTone);
+		REGISTER_MEMBER(processingStage);
+		REGISTER_MEMBER(childBusesCount);
+		REGISTER_MEMBER(onReverbPath);
+		REGISTER_MEMBER(voiceLimiterInfo);
+	}
+};
+
+struct BusTreeDescriptor {
+	uint32_t id;
+	Vector<uint32_t> busIdList;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(id);
+		REGISTER_MEMBER(busIdList);
+	}
+};
+
+struct ProjectBusDataDescriptor {
+	Vector<BusDescriptor> busDescList;
+	Vector<BusTreeDescriptor> busTreeDescList;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(busDescList);
+		REGISTER_MEMBER(busTreeDescList);
+	}
+};
+
+struct EffectParameters {
+	Vector<ParameterValue> parameterValueList;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, parameterValueList);
+	}
+};
+
+struct EffectDescriptor {
+	uint32_t id;
+	int32_t effectType;
+	EffectParameters effectParameters;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(id);
+		REGISTER_MEMBER(effectType);
+		REGISTER_MEMBER(effectParameters);
+	}
+};
+
+struct ProjectEffectDataDescriptor {
+	Vector<EffectDescriptor> effectDescList;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, effectDescList);
+	}
+};
+
+struct RTVariableDescriptor {
+	uint32_t m_varId;
+	int32_t m_defaultValue;
+	bool m_isDistanceBased;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_varId);
+		REGISTER_MEMBER(m_defaultValue);
+		REGISTER_MEMBER(m_isDistanceBased);
+	}
+};
+
+struct GraphCoordinate {
+	int32_t x;
+	int32_t y;
+	int32_t interpolationCurveType;
+	float interpolationCurveFactor;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(x);
+		REGISTER_MEMBER(y);
+		REGISTER_MEMBER(interpolationCurveType);
+		REGISTER_MEMBER(interpolationCurveFactor);
+	}
+};
+
+struct RTGraphDescriptor {
+	int32_t m_variableType;
+	int32_t m_parameterType;
+	Vector<GraphCoordinate> m_pointList;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_variableType);
+		REGISTER_MEMBER(m_parameterType);
+		REGISTER_MEMBER(m_pointList);
+	}
+};
+
+struct RTParameterDescriptor {
+	int32_t m_type;
+	uint32_t m_targetId;
+	uint32_t m_fieldIndex;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_type);
+		REGISTER_MEMBER(m_targetId);
+		REGISTER_MEMBER(m_fieldIndex);
+	}
+};
+
+struct RTPCDescriptor {
+	Vector<uint32_t> m_varIdList;
+	Vector<RTGraphDescriptor> m_graphList;
+	Vector<RTParameterDescriptor> m_parameterList;
+	uint32_t m_rtpcId;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_varIdList);
+		REGISTER_MEMBER(m_graphList);
+		REGISTER_MEMBER(m_parameterList);
+		REGISTER_MEMBER(m_rtpcId);
+	}
+};
+
+struct RTPCsAndVariablesDescriptor {
+	Vector<RTVariableDescriptor> m_variableList;
+	Vector<RTPCDescriptor> m_rtpcList;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_variableList);
+		REGISTER_MEMBER(m_rtpcList);
+	}
+};
+
+struct ProjectMicDataDescriptor {
+	Vector<MicSpecDescriptor> micSpecList;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(micSpecList);
 	}
 };
 
@@ -768,6 +978,12 @@ struct ProjectDesc {
 	std::array<uint8_t, 16> cTitleGuid;
 	std::array<uint8_t, 16> cProjectDataVersion;
 	ProjectBusDataDescriptor projectBusDataDescBin;
+	ProjectEffectDataDescriptor projectEffectDataDescBin;
+	RTPCsAndVariablesDescriptor projectRTPCDataDescBin;
+	ProjectMicDataDescriptor projectMicDataDescBin;
+	uint32_t dopplerMicAtomicId;
+	LimiterInfoDescriptor streamLimiterInfo;
+	LimiterInfoDescriptor polyphonyLimiterInfo;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms) {
@@ -783,6 +999,12 @@ struct ProjectDesc {
 		REGISTER_MEMBER(cTitleGuid);
 		REGISTER_MEMBER(cProjectDataVersion);
 		REGISTER_MEMBER(projectBusDataDescBin);
+		REGISTER_MEMBER(projectEffectDataDescBin);
+		REGISTER_MEMBER(projectRTPCDataDescBin);
+		REGISTER_MEMBER(projectMicDataDescBin);
+		REGISTER_MEMBER(dopplerMicAtomicId);
+		REGISTER_MEMBER(streamLimiterInfo);
+		REGISTER_MEMBER(polyphonyLimiterInfo);
 	}
 };
 

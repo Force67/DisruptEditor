@@ -844,6 +844,15 @@ void ProjectDesc::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(MultiLayerParameters);
 	fp.memBlock(cTitleGuid.data(), 1, sizeof(cTitleGuid));
 	fp.memBlock(cProjectDataVersion.data(), 1, sizeof(cProjectDataVersion));
+	fp.serialize(projectBusDataDescBin);
+	fp.serialize(projectEffectDataDescBin);
+	fp.serialize(projectRTPCDataDescBin);
+	fp.serialize(projectMicDataDescBin);
+	fp.serialize(dopplerMicAtomicId);
+	fp.serialize(streamLimiterInfo);
+	fp.serialize(polyphonyLimiterInfo);
+
+	StreamValidationPoint(fp);
 }
 
 void tdstObstructionPreset::read(IBinaryArchive & fp) {
@@ -919,4 +928,91 @@ void RTPCCone::read(IBinaryArchive & fp) {
 }
 
 void ProjectBusDataDescriptor::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(busDescList);
+	fp.serializeNdVectorExternal(busTreeDescList);
+}
+
+void BusDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(id);
+	fp.serialize(busType);
+	fp.serialize(parentBusId);
+	fp.serializeNdVectorExternal_pod(effectIds);
+	fp.serialize(preEffectVolume);
+	fp.serialize(connectedVoicesVolume);
+	fp.serialize(postEffectChannelVolumes);
+	fp.serialize(pitchSemiTone);
+	fp.serialize(processingStage);
+	fp.serialize(childBusesCount);
+	fp.serialize(onReverbPath);
+	fp.serialize(voiceLimiterInfo);
+}
+
+void BusTreeDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(id);
+	fp.serializeNdVectorExternal_pod(busIdList);
+}
+
+void VolumeHelper::read(IBinaryArchive & fp) {
+	fp.serialize(volume);
+}
+
+void BusChannelVolumes::read(IBinaryArchive & fp) {
+	fp.serialize(m_masterVolume);
+	fp.serialize(m_dryChannelsVolumes);
+	fp.serialize(m_wetChannelsVolumes);
+}
+
+void ProjectEffectDataDescriptor::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(effectDescList);
+}
+
+void EffectDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(id);
+	fp.serialize(effectType);
+	fp.serialize(effectParameters);
+}
+
+void EffectParameters::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(parameterValueList);
+}
+
+void RTPCsAndVariablesDescriptor::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(m_variableList);
+	fp.serializeNdVectorExternal(m_rtpcList);
+}
+
+void RTVariableDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(m_varId);
+	fp.serialize(m_defaultValue);
+	fp.serialize(m_isDistanceBased);
+}
+
+void RTPCDescriptor::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal_pod(m_varIdList);
+	fp.serializeNdVectorExternal(m_graphList);
+	fp.serializeNdVectorExternal(m_parameterList);
+	fp.serialize(m_rtpcId);
+}
+
+void GraphCoordinate::read(IBinaryArchive & fp) {
+	fp.serialize(x);
+	fp.serialize(y);
+	fp.serialize(interpolationCurveType);
+	fp.serialize(interpolationCurveFactor);
+}
+
+void RTGraphDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(m_variableType);
+	fp.serialize(m_parameterType);
+	fp.serializeNdVectorExternal(m_pointList);
+}
+
+void RTParameterDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(m_type);
+	fp.serialize(m_targetId);
+	fp.serialize(m_fieldIndex);
+}
+
+void ProjectMicDataDescriptor::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(micSpecList);
 }
