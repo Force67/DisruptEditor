@@ -93,6 +93,8 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 		SDL_assert_release(false);
 	}
 	else {
+		type = CDobbsID("SndData");
+
 		//Assume this is sound data
 		SDL_RWseek(fp.fp, -4, RW_SEEK_CUR);
 		size_t rawDataSize = size - (7 * 4);
@@ -119,6 +121,22 @@ void sbaoFile::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*playEventDescriptor);
 	else if (typeName == "MultiEventDescriptor")
 		REGISTER_MEMBER(*multiEventDescriptor);
+	else if (typeName == "PresetDescriptor")
+		REGISTER_MEMBER(*presetDescriptor);
+	else if (typeName == "PresetEventDescriptor")
+		REGISTER_MEMBER(*presetEventDescriptor);
+	else if (typeName == "StopEventDescriptor")
+		REGISTER_MEMBER(*stopEventDescriptor);
+	else if (typeName == "RemovePresetEventDescriptor")
+		REGISTER_MEMBER(*removePresetEventDescriptor);
+	else if (typeName == "ProjectDesc")
+		REGISTER_MEMBER(*projectDesc);
+	else if (typeName == "RolloffResourceDescriptor")
+		REGISTER_MEMBER(*rolloffResourceDescriptor);
+	else if (typeName == "EmitterSpec")
+		REGISTER_MEMBER(*emitterSpec);
+	else if (typeName == "SndData")
+		REGISTER_MEMBER(*sndData);
 }
 
 void ResourceDescriptor::read(IBinaryArchive & fp) {
@@ -215,6 +233,12 @@ void BaseResourceDescriptor::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*silenceResourceDescriptor);
 	if (typeName == "MultiLayerResourceDescriptor")
 		REGISTER_MEMBER(*multiLayerResourceDescriptor);
+	if (typeName == "SequenceResourceDescriptor")
+		REGISTER_MEMBER(*sequenceResourceDescriptor);
+	if (typeName == "MultiTrackResourceDescriptor")
+		REGISTER_MEMBER(*multiTrackResourceDescriptor);
+	if (typeName == "ThemeResourceDescriptor")
+		REGISTER_MEMBER(*themeResourceDescriptor);
 }
 
 void RTPC::read(IBinaryArchive & fp) {
@@ -394,7 +418,17 @@ void SND_tdstToolSourceFormat::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(ulNbSamples);
 	REGISTER_MEMBER(isMTTInterlaced);
 	REGISTER_MEMBER(bStream);
-	REGISTER_MEMBER(dataRef);
+	if (bStream) {
+		REGISTER_MEMBER(bZeroLatency);
+		REGISTER_MEMBER(ZLMemPartInBytes);
+		REGISTER_MEMBER(ulOffsetData);
+		REGISTER_MEMBER(dataId);
+		REGISTER_MEMBER(streamRef);
+		REGISTER_MEMBER(uSndDataZeroLatencyMemPart);
+	}
+	else {
+		REGISTER_MEMBER(dataRef);
+	}
 }
 
 void tdstWaveMarkerList::read(IBinaryArchive & fp) {
@@ -427,7 +461,9 @@ void DynamicIndexedPropertyContainer::read(IBinaryArchive & fp) {
 }
 
 void DynamicIndexedPropertyContainer::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(size);
 	REGISTER_MEMBER(isBlob);
+	REGISTER_MEMBER(rawSize);//TODO
 }
 
 void tdstWaveMarkerElement::read(IBinaryArchive & fp) {
@@ -435,6 +471,7 @@ void tdstWaveMarkerElement::read(IBinaryArchive & fp) {
 }
 
 void tdstWaveMarkerElement::registerMembers(MemberStructure & ms) {
+	ms.registerMember(NULL, fTimePos);
 }
 
 void RandomResourceDescriptor::read(IBinaryArchive & fp) {
@@ -557,16 +594,26 @@ void EmitterSpec::read(IBinaryArchive & fp) {
 }
 
 void EmitterSpec::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(m_id);
+	REGISTER_MEMBER(m_volume);
+	REGISTER_MEMBER(m_volumesMatrices);
+	REGISTER_MEMBER(m_positioned);
+	REGISTER_MEMBER(m_dopplerEffect);
+	REGISTER_MEMBER(m_speakerPanning);
+	REGISTER_MEMBER(m_playOnWiimote);
+	REGISTER_MEMBER(m_useEmitterCone);
+	REGISTER_MEMBER(m_rolloffId);
+	REGISTER_MEMBER(m_pSpreadFactor);
+	REGISTER_MEMBER(m_pWetVolume);
+	REGISTER_MEMBER(m_pLPFCutoffFrequency);
+	REGISTER_MEMBER(m_emitterAudibilityCone);
+	REGISTER_MEMBER(m_effectIds);
+	REGISTER_MEMBER(m_activeSpeakers);
 }
 
 void SilenceResourceDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(fLength);
 	fp.serialize(busId);
-}
-
-void SilenceResourceDescriptor::registerMembers(MemberStructure & ms) {
-	REGISTER_MEMBER(fLength);
-	REGISTER_MEMBER(busId);
 }
 
 void MultiLayerResourceDescriptor::read(IBinaryArchive & fp) {
@@ -585,6 +632,10 @@ void tdstMultiLayerElement::read(IBinaryArchive & fp) {
 }
 
 void tdstMultiLayerElement::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(uRes);
+	REGISTER_MEMBER(activationFlagId);
+	REGISTER_MEMBER(invFlag);
+	REGISTER_MEMBER(m_effectGraphs);
 }
 
 void tdstEffectGraph::read(IBinaryArchive & fp) {
@@ -594,6 +645,9 @@ void tdstEffectGraph::read(IBinaryArchive & fp) {
 }
 
 void tdstEffectGraph::registerMembers(MemberStructure & ms) {
+	REGISTER_MEMBER(eEffectID);
+	REGISTER_MEMBER(multiLayerParameterId);
+	REGISTER_MEMBER(m_coordinates);
 }
 
 void MultiEventDescriptor::read(IBinaryArchive & fp) {
@@ -788,8 +842,8 @@ void ProjectDesc::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal_pod(stMTTChannelList);
 	fp.serializeNdVectorExternal(stSoundTextureList);
 	fp.serializeNdVectorExternal(MultiLayerParameters);
-	fp.memBlock(cTitleGuid, 1, sizeof(cTitleGuid));
-	fp.memBlock(cProjectDataVersion, 1, sizeof(cProjectDataVersion));
+	fp.memBlock(cTitleGuid.data(), 1, sizeof(cTitleGuid));
+	fp.memBlock(cProjectDataVersion.data(), 1, sizeof(cProjectDataVersion));
 }
 
 void tdstObstructionPreset::read(IBinaryArchive & fp) {
@@ -862,4 +916,7 @@ void RTPCCone::read(IBinaryArchive & fp) {
 	fp.serialize(m_outerVolumeRTPC);
 	fp.serialize(m_innerLPFRTPC);
 	fp.serialize(m_outerLPFRTPC);
+}
+
+void ProjectBusDataDescriptor::read(IBinaryArchive & fp) {
 }

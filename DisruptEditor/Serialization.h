@@ -3,6 +3,7 @@
 #include "tinyxml2.h"
 #include <string>
 #include <vector>
+#include <array>
 #include <map>
 #include <stdint.h>
 #include <string.h>
@@ -28,6 +29,9 @@ size_t XMLNumChildren(tinyxml2::XMLElement* it);
 
 class MemberStructure {
 public:
+	template <typename T, size_t Size>
+	void registerMember(const char* name, std::array<T, Size> &value);
+
 	template <typename T>
 	void registerMember(const char* name, std::vector<T> &value);
 
@@ -66,6 +70,61 @@ public:
 	//In your class you need
 	//void registerMembers(MemberStructure &ms);
 };
+
+template<typename T, size_t Size>
+inline void MemberStructure::registerMember(const char * name, std::array<T, Size>& value) {
+	switch (type) {
+	case TOXML:
+	{
+		if (name)
+			printer->OpenElement(name);
+		for (int i = 0; i < Size; ++i) {
+			registerMember("Elem", value[i]);
+		}
+		if (name)
+			printer->CloseElement();
+		return;
+	}
+	case FROMXML:
+	{
+		tinyxml2::XMLElement* itBack = it;
+		if (name)
+			it = it->FirstChildElement(name);
+		if (it) {
+			it = it->FirstChildElement();
+			size_t i = 0;
+			while (it) {
+				registerMember(NULL, value[i]);
+				it = it->NextSiblingElement();
+				++i;
+			}
+		}
+		it = itBack;
+		return;
+	}
+	case IMGUI:
+	{
+		ImGui::PushID(&value);
+		ImGui::AlignTextToFramePadding();
+		bool node_open = ImGui::TreeNode("Object", "%s", name);
+		ImGui::NextColumn();
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("Count: %zu", value.size());
+		ImGui::SameLine();
+		ImGui::NextColumn();
+		if (node_open) {
+			for (int i = 0; i < Size; ++i) {
+				char buffer[25];
+				snprintf(buffer, sizeof(buffer), "%i", i);
+				registerMember(buffer, value[i]);
+			}
+			ImGui::TreePop();
+		}
+		ImGui::PopID();
+		return;
+	}
+	}
+}
 
 template<typename T>
 inline void MemberStructure::registerMember(const char * name, std::vector<T>& value) {

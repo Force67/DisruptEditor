@@ -46,6 +46,23 @@ void UI::displayDARE() {
 		}
 	}
 
+	if (ImGui::Button("Save All XML")) {
+		for (auto it : DARE::instance().atomicObjects) {
+			sbaoFile &sbao = it.second.ao;
+			uint32_t spkID = it.second.spkFile;
+			uint32_t sbaoID = it.first;
+
+			char buffer[80];
+			snprintf(buffer, sizeof(buffer), "%08x_%08x.spk.xml", spkID, sbaoID);
+
+			std::string xml = serializeToXML(sbao);
+			FILE *fp = fopen(buffer, "wb");
+			fwrite(xml.c_str(), 1, xml.size(), fp);
+			fclose(fp);
+
+		}
+	}
+
 	for (auto it : DARE::instance().atomicObjects) {
 		ImGui::Text("Atomic Object: %08x", it.first);
 		sbaoFile &sbao = it.second.ao;

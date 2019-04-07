@@ -6,6 +6,7 @@ settings.xml
 *.db-journal
 *.ogg
 *.wav
+*.spk.xml
 desktop.ini
 
 ## Ignore Visual Studio temporary files, build results, and

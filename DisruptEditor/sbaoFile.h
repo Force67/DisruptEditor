@@ -5,6 +5,7 @@
 #include "Vector.h"
 #include "CDobbsID.h"
 #include <memory>
+#include <array>
 #include "IBinaryArchive.h"
 #include "Serialization.h"
 
@@ -12,6 +13,8 @@ struct ResourceDescriptor;
 
 struct SndData {
 	Vector<uint8_t> rawData;
+	void registerMembers(MemberStructure &ms) {
+	}
 };
 
 template <typename T>
@@ -41,11 +44,14 @@ struct RTPCVolume {
 };
 
 struct RTPCVolumeMatrices {
-	RTPCVolume volume[6];
-	RTPCVolume volume2[0xC];
+	std::array<RTPCVolume, 6> volume;
+	std::array<RTPCVolume, 0xC> volume2;
 
 	void read(IBinaryArchive &fp);
-	void registerMembers(MemberStructure &ms);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(volume);
+		REGISTER_MEMBER(volume2);
+	}
 };
 
 struct SND_Cone {
@@ -57,6 +63,14 @@ struct SND_Cone {
 	float m_OuterLPF;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_InnerAngle);
+		REGISTER_MEMBER(m_OuterAngle);
+		REGISTER_MEMBER(m_InnerVolumeDB);
+		REGISTER_MEMBER(m_OuterVolumeDB);
+		REGISTER_MEMBER(m_InnerLPF);
+		REGISTER_MEMBER(m_OuterLPF);
+	}
 };
 
 struct RTPCCone {
@@ -69,6 +83,15 @@ struct RTPCCone {
 	RTPC m_outerLPFRTPC;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(cone);
+		REGISTER_MEMBER(m_innerAngleRTPC);
+		REGISTER_MEMBER(m_outerAngleRTPC);
+		REGISTER_MEMBER(m_innerVolumeRTPC);
+		REGISTER_MEMBER(m_outerVolumeRTPC);
+		REGISTER_MEMBER(m_innerLPFRTPC);
+		REGISTER_MEMBER(m_outerLPFRTPC);
+	}
 };
 
 struct ResourceVolume {
@@ -184,7 +207,10 @@ struct SilenceResourceDescriptor {
 	uint32_t busId;
 
 	void read(IBinaryArchive &fp);
-	void registerMembers(MemberStructure &ms);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(fLength);
+		REGISTER_MEMBER(busId);
+	}
 };
 
 struct tdstCoordinate {
@@ -194,6 +220,12 @@ struct tdstCoordinate {
 	float curveFactor;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(xFloat);
+		REGISTER_MEMBER(yFloat);
+		REGISTER_MEMBER(curvType);
+		REGISTER_MEMBER(curveFactor);
+	}
 };
 
 struct tdstEffectGraph {
@@ -232,6 +264,15 @@ struct SequenceResourceDescriptor {
 	Vector< CObjectReference<ResourceDescriptor> > sequences;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(bLoop);
+		REGISTER_MEMBER(ulStartLoop);
+		REGISTER_MEMBER(ulEndLoop);
+		REGISTER_MEMBER(ulNbLoops);
+		REGISTER_MEMBER(fLength);
+		REGISTER_MEMBER(fPosMainReLoop);
+		REGISTER_MEMBER(sequences);
+	}
 };
 
 struct tdstMultiTrackElement {
@@ -245,6 +286,16 @@ struct tdstMultiTrackElement {
 	DynamicIndexedPropertyContainer platformSpecificProperties;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(ulFreq);
+		REGISTER_MEMBER(ulNbChannels);
+		REGISTER_MEMBER(CompressionFormat);
+		REGISTER_MEMBER(trackVolume);
+		REGISTER_MEMBER(ulNbSamples);
+		REGISTER_MEMBER(ulNbBytes);
+		REGISTER_MEMBER(ulBitRate);
+		REGISTER_MEMBER(platformSpecificProperties);
+	}
 };
 
 struct DataBlock {
@@ -254,6 +305,12 @@ struct DataBlock {
 	uint32_t m_memoryType;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_size);
+		REGISTER_MEMBER(m_allocInfos);
+		REGISTER_MEMBER(m_allocatorType);
+		REGISTER_MEMBER(m_memoryType);
+	}
 };
 
 struct MultiTrackResourceDescriptor {
@@ -272,12 +329,30 @@ struct MultiTrackResourceDescriptor {
 	uint32_t currentResourceID;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(bLoop);
+		REGISTER_MEMBER(bIsNotifying);
+		REGISTER_MEMBER(ulNbTrack);
+		REGISTER_MEMBER(ulResNotificationUserData);
+		REGISTER_MEMBER(multiTrackChannelId);
+		REGISTER_MEMBER(stToolSourceFormat);
+		REGISTER_MEMBER(stWaveMarkerList);
+		REGISTER_MEMBER(autoDuckingSetPresetEventId);
+		REGISTER_MEMBER(busId);
+		REGISTER_MEMBER(m_tracks);
+		REGISTER_MEMBER(m_tracksRawData);
+		REGISTER_MEMBER(platformSpecificProperties);
+		REGISTER_MEMBER(currentResourceID);
+	}
 };
 
 struct ThemePartOutroDescriptor {
 	CDobbsID type;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(type);
+	}
 };
 
 struct ThemePartDescriptor {
@@ -288,6 +363,13 @@ struct ThemePartDescriptor {
 	float fLength;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(resRef);
+		REGISTER_MEMBER(bLoopStart);
+		REGISTER_MEMBER(bLoopEnd);
+		REGISTER_MEMBER(lNbLoops);
+		REGISTER_MEMBER(fLength);
+	}
 };
 
 struct ThemeResourceDescriptor {
@@ -309,6 +391,24 @@ struct ThemeResourceDescriptor {
 	Vector<ThemePartDescriptor> m_themParts;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(ulStartLoop);
+		REGISTER_MEMBER(ulNbLoopsulNbLoops);
+		REGISTER_MEMBER(bStartImmediatly);
+		REGISTER_MEMBER(bIsNotifying);
+		REGISTER_MEMBER(bStream);
+		REGISTER_MEMBER(ulResNotificationUserData);
+		REGISTER_MEMBER(eTransition);
+		REGISTER_MEMBER(eIndexFadeInType);
+		REGISTER_MEMBER(eIndexFadeOutType);
+		REGISTER_MEMBER(pstPartOutro);
+		REGISTER_MEMBER(fThemeLength);
+		REGISTER_MEMBER(fPosMainReLoop);
+		REGISTER_MEMBER(ulTracksFading);
+		REGISTER_MEMBER(indexFadeInDur);
+		REGISTER_MEMBER(indexFadeOutDur);
+		REGISTER_MEMBER(m_themParts);
+	}
 };
 
 struct EmitterSpec {
@@ -431,6 +531,15 @@ struct MicSpecDescriptor {
 	SND_Cone cone;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(micAtomicId);
+		REGISTER_MEMBER(volumeInDecibels);
+		REGISTER_MEMBER(fadeDuration);
+		REGISTER_MEMBER(fadeType);
+		REGISTER_MEMBER(rolloffId);
+		REGISTER_MEMBER(useCone);
+		REGISTER_MEMBER(cone);
+	}
 };
 
 struct MicPresetDescriptor {
@@ -438,10 +547,16 @@ struct MicPresetDescriptor {
 	MicSpecDescriptor spec;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(mask);
+		REGISTER_MEMBER(spec);
+	}
 };
 
 struct EffectPresetInfo {
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+	}
 };
 
 struct ParameterValue {
@@ -460,6 +575,17 @@ struct ParameterValue {
 	Vector<float> valueListSndFloat;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(parameterType);
+		REGISTER_MEMBER(parameterIndex);
+		REGISTER_MEMBER(rtpcId);
+
+		//TODO
+		REGISTER_MEMBER(valueSndS32);
+		REGISTER_MEMBER(valueSndFloat);
+		REGISTER_MEMBER(valueListSndS32);
+		REGISTER_MEMBER(valueListSndFloat);
+	}
 };
 
 struct ParamInfo {
@@ -472,6 +598,15 @@ struct ParamInfo {
 	ParameterValue paramValue;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(fadeInType);
+		REGISTER_MEMBER(fadeInDuration);
+		REGISTER_MEMBER(duration);
+		REGISTER_MEMBER(fadeOutType);
+		REGISTER_MEMBER(fadeOutDuration);
+		REGISTER_MEMBER(absoluteChange);
+		REGISTER_MEMBER(paramValue);
+	}
 };
 
 struct BusPresetInfo {
@@ -479,6 +614,10 @@ struct BusPresetInfo {
 	Vector<ParamInfo> paramsToChange;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(busId);
+		REGISTER_MEMBER(paramsToChange);
+	}
 };
 
 struct PresetDescriptor {
@@ -490,7 +629,14 @@ struct PresetDescriptor {
 	int32_t priority;
 
 	void read(IBinaryArchive &fp);
-	void registerMembers(MemberStructure &ms);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(id);
+		REGISTER_MEMBER(type);
+		REGISTER_MEMBER(micPresetList);
+		REGISTER_MEMBER(effectPresetInfos);
+		REGISTER_MEMBER(busPresetInfos);
+		REGISTER_MEMBER(priority);
+	}
 };
 
 struct PresetEventDescriptor {
@@ -498,6 +644,10 @@ struct PresetEventDescriptor {
 	CObjectReference<PresetDescriptor> presetRef;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, pBase);
+		REGISTER_MEMBER(presetRef);
+	}
 };
 
 struct StopEventDescriptor {
@@ -507,6 +657,12 @@ struct StopEventDescriptor {
 	uint32_t eFadeType;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, pBase);
+		REGISTER_MEMBER(uEvt);
+		REGISTER_MEMBER(fFadeDuration);
+		REGISTER_MEMBER(eFadeType);
+	}
 };
 
 struct RemovePresetEventDescriptor {
@@ -514,6 +670,10 @@ struct RemovePresetEventDescriptor {
 	uint32_t presetId;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, pBase);
+		REGISTER_MEMBER(presetId);
+	}
 };
 
 struct tdstObstructionPreset {
@@ -522,6 +682,11 @@ struct tdstObstructionPreset {
 	float fLowPassMaxFreq;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(bUseSoftwareFilterObstruction);
+		REGISTER_MEMBER(fLowPassMinFreq);
+		REGISTER_MEMBER(fLowPassMaxFreq);
+	}
 };
 
 struct tdstOcclusionPortable {
@@ -531,6 +696,12 @@ struct tdstOcclusionPortable {
 	uint32_t ulActiveFilters;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(fBandPassCenterFrequency);
+		REGISTER_MEMBER(fBandPassBandWidth);
+		REGISTER_MEMBER(fGain);
+		REGISTER_MEMBER(ulActiveFilters);
+	}
 };
 
 struct tdstOcclusionPreset {
@@ -541,6 +712,13 @@ struct tdstOcclusionPreset {
 	DynamicIndexedPropertyContainer platformSpecificProps;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(materialId);
+		REGISTER_MEMBER(bUseSoftwareFilterOcclusion);
+		REGISTER_MEMBER(Portable);
+		REGISTER_MEMBER(fSoftwareOcclusion);
+		REGISTER_MEMBER(platformSpecificProps);
+	}
 };
 
 struct tdstSoundTexture {
@@ -550,6 +728,12 @@ struct tdstSoundTexture {
 	float fContactDuration;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(textureId);
+		REGISTER_MEMBER(resourceId);
+		REGISTER_MEMBER(fReadRate);
+		REGISTER_MEMBER(fContactDuration);
+	}
 };
 
 struct tdstMultiLayerParameter {
@@ -558,10 +742,17 @@ struct tdstMultiLayerParameter {
 	float fMax;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(Id);
+		REGISTER_MEMBER(fMin);
+		REGISTER_MEMBER(fMax);
+	}
 };
 
 struct ProjectBusDataDescriptor {
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+	}
 };
 
 struct ProjectDesc {
@@ -574,11 +765,25 @@ struct ProjectDesc {
 	Vector<uint32_t> stMTTChannelList;
 	Vector<tdstSoundTexture> stSoundTextureList;
 	Vector<tdstMultiLayerParameter> MultiLayerParameters;
-	uint8_t cTitleGuid[16];
-	uint8_t cProjectDataVersion[16];
+	std::array<uint8_t, 16> cTitleGuid;
+	std::array<uint8_t, 16> cProjectDataVersion;
 	ProjectBusDataDescriptor projectBusDataDescBin;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(serializerVersion);
+		REGISTER_MEMBER(lProjectVersion);
+		REGISTER_MEMBER(bLocalised);
+		REGISTER_MEMBER(minStreamingPrefetchBufferLength);
+		REGISTER_MEMBER(stObstructionPreset);
+		REGISTER_MEMBER(stOcclusionPresetList);
+		REGISTER_MEMBER(stMTTChannelList);
+		REGISTER_MEMBER(stSoundTextureList);
+		REGISTER_MEMBER(MultiLayerParameters);
+		REGISTER_MEMBER(cTitleGuid);
+		REGISTER_MEMBER(cProjectDataVersion);
+		REGISTER_MEMBER(projectBusDataDescBin);
+	}
 };
 
 struct tdstRollOffPoint {
@@ -588,12 +793,21 @@ struct tdstRollOffPoint {
 	float m_interpolationCurveFactor;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_distance);
+		REGISTER_MEMBER(m_decibel);
+		REGISTER_MEMBER(m_interpolationCurveType);
+		REGISTER_MEMBER(m_interpolationCurveFactor);
+	}
 };
 
 struct RolloffResourceDescriptor {
 	Vector<tdstRollOffPoint> m_pointList;
 
 	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_pointList);
+	}
 };
 
 class sbaoFile {
