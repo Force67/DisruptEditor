@@ -243,6 +243,43 @@ struct MultiTrackResourceDescriptor {
 	void read(IBinaryArchive &fp);
 };
 
+struct ThemePartOutroDescriptor {
+	CDobbsID type;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct ThemePartDescriptor {
+	CObjectReference<ResourceDescriptor> resRef;
+	bool bLoopStart;
+	bool bLoopEnd;
+	int32_t lNbLoops;
+	float fLength;
+
+	void read(IBinaryArchive &fp);
+};
+
+struct ThemeResourceDescriptor {
+	uint32_t ulStartLoop;
+	uint32_t ulNbLoopsulNbLoops;
+	bool bStartImmediatly;
+	bool bIsNotifying;
+	bool bStream;
+	uint32_t ulResNotificationUserData;
+	uint32_t eTransition;
+	uint32_t eIndexFadeInType;
+	uint32_t eIndexFadeOutType;
+	ThemePartOutroDescriptor pstPartOutro;
+	float fThemeLength;
+	float fPosMainReLoop;
+	uint32_t ulTracksFading;
+	float indexFadeInDur;
+	float indexFadeOutDur;
+	Vector<ThemePartDescriptor> m_themParts;
+
+	void read(IBinaryArchive &fp);
+};
+
 struct EmitterSpec {
 	void registerMembers(MemberStructure &ms);
 };
@@ -259,6 +296,7 @@ struct BaseResourceDescriptor {
 	std::shared_ptr<MultiLayerResourceDescriptor> multiLayerResourceDescriptor;
 	std::shared_ptr<SequenceResourceDescriptor> sequenceResourceDescriptor;
 	std::shared_ptr<MultiTrackResourceDescriptor> multiTrackResourceDescriptor;
+	std::shared_ptr<ThemeResourceDescriptor> themeResourceDescriptor;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
@@ -428,6 +466,13 @@ struct StopEventDescriptor {
 	void read(IBinaryArchive &fp);
 };
 
+struct RemovePresetEventDescriptor {
+	EventDescriptor pBase;
+	uint32_t presetId;
+
+	void read(IBinaryArchive &fp);
+};
+
 class sbaoFile {
 public:
 	sbaoFile();
@@ -449,6 +494,7 @@ public:
 	std::shared_ptr<PresetDescriptor> presetDescriptor;
 	std::shared_ptr<PresetEventDescriptor> presetEventDescriptor;
 	std::shared_ptr<StopEventDescriptor> stopEventDescriptor;
+	std::shared_ptr<RemovePresetEventDescriptor> removePresetEventDescriptor;
 	std::shared_ptr<SndData> sndData;
 };
 

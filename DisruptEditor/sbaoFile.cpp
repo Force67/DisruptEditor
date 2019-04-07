@@ -76,6 +76,9 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	} else if (typeName == "StopEventDescriptor") {
 		stopEventDescriptor = std::make_shared<StopEventDescriptor>();
 		stopEventDescriptor->read(fp);
+	} else if (typeName == "RemovePresetEventDescriptor") {
+		removePresetEventDescriptor = std::make_shared<RemovePresetEventDescriptor>();
+		removePresetEventDescriptor->read(fp);
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
@@ -181,6 +184,9 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	} else if (typeName == "MultiTrackResourceDescriptor") {
 		multiTrackResourceDescriptor = std::make_shared<MultiTrackResourceDescriptor>();
 		multiTrackResourceDescriptor->read(fp);
+	} else if (typeName == "ThemeResourceDescriptor") {
+		themeResourceDescriptor = std::make_shared<ThemeResourceDescriptor>();
+		themeResourceDescriptor->read(fp);
 	}
 	else {
 		SDL_assert_release(false);
@@ -708,4 +714,43 @@ void DataBlock::read(IBinaryArchive & fp) {
 	fp.serialize(m_memoryType);
 
 	SDL_assert_release(m_size == 0);//TODO
+}
+
+void RemovePresetEventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(pBase);
+	fp.serialize(presetId);
+	StreamValidationPoint(fp);
+}
+
+void ThemeResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(ulStartLoop);
+	fp.serialize(ulNbLoopsulNbLoops);
+	fp.serialize(bStartImmediatly);
+	fp.serialize(bIsNotifying);
+	fp.serialize(bStream);
+	fp.serialize(ulResNotificationUserData);
+	fp.serialize(eTransition);
+	fp.serialize(eIndexFadeInType);
+	fp.serialize(eIndexFadeOutType);
+	fp.serialize(pstPartOutro);
+	fp.serialize(fThemeLength);
+	fp.serialize(fPosMainReLoop);
+	fp.serialize(ulTracksFading);
+	fp.serialize(indexFadeInDur);
+	fp.serialize(indexFadeOutDur);
+	fp.serializeNdVectorExternal(m_themParts);
+}
+
+void ThemePartOutroDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(type.id);
+	std::string typeName = type.getReverseName();
+	SDL_assert_release(type.id == 0);
+}
+
+void ThemePartDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(resRef);
+	fp.serialize(bLoopStart);
+	fp.serialize(bLoopEnd);
+	fp.serialize(lNbLoops);
+	fp.serialize(fLength);
 }
