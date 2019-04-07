@@ -186,6 +186,7 @@ struct SampleResourceDescriptor {
 	std::vector<short> decode();
 	void play();
 	void saveDecoded(const char* file);
+	uint32_t getHelpfulId();
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);

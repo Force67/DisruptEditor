@@ -1,4 +1,5 @@
 #include "sbaoFile.h"
+#include "sbaoFile.h"
 
 #include <algorithm>
 #include <stdio.h>
@@ -260,30 +261,33 @@ void LimiterInfoDescriptor::registerMembers(MemberStructure & ms) {
 }
 
 std::vector<short> SampleResourceDescriptor::decode() {
-	SDL_assert_release(!stToolSourceFormat.bStream);//TODO
+	SndData sndData;
+	if (stToolSourceFormat.bStream) {
+		sbaoFile &streamRef = DARE::instance().loadAtomicObject(stToolSourceFormat.streamRef.refAtomicId);
+		//sbaoFile &uSndDataZeroLatencyMemPart = DARE::instance().loadAtomicObject(stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId);
+		SDL_assert_release(stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId == 0xFFFFFFFF);
+		sndData = *streamRef.sndData;
+	} else {
+		sbaoFile &source = DARE::instance().loadAtomicObject(stToolSourceFormat.dataRef.refAtomicId);
+		SDL_assert_release(source.sndData);
+		sndData = *source.sndData;
+	}
 
 	std::vector<short> decoded;
 	switch (CompressionFormat) {
 	case 1: {//PCM
-		//Find the SourceObject
-		sbaoFile source = DARE::instance().loadAtomicObject(stToolSourceFormat.dataRef.refAtomicId);
-		SDL_assert_release(source.sndData);
-
-		decoded.resize(source.sndData->rawData.size() / sizeof(short));
-		memcpy(decoded.data(), source.sndData->rawData.data(), source.sndData->rawData.size());
+		decoded.resize(sndData.rawData.size() / sizeof(short));
+		memcpy(decoded.data(), sndData.rawData.data(), sndData.rawData.size());
 		break;
 	}
 	case 2: {//ADPCM
-		//Find the SourceObject
-		sbaoFile source = DARE::instance().loadAtomicObject(stToolSourceFormat.dataRef.refAtomicId);
-		SDL_assert_release(source.sndData);
-		decoded.resize(source.sndData->rawData.size() * 16);//This should be a good enough buffer for decoding
+		decoded.resize(sndData.rawData.size() * 16);//This should be a good enough buffer for decoding
 
 		if (ulNbChannels == 2) {
 			SAdpcmStereoParam param;
 			memset(&param, 0, sizeof(param));
-			param.InputBuffer = source.sndData->rawData.data() + (44 + 20 + 4);//44 + 20 is what i found made the ADPCM play with no glitches
-			param.InputLength = source.sndData->rawData.size() - (44 + 20 + 4);
+			param.InputBuffer = sndData.rawData.data() + (44 + 20 + 4);//44 + 20 is what i found made the ADPCM play with minimal glitches
+			param.InputLength = sndData.rawData.size() - (44 + 20 + 4);
 			param.OutputBuffer = decoded.data();
 			int written = 0;
 			bool ret = DecompressStereoAdpcm(&param, written);
@@ -293,8 +297,8 @@ std::vector<short> SampleResourceDescriptor::decode() {
 		else if (ulNbChannels == 1) {
 			SAdpcmMonoParam param;
 			memset(&param, 0, sizeof(param));
-			param.InputBuffer = source.sndData->rawData.data() + (44 + 20 + 4);//44 + 20 is what i found made the ADPCM play with no glitches
-			param.InputLength = source.sndData->rawData.size() - (44 + 20 + 4);
+			param.InputBuffer = sndData.rawData.data() + (44 + 20 + 4);//44 + 20 is what i found made the ADPCM play with minimal glitches
+			param.InputLength = sndData.rawData.size() - (44 + 20 + 4);
 			param.OutputBuffer = decoded.data();
 			int written = 0;
 			bool ret = DecompressMonoAdpcm(&param, written);
@@ -308,13 +312,9 @@ std::vector<short> SampleResourceDescriptor::decode() {
 		break;
 	}
 	case 4: {//OGG
-		//Find the SourceObject
-		sbaoFile source = DARE::instance().loadAtomicObject(stToolSourceFormat.dataRef.refAtomicId);
-		SDL_assert_release(source.sndData);
-
 		int channels, sampleRate;
 		short *output;
-		int ret = stb_vorbis_decode_memory(source.sndData->rawData.data(), source.sndData->rawData.size(), &channels, &sampleRate, &output);
+		int ret = stb_vorbis_decode_memory(sndData.rawData.data(), sndData.rawData.size(), &channels, &sampleRate, &output);
 		SDL_assert_release(channels == ulNbChannels);
 		SDL_assert_release(sampleRate == ulFreq);
 
@@ -347,6 +347,14 @@ void SampleResourceDescriptor::saveDecoded(const char * file) {
 	drwav* pWav = drwav_open_file_write(file, &format);
 	drwav_uint64 samplesWritten = drwav_write(pWav, decoded.size(), decoded.data());
 	drwav_close(pWav);
+}
+
+uint32_t SampleResourceDescriptor::getHelpfulId() {
+	if (stToolSourceFormat.bStream) {
+		return stToolSourceFormat.streamRef.refAtomicId;
+	} else {
+		return stToolSourceFormat.dataRef.refAtomicId;
+	}
 }
 
 void SampleResourceDescriptor::read(IBinaryArchive & fp) {
