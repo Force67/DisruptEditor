@@ -56,11 +56,19 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	//We need to know ahead of time if this is audio data or a object
 
 	//This is for object
-	fp.serialize(type.id);
+	if (!fp.isReading() && sndData) {
+		fp.memBlock(sndData->rawData.data(), 1, sndData->rawData.size());
+		fp.padding = IBinaryArchive::PADDING_IBINARYARCHIVE;
+		return;
+	} else {
+		fp.serialize(type.id);
+	}
+
 	std::string typeName = type.getReverseName();
 
 	if (typeName == "ResourceDescriptor") {
-		resourceDescriptor = std::make_shared<ResourceDescriptor>();
+		if(!resourceDescriptor)
+			resourceDescriptor = std::make_shared<ResourceDescriptor>();
 		resourceDescriptor->read(fp);
 	} else if (typeName == "PlayEventDescriptor") {
 		playEventDescriptor = std::make_shared<PlayEventDescriptor>();
@@ -101,8 +109,7 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
-	}
-	else {
+	} else {
 		type = CDobbsID("SndData");
 
 		//Assume this is sound data
@@ -308,8 +315,8 @@ std::vector<short> SampleResourceDescriptor::decode() {
 		if (ulNbChannels == 2) {
 			SAdpcmStereoParam param;
 			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + (44 + 20 + 4);//44 + 20 is what i found made the ADPCM play with minimal glitches
-			param.InputLength = sndData.rawData.size() - (44 + 20 + 4);
+			param.InputBuffer = sndData.rawData.data() + 32;
+			param.InputLength = sndData.rawData.size() - 32;
 			param.OutputBuffer = decoded.data();
 			int written = 0;
 			bool ret = DecompressStereoAdpcm(&param, written);
@@ -319,8 +326,8 @@ std::vector<short> SampleResourceDescriptor::decode() {
 		else if (ulNbChannels == 1) {
 			SAdpcmMonoParam param;
 			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + (44 + 20 + 4);//44 + 20 is what i found made the ADPCM play with minimal glitches
-			param.InputLength = sndData.rawData.size() - (44 + 20 + 4);
+			param.InputBuffer = sndData.rawData.data() + 32;
+			param.InputLength = sndData.rawData.size() - 32;
 			param.OutputBuffer = decoded.data();
 			int written = 0;
 			bool ret = DecompressMonoAdpcm(&param, written);
@@ -786,6 +793,50 @@ void SequenceResourceDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(fLength);
 	fp.serialize(fPosMainReLoop);
 	fp.serializeNdVectorExternal(sequences);
+}
+
+std::vector<short> MultiTrackResourceDescriptor::decode(int i) {
+	SDL_RWops *mem = SDL_RWFromConstMem(m_tracksRawData.data.data(), m_tracksRawData.data.size());
+	CBinaryArchiveReader fp(mem);
+
+	uint32_t type = 1048585;
+	fp.serialize(type);
+	SDL_assert_release(type == 1048585);
+
+	uint32_t zero = 0;
+	fp.serialize(zero);
+	SDL_assert_release(zero == 0);
+
+	uint32_t numLayers = ulNbTrack;
+	fp.serialize(numLayers);
+	SDL_assert_release(numLayers == ulNbTrack);
+
+	uint32_t totalBlocks;
+	fp.serialize(totalBlocks);
+
+	struct infoPart {
+		uint8_t unk[3];
+		void read(IBinaryArchive &fp) {
+			fp.serialize(unk[0]);
+			fp.serialize(unk[1]);
+			fp.serialize(unk[2]);
+		}
+	};
+	Vector<infoPart> infoTable;
+	fp.serializeNdVectorExternal(infoTable);
+
+	Vector<uint32_t> headerSizes(numLayers);
+	for (uint32_t i = 0; i < numLayers; ++i)
+		fp.serialize(headerSizes[i]);
+
+	Vector< Vector<uint8_t> > data(numLayers);
+	//Read Headers
+	for (uint32_t i = 0; i < numLayers; ++i) {
+		data[i].resize(headerSizes[i]);
+		fp.memBlock(data[i].data(), 1, headerSizes[i]);
+	}
+
+	return std::vector<short>();
 }
 
 void MultiTrackResourceDescriptor::read(IBinaryArchive & fp) {

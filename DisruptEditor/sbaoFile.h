@@ -354,6 +354,10 @@ struct MultiTrackResourceDescriptor {
 	DynamicIndexedPropertyContainer platformSpecificProperties;
 	uint32_t currentResourceID;
 
+	std::vector<short> decode(int i);
+	void play(int i);
+	void saveDecoded(const char* file, int i);
+
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms) {
 		REGISTER_MEMBER(bLoop);

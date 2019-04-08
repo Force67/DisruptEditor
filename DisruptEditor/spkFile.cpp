@@ -34,10 +34,16 @@ void spkFile::open(IBinaryArchive &fp) {
 			SDL_assert_release(fp.tell() == nextOffset);
 			SDL_RWseek(fp.fp, nextOffset, RW_SEEK_SET);
 		} else {
-			/*Vector<uint8_t> data = objs[i].save();
-			size = data.size();
+			Vector<uint8_t> tempData(1024 * 1024 * 128);//128 mb buffer should be good enough for anything
+			SDL_RWops *tempFP = SDL_RWFromMem(tempData.data(), tempData.size());
+			CBinaryArchiveWriter writer(tempFP);
+			objs[i].open(writer, 0);
+			tempData.resize(SDL_RWtell(tempFP));
+			SDL_RWclose(tempFP);
+
+			size = tempData.size();
 			fp.serialize(size);
-			fp.memBlock(data.data(), 1, size);*/
+			fp.memBlock(tempData.data(), 1, size);
 		}
 		
 		fp.pad(4);
