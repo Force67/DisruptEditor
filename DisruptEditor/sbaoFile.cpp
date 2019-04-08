@@ -141,11 +141,8 @@ void sbaoFile::registerMembers(MemberStructure & ms) {
 }
 
 void ResourceDescriptor::read(IBinaryArchive & fp) {
-	SDL_Log("%u", fp.tell());
-
 	fp.serialize(Id);
 	resVolume.read(fp);
-	SDL_Log("%u", fp.tell());
 	fp.serialize(bLocalised);
 	globalLimiterInfo.read(fp);
 	perSoundObjectLimiterInfo.read(fp);
@@ -790,12 +787,14 @@ void tdstMultiTrackElement::read(IBinaryArchive & fp) {
 }
 
 void DataBlock::read(IBinaryArchive & fp) {
+	uint32_t m_size = data.size();
 	fp.serialize(m_size);
 	fp.serialize(m_allocInfos);
 	fp.serialize(m_allocatorType);
 	fp.serialize(m_memoryType);
 
-	SDL_assert_release(m_size == 0);//TODO
+	data.resize(m_size);
+	fp.memBlock(data.data(), 1, m_size);
 }
 
 void RemovePresetEventDescriptor::read(IBinaryArchive & fp) {

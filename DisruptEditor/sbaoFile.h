@@ -308,17 +308,17 @@ struct tdstMultiTrackElement {
 };
 
 struct DataBlock {
-	uint32_t m_size;
 	uint32_t m_allocInfos;
 	uint32_t m_allocatorType;
 	uint32_t m_memoryType;
+	Vector<uint8_t> data;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms) {
-		REGISTER_MEMBER(m_size);
 		REGISTER_MEMBER(m_allocInfos);
 		REGISTER_MEMBER(m_allocatorType);
 		REGISTER_MEMBER(m_memoryType);
+		REGISTER_MEMBER(data);
 	}
 };
 
