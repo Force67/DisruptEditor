@@ -462,7 +462,7 @@ void SND_tdstToolSourceFormat::registerMembers(MemberStructure & ms) {
 }
 
 void tdstWaveMarkerList::read(IBinaryArchive & fp) {
-	fp.serializeNdVectorExternal_pod(stringPool);
+	fp.serialize(stringPool);
 	fp.serializeNdVectorExternal(m_waveMarkers);
 }
 
@@ -1131,4 +1131,32 @@ void SwitchEventDescriptor::read(IBinaryArchive & fp) {
 void SwitchEventDescriptorElement::read(IBinaryArchive & fp) {
 	fp.serialize(eventRef);
 	fp.serialize(switchValueId);
+}
+
+void StringPool::read(IBinaryArchive & fp) {
+	if (fp.isReading()) {
+		uint32_t size;
+		fp.serialize(size);
+		Vector<char> data(size);
+		fp.memBlock(data.data(), 1, size);
+
+		strings.clear();
+		std::string temp;
+		auto it = data.begin();
+		while (it != data.end()) {
+			if (*it == '\0') {
+				strings.push_back(temp);
+				temp.clear();
+			} else {
+				temp += *it;
+			}
+
+			++it;
+		}
+		if (!temp.empty())
+			strings.push_back(temp);
+	}
+	else {
+		//TODO
+	}
 }

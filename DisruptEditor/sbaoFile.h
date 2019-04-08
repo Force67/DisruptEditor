@@ -11,6 +11,15 @@
 
 struct ResourceDescriptor;
 
+struct StringPool {
+	Vector<std::string> strings;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, strings);
+	}
+};
+
 struct SndData {
 	Vector<uint8_t> rawData;
 	void registerMembers(MemberStructure &ms) {
@@ -141,7 +150,7 @@ struct tdstWaveMarkerElement {
 };
 
 struct tdstWaveMarkerList {
-	Vector<int8_t> stringPool;
+	StringPool stringPool;
 	Vector<tdstWaveMarkerElement> m_waveMarkers;
 
 	void read(IBinaryArchive &fp);
