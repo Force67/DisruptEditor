@@ -626,7 +626,7 @@ struct MicSpecDescriptor {
 	float fadeDuration;
 	int32_t fadeType;
 	uint32_t rolloffId;
-	int32_t useCone;
+	bool useCone;
 	SND_Cone cone;
 
 	void read(IBinaryArchive &fp);
@@ -649,12 +649,6 @@ struct MicPresetDescriptor {
 	void registerMembers(MemberStructure &ms) {
 		REGISTER_MEMBER(mask);
 		REGISTER_MEMBER(spec);
-	}
-};
-
-struct EffectPresetInfo {
-	void read(IBinaryArchive &fp);
-	void registerMembers(MemberStructure &ms) {
 	}
 };
 
@@ -705,6 +699,17 @@ struct ParamInfo {
 		REGISTER_MEMBER(fadeOutDuration);
 		REGISTER_MEMBER(absoluteChange);
 		REGISTER_MEMBER(paramValue);
+	}
+};
+
+struct EffectPresetInfo {
+	uint32_t effectId;
+	Vector<ParamInfo> paramsToChange;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(effectId);
+		REGISTER_MEMBER(paramsToChange);
 	}
 };
 

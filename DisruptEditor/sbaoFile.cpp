@@ -713,6 +713,8 @@ void MicSpecDescriptor::read(IBinaryArchive & fp) {
 }
 
 void EffectPresetInfo::read(IBinaryArchive & fp) {
+	fp.serialize(effectId);
+	fp.serializeNdVectorExternal(paramsToChange);
 }
 
 void BusPresetInfo::read(IBinaryArchive & fp) {
