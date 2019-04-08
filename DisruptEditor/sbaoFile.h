@@ -441,6 +441,68 @@ struct EmitterSpec {
 	void registerMembers(MemberStructure &ms);
 };
 
+struct GranularPitchInfo {
+	float m_freq;
+	uint32_t m_samplePos;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_freq);
+		REGISTER_MEMBER(m_samplePos);
+	}
+};
+
+struct GranularResourceDescriptor {
+	uint32_t m_idleStop;
+	uint32_t m_accStart;
+	uint32_t m_accStop;
+	uint32_t m_maxStart;
+	uint32_t m_maxStop;
+	uint32_t m_decStart;
+	uint32_t m_numChannels;
+	uint32_t m_freq;
+	uint32_t m_busId;
+	uint32_t m_autoDuckingSetPresetEventId;
+	bool m_isDecelerationEnabled;
+	uint32_t m_granuleMaxSize;
+	uint32_t m_granuleMinSize;
+	uint32_t m_constantGranuleMaxSize;
+	uint32_t m_constantGranuleMinSize;
+	uint32_t m_maxGranuleShuffle;
+	float m_smoothfactor;
+	float m_granuleOverlap;
+	uint32_t m_compression;
+	SND_tdstToolSourceFormat m_toolSourceFormat;
+	uint32_t m_granuleAligmentRes;
+	Vector<GranularPitchInfo> m_pitchInfo;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_idleStop);
+		REGISTER_MEMBER(m_accStart);
+		REGISTER_MEMBER(m_accStop);
+		REGISTER_MEMBER(m_maxStart);
+		REGISTER_MEMBER(m_maxStop);
+		REGISTER_MEMBER(m_decStart);
+		REGISTER_MEMBER(m_numChannels);
+		REGISTER_MEMBER(m_freq);
+		REGISTER_MEMBER(m_busId);
+		REGISTER_MEMBER(m_autoDuckingSetPresetEventId);
+		REGISTER_MEMBER(m_isDecelerationEnabled);
+		REGISTER_MEMBER(m_granuleMaxSize);
+		REGISTER_MEMBER(m_granuleMinSize);
+		REGISTER_MEMBER(m_constantGranuleMaxSize);
+		REGISTER_MEMBER(m_constantGranuleMinSize);
+		REGISTER_MEMBER(m_maxGranuleShuffle);
+		REGISTER_MEMBER(m_smoothfactor);
+		REGISTER_MEMBER(m_granuleOverlap);
+		REGISTER_MEMBER(m_compression);
+		REGISTER_MEMBER(m_toolSourceFormat);
+		REGISTER_MEMBER(m_granuleAligmentRes);
+		REGISTER_MEMBER(m_pitchInfo);
+	}
+};
+
 struct BaseResourceDescriptor {
 	CDobbsID type;
 
@@ -454,6 +516,7 @@ struct BaseResourceDescriptor {
 	std::shared_ptr<SequenceResourceDescriptor> sequenceResourceDescriptor;
 	std::shared_ptr<MultiTrackResourceDescriptor> multiTrackResourceDescriptor;
 	std::shared_ptr<ThemeResourceDescriptor> themeResourceDescriptor;
+	std::shared_ptr<GranularResourceDescriptor> granularResourceDescriptor;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);

@@ -212,6 +212,9 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	} else if (typeName == "ThemeResourceDescriptor") {
 		themeResourceDescriptor = std::make_shared<ThemeResourceDescriptor>();
 		themeResourceDescriptor->read(fp);
+	} else if (typeName == "GranularResourceDescriptor") {
+		granularResourceDescriptor = std::make_shared<GranularResourceDescriptor>();
+		granularResourceDescriptor->read(fp);
 	}
 	else {
 		SDL_assert_release(false);
@@ -237,6 +240,8 @@ void BaseResourceDescriptor::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*multiTrackResourceDescriptor);
 	if (typeName == "ThemeResourceDescriptor")
 		REGISTER_MEMBER(*themeResourceDescriptor);
+	if (typeName == "GranularResourceDescriptor")
+		REGISTER_MEMBER(*granularResourceDescriptor);
 }
 
 void RTPC::read(IBinaryArchive & fp) {
@@ -722,6 +727,9 @@ void ParameterValue::read(IBinaryArchive & fp) {
 	case 4:
 		fp.serializeNdVectorExternal_pod(valueListSndFloat);
 		break;
+	case 0:
+		//None
+		break;
 	default:
 		SDL_assert_release(false);
 	}
@@ -1019,4 +1027,34 @@ void RTParameterDescriptor::read(IBinaryArchive & fp) {
 
 void ProjectMicDataDescriptor::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(micSpecList);
+}
+
+void GranularResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(m_idleStop);
+	fp.serialize(m_accStart);
+	fp.serialize(m_accStop);
+	fp.serialize(m_maxStart);
+	fp.serialize(m_maxStop);
+	fp.serialize(m_decStart);
+	fp.serialize(m_numChannels);
+	fp.serialize(m_freq);
+	fp.serialize(m_busId);
+	fp.serialize(m_autoDuckingSetPresetEventId);
+	fp.serialize(m_isDecelerationEnabled);
+	fp.serialize(m_granuleMaxSize);
+	fp.serialize(m_granuleMinSize);
+	fp.serialize(m_constantGranuleMaxSize);
+	fp.serialize(m_constantGranuleMinSize);
+	fp.serialize(m_maxGranuleShuffle);
+	fp.serialize(m_smoothfactor);
+	fp.serialize(m_granuleOverlap);
+	fp.serialize(m_compression);
+	fp.serialize(m_toolSourceFormat);
+	fp.serialize(m_granuleAligmentRes);
+	fp.serializeNdVectorExternal(m_pitchInfo);
+}
+
+void GranularPitchInfo::read(IBinaryArchive & fp) {
+	fp.serialize(m_freq);
+	fp.serialize(m_samplePos);
 }
