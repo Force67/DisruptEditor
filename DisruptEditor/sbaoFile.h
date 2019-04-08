@@ -8,6 +8,7 @@
 #include <array>
 #include "IBinaryArchive.h"
 #include "Serialization.h"
+#include "HexBase64.h"
 
 struct ResourceDescriptor;
 
@@ -327,7 +328,14 @@ struct DataBlock {
 		REGISTER_MEMBER(m_allocInfos);
 		REGISTER_MEMBER(m_allocatorType);
 		REGISTER_MEMBER(m_memoryType);
-		REGISTER_MEMBER(data);
+		if (ms.type == ms.TOXML) {
+			std::string base64 = toBase64String(data.data(), data.size());
+			ms.registerMember("data", base64);
+		} else {
+			std::string base64;
+			ms.registerMember("data", base64);
+			data = fromBase64String(base64);
+		}
 	}
 };
 
