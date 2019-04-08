@@ -89,6 +89,15 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	} else if (typeName == "EmitterSpec") {
 		emitterSpec = std::make_shared<EmitterSpec>();
 		emitterSpec->read(fp);
+	} else if (typeName == "ChangeVolumeEventDescriptor") {
+		changeVolumeEventDescriptor = std::make_shared<ChangeVolumeEventDescriptor>();
+		changeVolumeEventDescriptor->read(fp);
+	} else if (typeName == "StopNGoEventDescriptor") {
+		stopNGoEventDescriptor = std::make_shared<StopNGoEventDescriptor>();
+		stopNGoEventDescriptor->read(fp);
+	} else if (typeName == "SwitchEventDescriptor") {
+		switchEventDescriptor = std::make_shared<SwitchEventDescriptor>();
+		switchEventDescriptor->read(fp);
 	}
 	else if (typeName[0] != '_') {
 		SDL_assert_release(false);
@@ -136,6 +145,12 @@ void sbaoFile::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*rolloffResourceDescriptor);
 	else if (typeName == "EmitterSpec")
 		REGISTER_MEMBER(*emitterSpec);
+	else if (typeName == "ChangeVolumeEventDescriptor")
+		REGISTER_MEMBER(*changeVolumeEventDescriptor);
+	else if (typeName == "StopNGoEventDescriptor")
+		REGISTER_MEMBER(*stopNGoEventDescriptor);
+	else if (typeName == "SwitchEventDescriptor")
+		REGISTER_MEMBER(*switchEventDescriptor);
 	else if (typeName == "SndData")
 		REGISTER_MEMBER(*sndData);
 }
@@ -215,6 +230,9 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	} else if (typeName == "GranularResourceDescriptor") {
 		granularResourceDescriptor = std::make_shared<GranularResourceDescriptor>();
 		granularResourceDescriptor->read(fp);
+	} else if (typeName == "SwitchResourceDescriptor") {
+		switchResourceDescriptor = std::make_shared<SwitchResourceDescriptor>();
+		switchResourceDescriptor->read(fp);
 	}
 	else {
 		SDL_assert_release(false);
@@ -242,6 +260,8 @@ void BaseResourceDescriptor::registerMembers(MemberStructure & ms) {
 		REGISTER_MEMBER(*themeResourceDescriptor);
 	if (typeName == "GranularResourceDescriptor")
 		REGISTER_MEMBER(*granularResourceDescriptor);
+	if (typeName == "SwitchResourceDescriptor")
+		REGISTER_MEMBER(*switchResourceDescriptor);
 }
 
 void RTPC::read(IBinaryArchive & fp) {
@@ -1057,4 +1077,52 @@ void GranularResourceDescriptor::read(IBinaryArchive & fp) {
 void GranularPitchInfo::read(IBinaryArchive & fp) {
 	fp.serialize(m_freq);
 	fp.serialize(m_samplePos);
+}
+
+void ChangeVolumeEventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(pBase);
+	fp.serialize(bApplyOnObjectType);
+	fp.serialize(newVolume_dB);
+	fp.serialize(fFadeDuration);
+	fp.serialize(eFadeType);
+	fp.serialize(lTrackID);
+	fp.serialize(multiTrackChannelId);
+	fp.serialize(emitterSpecId);
+	StreamValidationPoint(fp);
+}
+
+void SwitchResourceDescriptor::read(IBinaryArchive & fp) {
+	fp.serializeNdVectorExternal(m_elements);
+	fp.serialize(switchTypeId);
+	fp.serialize(defaultSwitchValueId);
+	fp.serialize(bDynamic);
+}
+
+void tdstSwitchElement::read(IBinaryArchive & fp) {
+	fp.serialize(resourceId);
+	fp.serialize(switchValueId);
+}
+
+void StopNGoEventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(pBase);
+	fp.serialize(uEvtStop);
+	fp.serialize(uEvtGo);
+	fp.serialize(fFadeDuration);
+	fp.serialize(eFadeType);
+	fp.serialize(bCrossFade);
+	fp.serialize(bStopAllEvents);
+	StreamValidationPoint(fp);
+}
+
+void SwitchEventDescriptor::read(IBinaryArchive & fp) {
+	fp.serialize(pBase);
+	fp.serialize(switchTypeId);
+	fp.serialize(defaultEvent);
+	fp.serializeNdVectorExternal(m_elements);
+	StreamValidationPoint(fp);
+}
+
+void SwitchEventDescriptorElement::read(IBinaryArchive & fp) {
+	fp.serialize(eventRef);
+	fp.serialize(switchValueId);
 }

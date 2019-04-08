@@ -503,6 +503,32 @@ struct GranularResourceDescriptor {
 	}
 };
 
+struct tdstSwitchElement {
+	uint32_t resourceId;
+	uint32_t switchValueId;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(resourceId);
+		REGISTER_MEMBER(switchValueId);
+	}
+};
+
+struct SwitchResourceDescriptor {
+	Vector<tdstSwitchElement> m_elements;
+	uint32_t switchTypeId;
+	uint32_t defaultSwitchValueId;
+	bool bDynamic;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(m_elements);
+		REGISTER_MEMBER(switchTypeId);
+		REGISTER_MEMBER(defaultSwitchValueId);
+		REGISTER_MEMBER(bDynamic);
+	}
+};
+
 struct BaseResourceDescriptor {
 	CDobbsID type;
 
@@ -517,6 +543,7 @@ struct BaseResourceDescriptor {
 	std::shared_ptr<MultiTrackResourceDescriptor> multiTrackResourceDescriptor;
 	std::shared_ptr<ThemeResourceDescriptor> themeResourceDescriptor;
 	std::shared_ptr<GranularResourceDescriptor> granularResourceDescriptor;
+	std::shared_ptr<SwitchResourceDescriptor> switchResourceDescriptor;
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
@@ -1096,6 +1123,76 @@ struct RolloffResourceDescriptor {
 	}
 };
 
+struct ChangeVolumeEventDescriptor {
+	EventDescriptor pBase;
+	bool bApplyOnObjectType;
+	float newVolume_dB;
+	float fFadeDuration;
+	uint32_t eFadeType;
+	int32_t lTrackID;
+	uint32_t multiTrackChannelId;
+	uint32_t emitterSpecId;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(pBase);
+		REGISTER_MEMBER(bApplyOnObjectType);
+		REGISTER_MEMBER(newVolume_dB);
+		REGISTER_MEMBER(fFadeDuration);
+		REGISTER_MEMBER(eFadeType);
+		REGISTER_MEMBER(lTrackID);
+		REGISTER_MEMBER(multiTrackChannelId);
+		REGISTER_MEMBER(emitterSpecId);
+	}
+};
+
+struct StopNGoEventDescriptor {
+	EventDescriptor pBase;
+	CObjectReference<EventDescriptor> uEvtStop;
+	CObjectReference<EventDescriptor> uEvtGo;
+	float fFadeDuration;
+	uint32_t eFadeType;
+	bool bCrossFade;
+	bool bStopAllEvents;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(pBase);
+		REGISTER_MEMBER(uEvtStop);
+		REGISTER_MEMBER(uEvtGo);
+		REGISTER_MEMBER(fFadeDuration);
+		REGISTER_MEMBER(eFadeType);
+		REGISTER_MEMBER(bCrossFade);
+		REGISTER_MEMBER(bStopAllEvents);
+	}
+};
+
+struct SwitchEventDescriptorElement {
+	CObjectReference<EventDescriptor> eventRef;
+	uint32_t switchValueId;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(eventRef);
+		REGISTER_MEMBER(switchValueId);
+	}
+};
+
+struct SwitchEventDescriptor {
+	EventDescriptor pBase;
+	uint32_t switchTypeId;
+	CObjectReference<EventDescriptor> defaultEvent;
+	Vector<SwitchEventDescriptorElement> m_elements;
+
+	void read(IBinaryArchive &fp);
+	void registerMembers(MemberStructure &ms) {
+		REGISTER_MEMBER(pBase);
+		REGISTER_MEMBER(switchTypeId);
+		REGISTER_MEMBER(defaultEvent);
+		REGISTER_MEMBER(m_elements);
+	}
+};
+
 class sbaoFile {
 public:
 	sbaoFile();
@@ -1121,6 +1218,9 @@ public:
 	std::shared_ptr<ProjectDesc> projectDesc;
 	std::shared_ptr<RolloffResourceDescriptor> rolloffResourceDescriptor;
 	std::shared_ptr<EmitterSpec> emitterSpec;
+	std::shared_ptr<ChangeVolumeEventDescriptor> changeVolumeEventDescriptor;
+	std::shared_ptr<StopNGoEventDescriptor> stopNGoEventDescriptor;
+	std::shared_ptr<SwitchEventDescriptor> switchEventDescriptor;
 	std::shared_ptr<SndData> sndData;
 };
 
