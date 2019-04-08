@@ -855,7 +855,11 @@ void ThemeResourceDescriptor::read(IBinaryArchive & fp) {
 void ThemePartOutroDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(type.id);
 	std::string typeName = type.getReverseName();
-	SDL_assert_release(type.id == 0);
+
+	if (typeName == "ThemePartOutroDescriptor") {
+		fp.serialize(resRef);
+		fp.serialize(fPos);
+	}
 }
 
 void ThemePartDescriptor::read(IBinaryArchive & fp) {

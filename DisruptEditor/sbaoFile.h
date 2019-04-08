@@ -358,9 +358,15 @@ struct MultiTrackResourceDescriptor {
 struct ThemePartOutroDescriptor {
 	CDobbsID type;
 
+	//ThemePartOutroDescriptor
+	CObjectReference<ResourceDescriptor> resRef;
+	float fPos;
+
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms) {
 		REGISTER_MEMBER(type);
+		REGISTER_MEMBER(resRef);
+		REGISTER_MEMBER(fPos);
 	}
 };
 
