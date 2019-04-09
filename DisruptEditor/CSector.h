@@ -4,6 +4,7 @@
 #include <vector>
 #include "CPathID.h"
 #include "GLHelper.h"
+#include <memory>
 
 class IBinaryArchive;
 class MemberStructure;

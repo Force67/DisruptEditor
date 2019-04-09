@@ -6,6 +6,7 @@
 #include "Vector.h"
 #include <SDL_assert.h>
 #include "tinyxml2.h"
+#include <memory>
 
 class Shader {
 public:

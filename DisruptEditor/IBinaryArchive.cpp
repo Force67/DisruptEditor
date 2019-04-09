@@ -137,7 +137,7 @@ void CBinaryArchiveReader::pad(size_t padding) {
 	Vector<uint8_t> data(seek);
 	memBlock(data.data(), 1, seek);
 	for (Sint64 i = 0; i < seek; ++i)
-		SDL_assert_release(data[i] == 0);
+		SDL_assert(data[i] == 0);
 	offset = SDL_RWtell(fp);
 }
 

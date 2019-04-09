@@ -50,26 +50,26 @@ void UI::displayTopMenu() {
 	if (ImGui::BeginMenu("Batch")) {
 		if (ImGui::MenuItem("Import Wlu XML")) {
 			for (auto it = world.wlus.begin(); it != world.wlus.end(); ++it) {
-				std::string xmlFileName = it->second.shortName + ".xml";
+				std::string xmlFileName = it->second->shortName + ".xml";
 				tinyxml2::XMLDocument doc;
 				if (doc.LoadFile(xmlFileName.c_str()) == tinyxml2::XMLError::XML_SUCCESS)
-					it->second.root.deserializeXML(doc.RootElement());
+					it->second->root.deserializeXML(doc.RootElement());
 			}
 		}
 		if (ImGui::MenuItem("Export Wlu XML")) {
 			for (auto it = world.wlus.begin(); it != world.wlus.end(); ++it) {
-				std::string xmlFileName = it->second.shortName + ".xml";
+				std::string xmlFileName = it->second->shortName + ".xml";
 				FILE *fp = fopen(xmlFileName.c_str(), "wb");
 				tinyxml2::XMLPrinter printer(fp);
-				it->second.root.serializeXML(printer);
+				it->second->root.serializeXML(printer);
 				fclose(fp);
 			}
 		}
 		if (ImGui::MenuItem("Save Wlu")) {
 			for (auto it = world.wlus.begin(); it != world.wlus.end(); ++it) {
-				std::string backup = it->second.origFilename;
+				std::string backup = it->second->origFilename;
 				backup += ".bak";
-				CopyFileA(it->second.origFilename.c_str(), backup.c_str(), TRUE);
+				CopyFileA(it->second->origFilename.c_str(), backup.c_str(), TRUE);
 
 				/*it->second.root.findFirstChild("Entities")->children.clear();//DEBUG
 				for (auto a = it->second.root.children.begin(); a != it->second.root.children.end();) {
@@ -79,7 +79,7 @@ void UI::displayTopMenu() {
 						++a;
 				}*/
 
-				it->second.serialize(it->second.origFilename.c_str());
+				it->second->serialize(it->second->origFilename.c_str());
 			}
 		}
 		ImGui::EndMenu();
@@ -95,6 +95,9 @@ void UI::displayTopMenu() {
 		ImGui::Text("Disrupt Editor v" DE_VERSIONSTR);
 		if (ImGui::Selectable("Check for updates"))
 			ShellExecute(0, 0, L"https://ci.appveyor.com/project/j301scott/disrupteditor/build/artifacts", 0, 0, SW_SHOW);
+		ImGui::Separator();
+		if (ImGui::Selectable("Watch Dogs Modding Discord"))
+			ShellExecute(0, 0, L"https://discord.gg/rTQcfDD", 0, 0, SW_SHOW);
 		ImGui::Separator();
 		if (ImGui::Selectable("Disrupt Editor - Jon"))
 			ShellExecute(0, 0, L"https://github.com/j301scott/DisruptEditor", 0, 0, SW_SHOW);

@@ -16,6 +16,7 @@ You may not use this file without permission
 #include "CStringID.h"
 #include "glm/glm.hpp"
 #include "NBCF.h"
+#include <memory>
 
 class IBinaryArchive;
 class MemberStructure;

@@ -23,7 +23,7 @@ static int char2int(char input) {
 		return input - 'A' + 10;
 	if (input >= 'a' && input <= 'f')
 		return input - 'a' + 10;
-	throw std::invalid_argument("Invalid input string");
+	throw std::string("Invalid input string");
 }
 
 std::vector<uint8_t> fromHexString(const std::string &str) {
