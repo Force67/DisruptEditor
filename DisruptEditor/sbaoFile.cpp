@@ -35,7 +35,7 @@ sbaoFile::~sbaoFile() {
 }
 
 template <typename T>
-void serializeForce(std::shared_ptr<T>& ptr, IBinaryArchive &fp) {
+void serializeSharedPtr(std::shared_ptr<T>& ptr, IBinaryArchive &fp) {
 	if (!ptr)
 		ptr = std::make_shared<T>();
 	ptr->read(fp);
@@ -75,44 +75,32 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	std::string typeName = type.getReverseName();
 
 	if (typeName == "ResourceDescriptor") {
-		serializeForce(resourceDescriptor, fp);
+		serializeSharedPtr(resourceDescriptor, fp);
 	} else if (typeName == "PlayEventDescriptor") {
-		serializeForce(playEventDescriptor, fp);
+		serializeSharedPtr(playEventDescriptor, fp);
 	} else if (typeName == "MultiEventDescriptor") {
-		multiEventDescriptor = std::make_shared<MultiEventDescriptor>();
-		multiEventDescriptor->read(fp);
+		serializeSharedPtr(multiEventDescriptor, fp);
 	} else if (typeName == "PresetDescriptor") {
-		presetDescriptor = std::make_shared<PresetDescriptor>();
-		presetDescriptor->read(fp);
+		serializeSharedPtr(presetDescriptor, fp);
 	} else if (typeName == "PresetEventDescriptor") {
-		presetEventDescriptor = std::make_shared<PresetEventDescriptor>();
-		presetEventDescriptor->read(fp);
+		serializeSharedPtr(presetEventDescriptor, fp);
 	} else if (typeName == "StopEventDescriptor") {
-		stopEventDescriptor = std::make_shared<StopEventDescriptor>();
-		stopEventDescriptor->read(fp);
+		serializeSharedPtr(stopEventDescriptor, fp);
 	} else if (typeName == "RemovePresetEventDescriptor") {
-		removePresetEventDescriptor = std::make_shared<RemovePresetEventDescriptor>();
-		removePresetEventDescriptor->read(fp);
+		serializeSharedPtr(removePresetEventDescriptor, fp);
 	} else if (typeName == "ProjectDesc") {
-		projectDesc = std::make_shared<ProjectDesc>();
-		projectDesc->read(fp);
+		serializeSharedPtr(projectDesc, fp);
 	} else if (typeName == "RolloffResourceDescriptor") {
-		rolloffResourceDescriptor = std::make_shared<RolloffResourceDescriptor>();
-		rolloffResourceDescriptor->read(fp);
+		serializeSharedPtr(rolloffResourceDescriptor, fp);
 	} else if (typeName == "EmitterSpec") {
-		emitterSpec = std::make_shared<EmitterSpec>();
-		emitterSpec->read(fp);
+		serializeSharedPtr(emitterSpec, fp);
 	} else if (typeName == "ChangeVolumeEventDescriptor") {
-		changeVolumeEventDescriptor = std::make_shared<ChangeVolumeEventDescriptor>();
-		changeVolumeEventDescriptor->read(fp);
+		serializeSharedPtr(changeVolumeEventDescriptor, fp);
 	} else if (typeName == "StopNGoEventDescriptor") {
-		stopNGoEventDescriptor = std::make_shared<StopNGoEventDescriptor>();
-		stopNGoEventDescriptor->read(fp);
+		serializeSharedPtr(stopNGoEventDescriptor, fp);
 	} else if (typeName == "SwitchEventDescriptor") {
-		switchEventDescriptor = std::make_shared<SwitchEventDescriptor>();
-		switchEventDescriptor->read(fp);
-	}
-	else if (typeName[0] != '_') {
+		serializeSharedPtr(switchEventDescriptor, fp);
+	} else if (typeName[0] != '_') {
 		SDL_assert_release(false);
 	} else {
 		type = CDobbsID("SndData");
@@ -219,33 +207,24 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(emitterSpecs);
 
 	if (typeName == "SampleResourceDescriptor") {
-		serializeForce(sampleResourceDescriptor, fp);
+		serializeSharedPtr(sampleResourceDescriptor, fp);
 	} else if (typeName == "RandomResourceDescriptor") {
-		randomResourceDescriptor = std::make_shared<RandomResourceDescriptor>();
-		randomResourceDescriptor->read(fp);
+		serializeSharedPtr(randomResourceDescriptor, fp);
 	} else if (typeName == "SilenceResourceDescriptor") {
-		silenceResourceDescriptor = std::make_shared<SilenceResourceDescriptor>();
-		silenceResourceDescriptor->read(fp);
+		serializeSharedPtr(silenceResourceDescriptor, fp);
 	} else if (typeName == "MultiLayerResourceDescriptor") {
-		multiLayerResourceDescriptor = std::make_shared<MultiLayerResourceDescriptor>();
-		multiLayerResourceDescriptor->read(fp);
+		serializeSharedPtr(multiLayerResourceDescriptor, fp);
 	} else if (typeName == "SequenceResourceDescriptor") {
-		sequenceResourceDescriptor = std::make_shared<SequenceResourceDescriptor>();
-		sequenceResourceDescriptor->read(fp);
+		serializeSharedPtr(sequenceResourceDescriptor, fp);
 	} else if (typeName == "MultiTrackResourceDescriptor") {
-		multiTrackResourceDescriptor = std::make_shared<MultiTrackResourceDescriptor>();
-		multiTrackResourceDescriptor->read(fp);
+		serializeSharedPtr(multiTrackResourceDescriptor, fp);
 	} else if (typeName == "ThemeResourceDescriptor") {
-		themeResourceDescriptor = std::make_shared<ThemeResourceDescriptor>();
-		themeResourceDescriptor->read(fp);
+		serializeSharedPtr(themeResourceDescriptor, fp);
 	} else if (typeName == "GranularResourceDescriptor") {
-		granularResourceDescriptor = std::make_shared<GranularResourceDescriptor>();
-		granularResourceDescriptor->read(fp);
+		serializeSharedPtr(granularResourceDescriptor, fp);
 	} else if (typeName == "SwitchResourceDescriptor") {
-		switchResourceDescriptor = std::make_shared<SwitchResourceDescriptor>();
-		switchResourceDescriptor->read(fp);
-	}
-	else {
+		serializeSharedPtr(switchResourceDescriptor, fp);
+	} else {
 		SDL_assert_release(false);
 	}
 }
