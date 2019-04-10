@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sbaoFile.h"
+#include <memory>
 
 class IBinaryArchive;
 class MemberStructure;
@@ -10,7 +11,7 @@ public:
 	void open(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms);
 
-	Vector<sbaoFile> objs;
+	Vector< std::shared_ptr<sbaoFile> > objs;
 	Vector<uint32_t> ids;
 };
 

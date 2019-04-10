@@ -23,7 +23,8 @@ static void StreamValidationPoint(IBinaryArchive & fp) {
 		uint32_t crc;
 		fp.serialize(crc);
 	} else {
-		SDL_assert_release(false);
+		uint32_t crc = 0;
+		fp.serialize(crc);
 	}
 }
 
@@ -31,6 +32,13 @@ sbaoFile::sbaoFile() {
 }
 
 sbaoFile::~sbaoFile() {
+}
+
+template <typename T>
+void serializeForce(std::shared_ptr<T>& ptr, IBinaryArchive &fp) {
+	if (!ptr)
+		ptr = std::make_shared<T>();
+	ptr->read(fp);
 }
 
 void sbaoFile::open(IBinaryArchive & fp, size_t size) {
@@ -67,12 +75,9 @@ void sbaoFile::open(IBinaryArchive & fp, size_t size) {
 	std::string typeName = type.getReverseName();
 
 	if (typeName == "ResourceDescriptor") {
-		if(!resourceDescriptor)
-			resourceDescriptor = std::make_shared<ResourceDescriptor>();
-		resourceDescriptor->read(fp);
+		serializeForce(resourceDescriptor, fp);
 	} else if (typeName == "PlayEventDescriptor") {
-		playEventDescriptor = std::make_shared<PlayEventDescriptor>();
-		playEventDescriptor->read(fp);
+		serializeForce(playEventDescriptor, fp);
 	} else if (typeName == "MultiEventDescriptor") {
 		multiEventDescriptor = std::make_shared<MultiEventDescriptor>();
 		multiEventDescriptor->read(fp);
@@ -214,8 +219,7 @@ void BaseResourceDescriptor::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(emitterSpecs);
 
 	if (typeName == "SampleResourceDescriptor") {
-		sampleResourceDescriptor = std::make_shared<SampleResourceDescriptor>();
-		sampleResourceDescriptor->read(fp);
+		serializeForce(sampleResourceDescriptor, fp);
 	} else if (typeName == "RandomResourceDescriptor") {
 		randomResourceDescriptor = std::make_shared<RandomResourceDescriptor>();
 		randomResourceDescriptor->read(fp);
@@ -294,8 +298,13 @@ std::vector<short> SampleResourceDescriptor::decode() {
 	if (stToolSourceFormat.bStream) {
 		sbaoFile &streamRef = DARE::instance().loadAtomicObject(stToolSourceFormat.streamRef.refAtomicId);
 		//sbaoFile &uSndDataZeroLatencyMemPart = DARE::instance().loadAtomicObject(stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId);
-		SDL_assert_release(stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId == 0xFFFFFFFF);
-		sndData = *streamRef.sndData;
+		if (stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId != 0xFFFFFFFF) {
+			sbaoFile& streamRefBegin = DARE::instance().loadAtomicObject(stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId);
+			sndData.rawData = streamRefBegin.sndData->rawData;
+			sndData.rawData.insert(sndData.rawData.end(), streamRef.sndData->rawData.begin(), streamRef.sndData->rawData.end());
+		} else {
+			sndData = *streamRef.sndData;
+		}
 	} else {
 		sbaoFile &source = DARE::instance().loadAtomicObject(stToolSourceFormat.dataRef.refAtomicId);
 		SDL_assert_release(source.sndData);
@@ -334,6 +343,39 @@ std::vector<short> SampleResourceDescriptor::decode() {
 			SDL_assert_release(ret);
 			decoded.resize(written);
 		} 
+		else {
+			SDL_assert_release(false);
+		}
+
+		break;
+	}
+	case 3: {//SeekableADPCM
+		decoded.resize(sndData.rawData.size() * 16);//This should be a good enough buffer for decoding
+		SDL_assert_release(false);
+
+
+		if (ulNbChannels == 2) {
+			SAdpcmStereoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = sndData.rawData.data() + 32;
+			param.InputLength = sndData.rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressStereoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		}
+		else if (ulNbChannels == 1) {
+			SAdpcmMonoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = sndData.rawData.data() + 32;
+			param.InputLength = sndData.rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressMonoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		}
 		else {
 			SDL_assert_release(false);
 		}
@@ -1106,6 +1148,135 @@ void ProjectMicDataDescriptor::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(micSpecList);
 }
 
+std::vector<short> GranularResourceDescriptor::decode() {
+	SndData sndData;
+	if (m_toolSourceFormat.bStream) {
+		sbaoFile& streamRef = DARE::instance().loadAtomicObject(m_toolSourceFormat.streamRef.refAtomicId);
+		//sbaoFile &uSndDataZeroLatencyMemPart = DARE::instance().loadAtomicObject(stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId);
+		SDL_assert_release(m_toolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId == 0xFFFFFFFF);
+		sndData = *streamRef.sndData;
+	}
+	else {
+		sbaoFile& source = DARE::instance().loadAtomicObject(m_toolSourceFormat.dataRef.refAtomicId);
+		SDL_assert_release(source.sndData);
+		sndData = *source.sndData;
+	}
+
+	std::vector<short> decoded;
+	switch (m_compression) {
+	case 1: {//PCM
+		decoded.resize(sndData.rawData.size() / sizeof(short));
+		memcpy(decoded.data(), sndData.rawData.data(), sndData.rawData.size());
+		break;
+	}
+	case 2: {//ADPCM
+		decoded.resize(sndData.rawData.size() * 16);//This should be a good enough buffer for decoding
+
+		//Header size is 0x20
+
+		if (m_numChannels == 2) {
+			SAdpcmStereoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = sndData.rawData.data() + 32;
+			param.InputLength = sndData.rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressStereoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		}
+		else if (m_numChannels == 1) {
+			SAdpcmMonoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = sndData.rawData.data() + 32;
+			param.InputLength = sndData.rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressMonoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		}
+		else {
+			SDL_assert_release(false);
+		}
+
+		break;
+	}
+	case 3: {//SeekableADPCM
+		decoded.resize(sndData.rawData.size() * 16);//This should be a good enough buffer for decoding
+		SDL_assert_release(false);
+		
+
+		if (m_numChannels == 2) {
+			SAdpcmStereoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = sndData.rawData.data() + 32;
+			param.InputLength = sndData.rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressStereoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		}
+		else if (m_numChannels == 1) {
+			SAdpcmMonoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = sndData.rawData.data() + 32;
+			param.InputLength = sndData.rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressMonoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		}
+		else {
+			SDL_assert_release(false);
+		}
+
+		break;
+	}
+	case 4: {//OGG
+		int channels, sampleRate;
+		short* output;
+		int ret = stb_vorbis_decode_memory(sndData.rawData.data(), sndData.rawData.size(), &channels, &sampleRate, &output);
+		SDL_assert_release(channels == m_numChannels);
+		SDL_assert_release(sampleRate == m_freq);
+
+		decoded.resize(ret * channels);
+		memcpy(decoded.data(), output, ret * channels * sizeof(short));
+		free(output);
+
+		break;
+	}
+	default:
+		SDL_assert_release(false);
+	}
+	return decoded;
+}
+
+void GranularResourceDescriptor::saveDecoded(const char* file) {
+	std::vector<short> decoded = decode();
+
+	drwav_data_format format;
+	format.container = drwav_container_riff;
+	format.format = DR_WAVE_FORMAT_PCM;
+	format.channels = m_numChannels;
+	format.sampleRate = m_freq;
+	format.bitsPerSample = 16;
+	drwav* pWav = drwav_open_file_write(file, &format);
+	drwav_uint64 samplesWritten = drwav_write(pWav, decoded.size(), decoded.data());
+	drwav_close(pWav);
+}
+
+uint32_t GranularResourceDescriptor::getHelpfulId() {
+	if (m_toolSourceFormat.bStream) {
+		return m_toolSourceFormat.streamRef.refAtomicId;
+	}
+	else {
+		return m_toolSourceFormat.dataRef.refAtomicId;
+	}
+}
+
 void GranularResourceDescriptor::read(IBinaryArchive & fp) {
 	fp.serialize(m_idleStop);
 	fp.serialize(m_accStart);
@@ -1208,6 +1379,13 @@ void StringPool::read(IBinaryArchive & fp) {
 			strings.push_back(temp);
 	}
 	else {
-		//TODO
+		Vector<char> data;
+		for (std::string str : strings) {
+
+		}
+
+		uint32_t size = data.size();
+		fp.serialize(size);
+		fp.memBlock(data.data(), 1, data.size());
 	}
 }

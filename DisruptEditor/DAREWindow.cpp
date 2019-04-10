@@ -7,6 +7,8 @@
 #include "Audio.h"
 #include "noc_file_dialog.h"
 #include "dr_wav.h"
+#define STB_VORBIS_HEADER_ONLY
+#include "stb_vorbis.c"
 #include "DARE.h"
 
 void UI::displayDARE() {
@@ -27,7 +29,7 @@ void UI::displayDARE() {
 
 	if (ImGui::Button("Save All")) {
 		for (auto it : DARE::instance().atomicObjects) {
-			sbaoFile &sbao = it.second.ao;
+			sbaoFile &sbao = *it.second.ao;
 
 			//displayImGui(sbao);
 
@@ -47,9 +49,31 @@ void UI::displayDARE() {
 		}
 	}
 
+	if (ImGui::Button("Save SPK")) {
+		for (auto it : DARE::instance().atomicObjects) {
+			sbaoFile& sbao = *it.second.ao;
+
+			//displayImGui(sbao);
+
+			if (sbao.resourceDescriptor) {
+				if (sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor) {
+					SampleResourceDescriptor& srd = *sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor;
+
+					uint32_t spkID = it.second.spkFile;
+					uint32_t sbaoID = srd.stToolSourceFormat.dataRef.refAtomicId;
+
+					char buffer[80];
+					snprintf(buffer, sizeof(buffer), "%08x_%08x.wav", spkID, sbaoID);
+					srd.saveDecoded(buffer);
+				}
+			}
+
+		}
+	}
+
 	if (ImGui::Button("Save All XML")) {
 		for (auto it : DARE::instance().atomicObjects) {
-			sbaoFile &sbao = it.second.ao;
+			sbaoFile &sbao = *it.second.ao;
 			uint32_t spkID = it.second.spkFile;
 			uint32_t sbaoID = it.first;
 
@@ -66,17 +90,22 @@ void UI::displayDARE() {
 
 	for (auto it : DARE::instance().atomicObjects) {
 		ImGui::Text("Atomic Object: %08x", it.first);
-		sbaoFile &sbao = it.second.ao;
+		sbaoFile &sbao = *it.second.ao;
 		ImGui::Text("Type: %s", sbao.type.getReverseName().c_str());
 
 		//displayImGui(sbao);
 		
 		if (sbao.resourceDescriptor) {
 			ImGui::Text("resourceDescriptor Type: %s", sbao.resourceDescriptor->pResourceDesc.type.getReverseName().c_str());
+			ImGui::InputFloat("ResVolume", &sbao.resourceDescriptor->resVolume.vol.m_volume_dB);
+
 			if (sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor) {
 				SampleResourceDescriptor &srd = *sbao.resourceDescriptor->pResourceDesc.sampleResourceDescriptor;
 				
 				switch (srd.CompressionFormat) {
+				case 1:
+					ImGui::Text("PCM");
+					break;
 				case 2:
 					ImGui::Text("ADPCM");
 					break;
@@ -100,8 +129,16 @@ void UI::displayDARE() {
 						if (pSampleData) {
 							srd.ulFreq = sampleRate;
 							srd.ulNbChannels = channels;
-							srd.CompressionFormat = 1;//PCM
+							srd.CompressionFormat = 1;//OGG
+							sbaoFile& sbao = DARE::instance().loadAtomicObject(srd.stToolSourceFormat.dataRef.refAtomicId);
+							sbao.sndData->rawData.resize(totalSampleCount * sizeof(short));
+							memcpy(sbao.sndData->rawData.data(), pSampleData, sbao.sndData->rawData.size());
+							srd.stToolSourceFormat.ulNbBytes = sbao.sndData->rawData.size();
 
+							SDL_RWops* fp = SDL_RWFromFile("test.spk", "wb");
+							CBinaryArchiveWriter writer(fp);
+							DARE::instance().spks.begin()->second->open(writer);
+							SDL_RWclose(fp);
 
 							drwav_free(pSampleData);
 						}

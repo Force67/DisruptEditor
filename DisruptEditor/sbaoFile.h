@@ -179,6 +179,7 @@ struct SampleResourceDescriptor {
 	uint32_t ulResNotificationUserData;
 	//1 - PCM
 	//2 - ADPCM
+	//3 - SeekADPCM
 	//4 - OGG
 	uint32_t CompressionFormat;
 	uint32_t ulNbChannels;
@@ -502,6 +503,11 @@ struct GranularResourceDescriptor {
 	SND_tdstToolSourceFormat m_toolSourceFormat;
 	uint32_t m_granuleAligmentRes;
 	Vector<GranularPitchInfo> m_pitchInfo;
+
+	std::vector<short> decode();
+	void play();
+	void saveDecoded(const char* file);
+	uint32_t getHelpfulId();
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms) {

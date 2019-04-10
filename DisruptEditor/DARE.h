@@ -11,10 +11,10 @@ public:
 
 	struct atomicObject {
 		uint32_t spkFile = -1;
-		sbaoFile ao;
+		std::shared_ptr<sbaoFile> ao;
 	};
 	std::unordered_map<uint32_t, atomicObject> atomicObjects;
-	std::unordered_map<uint32_t, Vector<uint32_t> > spks;
+	std::unordered_map<uint32_t, std::shared_ptr<spkFile> > spks;
 	sbaoFile& loadAtomicObject(uint32_t res);
 
 	static DARE& instance();

@@ -26,7 +26,8 @@ void spkFile::open(IBinaryArchive &fp) {
 			fp.serialize(size);
 			uint32_t nextOffset = fp.tell() + size;
 			try {
-				objs[i].open(fp, size);
+				objs[i] = std::make_shared<sbaoFile>();
+				objs[i]->open(fp, size);
 			}
 			catch (...) {
 				int a = 0;
@@ -34,16 +35,17 @@ void spkFile::open(IBinaryArchive &fp) {
 			SDL_assert_release(fp.tell() == nextOffset);
 			SDL_RWseek(fp.fp, nextOffset, RW_SEEK_SET);
 		} else {
-			Vector<uint8_t> tempData(1024 * 1024 * 128);//128 mb buffer should be good enough for anything
-			SDL_RWops *tempFP = SDL_RWFromMem(tempData.data(), tempData.size());
-			CBinaryArchiveWriter writer(tempFP);
-			objs[i].open(writer, 0);
-			tempData.resize(SDL_RWtell(tempFP));
-			SDL_RWclose(tempFP);
-
-			size = tempData.size();
+			Sint64 sizeOffset = fp.tell();
+			size = 0;
 			fp.serialize(size);
-			fp.memBlock(tempData.data(), 1, size);
+			Sint64 dataOffset = fp.tell();
+			objs[i]->open(fp, 0);
+			Sint64 endOffset = fp.tell();
+
+			SDL_RWseek(fp.fp, sizeOffset, RW_SEEK_SET);
+			size = endOffset - dataOffset;
+			fp.serialize(size);
+			SDL_RWseek(fp.fp, endOffset, RW_SEEK_SET);
 		}
 		
 		fp.pad(4);
@@ -54,6 +56,6 @@ void spkFile::registerMembers(MemberStructure & ms) {
 	for (uint32_t i = 0; i < objs.size(); ++i) {
 		char buffer[16];
 		snprintf(buffer, sizeof(buffer), "%08x", ids[i]);
-		ms.registerMember(buffer, objs[i]);
+		ms.registerMember(buffer, *objs[i]);
 	}
 }

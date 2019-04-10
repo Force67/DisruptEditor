@@ -15,7 +15,7 @@ public:
 	Node speechLength;
 	std::map<std::string, Node> behaviortrees;
 	std::map<int32_t, std::string> locStrings;
-	std::unordered_map<int32_t, uint32_t> soundidlinelinks;
+	std::map<int32_t, uint32_t> soundidlinelinks;
 
 	//locFile main;
 };
