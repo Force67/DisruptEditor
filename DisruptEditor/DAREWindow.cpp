@@ -115,6 +115,21 @@ void displayImGui(ResourceDescriptor& obj) {
 		if (ImGui::Button("Save recording.wav"))
 			mtrd.saveDecoded("recording.wav", 0);
 		ImGui::PopID();*/
+	} else if (obj.pResourceDesc.granularResourceDescriptor) {
+		GranularResourceDescriptor& grd = *obj.pResourceDesc.granularResourceDescriptor;
+
+
+		if (ImGui::Button("Save"))
+			grd.saveDecoded("record.wav");
+		if (ImGui::Button("Play")) {
+			Audio::instance().stopAll();
+			grd.play();
+		}
+
+		/*ImGui::PushID(&mtrd);
+		if (ImGui::Button("Save recording.wav"))
+			mtrd.saveDecoded("recording.wav", 0);
+		ImGui::PopID();*/
 	}
 }
 

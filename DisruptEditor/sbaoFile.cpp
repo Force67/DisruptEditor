@@ -70,6 +70,8 @@ static std::vector<short> decodeSoundData(uint32_t CompressionFormat, Vector<uin
 		decoded.resize(rawData.size() * 16);//This should be a good enough buffer for decoding
 		SDL_assert_release(false);
 
+		//Header is 0x20
+		//SubHeader is 0x4
 
 		if (ulNbChannels == 2) {
 			SAdpcmStereoParam param;
@@ -362,7 +364,20 @@ std::vector<short> SampleResourceDescriptor::decode() {
 		if (stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId != 0xFFFFFFFF) {
 			sbaoFile& streamRefBegin = DARE::instance().loadAtomicObject(stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId);
 			sndData.rawData = streamRefBegin.sndData->rawData;
-			sndData.rawData.insert(sndData.rawData.end(), streamRef.sndData->rawData.begin(), streamRef.sndData->rawData.end());
+			if (stToolSourceFormat.uSndDataZeroLatencyMemPart.refAtomicId == stToolSourceFormat.streamRef.refAtomicId) {
+				char buffer[80];
+				snprintf(buffer, sizeof(buffer), "soundbinary/%08x.sbao", stToolSourceFormat.streamRef.refAtomicId);
+
+				SDL_RWops* fp = FH::openFile(buffer);
+				if (fp) {
+					std::shared_ptr<sbaoFile> sbao = std::make_shared<sbaoFile>();
+					sbao->open(CBinaryArchiveReader(fp), SDL_RWsize(fp));
+					SDL_RWclose(fp);
+					sndData.rawData.insert(sndData.rawData.end(), sbao->sndData->rawData.begin(), sbao->sndData->rawData.end());
+				}
+			} else {
+				sndData.rawData.insert(sndData.rawData.end(), streamRef.sndData->rawData.begin(), streamRef.sndData->rawData.end());
+			}
 		} else {
 			sndData = *streamRef.sndData;
 		}
