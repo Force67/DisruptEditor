@@ -25,6 +25,8 @@ public:
 	std::string getStrFromCRC(uint32_t hash);
 	std::string getStrFromDobbs(uint32_t hash);
 
+	uint32_t getSpkFromSBAO(uint32_t resID);
+
 	void reinit();
 	static DB& instance();
 private:

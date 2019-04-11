@@ -82,6 +82,16 @@ std::string DB::getStrFromDobbs(uint32_t hash) {
 	}
 }
 
+uint32_t DB::getSpkFromSBAO(uint32_t resID) {
+	try {
+		uint32_t spk;
+		*db << "select spk from dare where sbao=?;" << resID >> spk;
+		return spk;
+	}
+	catch (...) { }
+	return -1;
+}
+
 void DB::reinit() {
 	if (db)
 		delete db;
@@ -162,6 +172,24 @@ void DB::reinit() {
 	handleCRCFile("res/exeStrings.txt", "etc");
 	handleCRCFile("res/strings.txt", "etc");
 	handleCRCFile("res/materialNames.txt", "Material");
+
+	//Dare
+	*db <<
+		"create table if not exists dare ("
+		"   spk integer not null,"
+		"   sbao integer not null"
+		");";
+	fp = fopen("res/dare.txt", "r");
+	auto psa = *db << "insert into dare (spk,sbao) values (?,?);";
+	while (fgets(buffer, sizeof(buffer), fp)) {
+		buffer[strlen(buffer) - 1] = '\0';
+		uint32_t spk, sbao;
+		sscanf(buffer, "%u,%u", &spk, &sbao);
+		psa << spk << sbao;
+		psa++;
+	}
+	fclose(fp);
+	psa.used(true);
 
 	*db << "commit;";
 }

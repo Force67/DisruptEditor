@@ -11,6 +11,8 @@
 #include "HexBase64.h"
 
 struct ResourceDescriptor;
+void addReferenceSpk(uint32_t ID);
+void addReferenceSbao(uint32_t ID);
 
 struct StringPool {
 	Vector<std::string> strings;
@@ -40,8 +42,21 @@ struct CObjectReference {
 	uint32_t refAtomicId;
 	void read(IBinaryArchive &fp) {
 		fp.serialize(refAtomicId);
+		addReferenceSpk(refAtomicId);
 	}
 	void registerMembers(MemberStructure &ms) {
+		ms.registerMember(NULL, refAtomicId);
+	}
+};
+
+template <>
+struct CObjectReference<SndData> {
+	uint32_t refAtomicId;
+	void read(IBinaryArchive& fp) {
+		fp.serialize(refAtomicId);
+		addReferenceSbao(refAtomicId);
+	}
+	void registerMembers(MemberStructure& ms) {
 		ms.registerMember(NULL, refAtomicId);
 	}
 };

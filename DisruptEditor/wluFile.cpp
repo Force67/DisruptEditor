@@ -307,7 +307,7 @@ void wluFile::draw(bool drawImgui, bool draw3D) {
 					ImGui::DragFloat(name, (float*)attr.buffer.data());
 					break;
 				case Types::UINT64:
-					ImGui::InputUInt64(name, (uint64_t*)attr.buffer.data());
+					ImGui::DragScalar(name, ImGuiDataType_U64, (uint64_t*)attr.buffer.data(), 1);
 					break;
 				case Types::VEC2:
 					ImGui::DragFloat2(name, (float*)attr.buffer.data());

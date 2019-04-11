@@ -6,7 +6,7 @@
 #include "DB.h"
 
 Vector<FileInfo> FH::getFileList(const std::string &dir, const std::string &extFilter) {
-	std::map<std::string, tfFILE> files;
+	std::unordered_map<std::string, tfFILE> files;
 
 	for (const std::string &base : settings.searchPaths) {
 		std::string fullPath = base + dir;
@@ -88,6 +88,13 @@ SDL_RWops * FH::openFile(const std::string & path) {
 	return fp;
 }
 
+SDL_RWops* FH::openFileWrite(const std::string& path) {
+	std::string fullPath = settings.patchDir + path;
+	//Todo: create parent directories
+
+	return SDL_RWFromFile(fullPath.c_str(), "wb");
+}
+
 SDL_RWops * FH::openFile(uint32_t path) {
 	SDL_RWops *fp = SDL_RWFromFile(getAbsoluteFilePath(path).c_str(), "rb");
 	if (!fp) return NULL;
@@ -159,12 +166,13 @@ static std::unordered_map<uint32_t, std::string> genListOfUnknown(const std::str
 static std::unordered_map<std::string, std::unordered_map<uint32_t, std::string> > unknownFileMap;
 
 std::string FH::getAbsoluteFilePath(const std::string &path) {
-	std::string fullPath = settings.patchDir + path;
-	if (PathFileExistsA(fullPath.c_str()))
+	char fullPath[512];
+	snprintf(fullPath, sizeof(fullPath), "%s%s", settings.patchDir.c_str(), path.c_str());
+	if (PathFileExistsA(fullPath))
 		return fullPath;
 	for (const std::string &base : settings.searchPaths) {
-		fullPath = base + path;
-		if (PathFileExistsA(fullPath.c_str()))
+		snprintf(fullPath, sizeof(fullPath), "%s%s", base.c_str(), path.c_str());
+		if (PathFileExistsA(fullPath))
 			return fullPath;
 	}
 

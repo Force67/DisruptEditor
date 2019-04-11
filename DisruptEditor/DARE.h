@@ -15,7 +15,13 @@ public:
 	};
 	std::unordered_map<uint32_t, atomicObject> atomicObjects;
 	std::unordered_map<uint32_t, std::shared_ptr<spkFile> > spks;
+
+	void reset();
 	sbaoFile& loadAtomicObject(uint32_t res);
+	bool isAtomicObjectLoaded(uint32_t res);
+
+	void addAODependency(uint32_t res);
+	void addSndDataDependency(uint32_t res);
 
 	static DARE& instance();
 };

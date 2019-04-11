@@ -126,33 +126,33 @@ void sbaoFile::registerMembers(MemberStructure & ms) {
 	REGISTER_MEMBER(type);
 	std::string typeName = type.getReverseName();
 	if (typeName == "ResourceDescriptor")
-		REGISTER_MEMBER(*resourceDescriptor);
+		ms.registerMember(NULL, *resourceDescriptor);
 	else if (typeName == "PlayEventDescriptor")
-		REGISTER_MEMBER(*playEventDescriptor);
+		ms.registerMember(NULL, *playEventDescriptor);
 	else if (typeName == "MultiEventDescriptor")
-		REGISTER_MEMBER(*multiEventDescriptor);
+		ms.registerMember(NULL, *multiEventDescriptor);
 	else if (typeName == "PresetDescriptor")
-		REGISTER_MEMBER(*presetDescriptor);
+		ms.registerMember(NULL, *presetDescriptor);
 	else if (typeName == "PresetEventDescriptor")
-		REGISTER_MEMBER(*presetEventDescriptor);
+		ms.registerMember(NULL, *presetEventDescriptor);
 	else if (typeName == "StopEventDescriptor")
-		REGISTER_MEMBER(*stopEventDescriptor);
+		ms.registerMember(NULL, *stopEventDescriptor);
 	else if (typeName == "RemovePresetEventDescriptor")
-		REGISTER_MEMBER(*removePresetEventDescriptor);
+		ms.registerMember(NULL, *removePresetEventDescriptor);
 	else if (typeName == "ProjectDesc")
-		REGISTER_MEMBER(*projectDesc);
+		ms.registerMember(NULL, *projectDesc);
 	else if (typeName == "RolloffResourceDescriptor")
-		REGISTER_MEMBER(*rolloffResourceDescriptor);
+		ms.registerMember(NULL, *rolloffResourceDescriptor);
 	else if (typeName == "EmitterSpec")
-		REGISTER_MEMBER(*emitterSpec);
+		ms.registerMember(NULL, *emitterSpec);
 	else if (typeName == "ChangeVolumeEventDescriptor")
-		REGISTER_MEMBER(*changeVolumeEventDescriptor);
+		ms.registerMember(NULL, *changeVolumeEventDescriptor);
 	else if (typeName == "StopNGoEventDescriptor")
-		REGISTER_MEMBER(*stopNGoEventDescriptor);
+		ms.registerMember(NULL, *stopNGoEventDescriptor);
 	else if (typeName == "SwitchEventDescriptor")
-		REGISTER_MEMBER(*switchEventDescriptor);
+		ms.registerMember(NULL, *switchEventDescriptor);
 	else if (typeName == "SndData")
-		REGISTER_MEMBER(*sndData);
+		ms.registerMember(NULL, *sndData);
 }
 
 void ResourceDescriptor::read(IBinaryArchive & fp) {
@@ -235,23 +235,23 @@ void BaseResourceDescriptor::registerMembers(MemberStructure & ms) {
 
 	std::string typeName = type.getReverseName();
 	if (typeName == "SampleResourceDescriptor")
-		REGISTER_MEMBER(*sampleResourceDescriptor);
-	if (typeName == "RandomResourceDescriptor")
-		REGISTER_MEMBER(*randomResourceDescriptor);
-	if (typeName == "SilenceResourceDescriptor")
-		REGISTER_MEMBER(*silenceResourceDescriptor);
-	if (typeName == "MultiLayerResourceDescriptor")
-		REGISTER_MEMBER(*multiLayerResourceDescriptor);
-	if (typeName == "SequenceResourceDescriptor")
-		REGISTER_MEMBER(*sequenceResourceDescriptor);
-	if (typeName == "MultiTrackResourceDescriptor")
-		REGISTER_MEMBER(*multiTrackResourceDescriptor);
-	if (typeName == "ThemeResourceDescriptor")
-		REGISTER_MEMBER(*themeResourceDescriptor);
-	if (typeName == "GranularResourceDescriptor")
-		REGISTER_MEMBER(*granularResourceDescriptor);
-	if (typeName == "SwitchResourceDescriptor")
-		REGISTER_MEMBER(*switchResourceDescriptor);
+		ms.registerMember(NULL, *sampleResourceDescriptor);
+	else if (typeName == "RandomResourceDescriptor")
+		ms.registerMember(NULL, *randomResourceDescriptor);
+	else if (typeName == "SilenceResourceDescriptor")
+		ms.registerMember(NULL, *silenceResourceDescriptor);
+	else if (typeName == "MultiLayerResourceDescriptor")
+		ms.registerMember(NULL, *multiLayerResourceDescriptor);
+	else if (typeName == "SequenceResourceDescriptor")
+		ms.registerMember(NULL, *sequenceResourceDescriptor);
+	else if (typeName == "MultiTrackResourceDescriptor")
+		ms.registerMember(NULL, *multiTrackResourceDescriptor);
+	else if (typeName == "ThemeResourceDescriptor")
+		ms.registerMember(NULL, *themeResourceDescriptor);
+	else if (typeName == "GranularResourceDescriptor")
+		ms.registerMember(NULL, *granularResourceDescriptor);
+	else if (typeName == "SwitchResourceDescriptor")
+		ms.registerMember(NULL, *switchResourceDescriptor);
 }
 
 void RTPC::read(IBinaryArchive & fp) {
@@ -382,7 +382,7 @@ std::vector<short> SampleResourceDescriptor::decode() {
 
 void SampleResourceDescriptor::play() {
 	std::vector<short> decoded = decode();
-
+	Audio::instance().addSound(ulFreq, ulNbChannels, decoded.data(), decoded.size() * sizeof(short), false);
 }
 
 void SampleResourceDescriptor::saveDecoded(const char * file) {
@@ -1367,4 +1367,12 @@ void StringPool::read(IBinaryArchive & fp) {
 		fp.serialize(size);
 		fp.memBlock(data.data(), 1, data.size());
 	}
+}
+
+void addReferenceSpk(uint32_t ID) {
+	DARE::instance().addAODependency(ID);
+}
+
+void addReferenceSbao(uint32_t ID) {
+	DARE::instance().addSndDataDependency(ID);
 }
