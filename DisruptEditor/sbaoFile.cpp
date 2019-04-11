@@ -15,6 +15,7 @@
 #include "Audio.h"
 #define STB_VORBIS_HEADER_ONLY
 #include "stb_vorbis.c"
+#include "FileHandler.h"
 
 static void StreamValidationPoint(IBinaryArchive & fp) {
 	//Dare::StreamValidationPoint((SndGear::Serializer &))
@@ -28,10 +29,91 @@ static void StreamValidationPoint(IBinaryArchive & fp) {
 	}
 }
 
-sbaoFile::sbaoFile() {
-}
+static std::vector<short> decodeSoundData(uint32_t CompressionFormat, Vector<uint8_t> &rawData, uint32_t ulNbChannels, uint32_t ulFreq) {
+	std::vector<short> decoded;
+	switch (CompressionFormat) {
+	case 1: {//PCM
+		decoded.resize(rawData.size() / sizeof(short));
+		memcpy(decoded.data(), rawData.data(), rawData.size());
+		break;
+	}
+	case 2: {//ADPCM
+		decoded.resize(rawData.size() * 16);//This should be a good enough buffer for decoding
 
-sbaoFile::~sbaoFile() {
+		if (ulNbChannels == 2) {
+			SAdpcmStereoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = rawData.data() + 32;
+			param.InputLength = rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressStereoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		} else if (ulNbChannels == 1) {
+			SAdpcmMonoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = rawData.data() + 32;
+			param.InputLength = rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressMonoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		} else {
+			SDL_assert_release(false);
+		}
+
+		break;
+	}
+	case 3: {//SeekableADPCM
+		decoded.resize(rawData.size() * 16);//This should be a good enough buffer for decoding
+		SDL_assert_release(false);
+
+
+		if (ulNbChannels == 2) {
+			SAdpcmStereoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = rawData.data() + 32;
+			param.InputLength = rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressStereoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		} else if (ulNbChannels == 1) {
+			SAdpcmMonoParam param;
+			memset(&param, 0, sizeof(param));
+			param.InputBuffer = rawData.data() + 32;
+			param.InputLength = rawData.size() - 32;
+			param.OutputBuffer = decoded.data();
+			int written = 0;
+			bool ret = DecompressMonoAdpcm(&param, written);
+			SDL_assert_release(ret);
+			decoded.resize(written);
+		} else {
+			SDL_assert_release(false);
+		}
+
+		break;
+	}
+	case 4: {//OGG
+		int channels, sampleRate;
+		short* output;
+		int ret = stb_vorbis_decode_memory(rawData.data(), rawData.size(), &channels, &sampleRate, &output);
+		SDL_assert_release(channels == ulNbChannels);
+		SDL_assert_release(sampleRate == ulFreq);
+
+		decoded.resize(ret * channels);
+		memcpy(decoded.data(), output, ret * channels * sizeof(short));
+		free(output);
+
+		break;
+	}
+	default:
+		SDL_assert_release(false);
+	}
+	return decoded;
 }
 
 template <typename T>
@@ -290,94 +372,7 @@ std::vector<short> SampleResourceDescriptor::decode() {
 		sndData = *source.sndData;
 	}
 
-	std::vector<short> decoded;
-	switch (CompressionFormat) {
-	case 1: {//PCM
-		decoded.resize(sndData.rawData.size() / sizeof(short));
-		memcpy(decoded.data(), sndData.rawData.data(), sndData.rawData.size());
-		break;
-	}
-	case 2: {//ADPCM
-		decoded.resize(sndData.rawData.size() * 16);//This should be a good enough buffer for decoding
-
-		if (ulNbChannels == 2) {
-			SAdpcmStereoParam param;
-			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + 32;
-			param.InputLength = sndData.rawData.size() - 32;
-			param.OutputBuffer = decoded.data();
-			int written = 0;
-			bool ret = DecompressStereoAdpcm(&param, written);
-			SDL_assert_release(ret);
-			decoded.resize(written);
-		}
-		else if (ulNbChannels == 1) {
-			SAdpcmMonoParam param;
-			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + 32;
-			param.InputLength = sndData.rawData.size() - 32;
-			param.OutputBuffer = decoded.data();
-			int written = 0;
-			bool ret = DecompressMonoAdpcm(&param, written);
-			SDL_assert_release(ret);
-			decoded.resize(written);
-		} 
-		else {
-			SDL_assert_release(false);
-		}
-
-		break;
-	}
-	case 3: {//SeekableADPCM
-		decoded.resize(sndData.rawData.size() * 16);//This should be a good enough buffer for decoding
-		SDL_assert_release(false);
-
-
-		if (ulNbChannels == 2) {
-			SAdpcmStereoParam param;
-			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + 32;
-			param.InputLength = sndData.rawData.size() - 32;
-			param.OutputBuffer = decoded.data();
-			int written = 0;
-			bool ret = DecompressStereoAdpcm(&param, written);
-			SDL_assert_release(ret);
-			decoded.resize(written);
-		}
-		else if (ulNbChannels == 1) {
-			SAdpcmMonoParam param;
-			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + 32;
-			param.InputLength = sndData.rawData.size() - 32;
-			param.OutputBuffer = decoded.data();
-			int written = 0;
-			bool ret = DecompressMonoAdpcm(&param, written);
-			SDL_assert_release(ret);
-			decoded.resize(written);
-		}
-		else {
-			SDL_assert_release(false);
-		}
-
-		break;
-	}
-	case 4: {//OGG
-		int channels, sampleRate;
-		short *output;
-		int ret = stb_vorbis_decode_memory(sndData.rawData.data(), sndData.rawData.size(), &channels, &sampleRate, &output);
-		SDL_assert_release(channels == ulNbChannels);
-		SDL_assert_release(sampleRate == ulFreq);
-
-		decoded.resize(ret * channels);
-		memcpy(decoded.data(), output, ret * channels * sizeof(short));
-		free(output);
-
-		break;
-	}
-	default:
-		SDL_assert_release(false);
-	}
-	return decoded;
+	return decodeSoundData(CompressionFormat, sndData.rawData, ulNbChannels, ulFreq);
 }
 
 void SampleResourceDescriptor::play() {
@@ -816,9 +811,27 @@ void SequenceResourceDescriptor::read(IBinaryArchive & fp) {
 	fp.serializeNdVectorExternal(sequences);
 }
 
-std::vector<short> MultiTrackResourceDescriptor::decode(int i) {
-	SDL_RWops *mem = SDL_RWFromConstMem(m_tracksRawData.data.data(), m_tracksRawData.data.size());
+std::vector<short> MultiTrackResourceDescriptor::decode(int layer) {
+	SDL_RWops* mem;
+	Vector<uint8_t> tempRawData;
+	if (m_tracksRawData.data.empty()) {
+		char buffer[80];
+		snprintf(buffer, sizeof(buffer), "soundbinary/%08x.sbao", currentResourceID);
+
+		SDL_RWops* fp = FH::openFile(buffer);
+		if (fp) {
+			std::shared_ptr<sbaoFile> sbao = std::make_shared<sbaoFile>();
+			sbao->open(CBinaryArchiveReader(fp), SDL_RWsize(fp));
+			SDL_RWclose(fp);
+			tempRawData = sbao->sndData->rawData;
+			mem = SDL_RWFromConstMem(tempRawData.data(), tempRawData.size());
+		}
+	} else {
+		mem = SDL_RWFromConstMem(m_tracksRawData.data.data(), m_tracksRawData.data.size());
+	}
+
 	CBinaryArchiveReader fp(mem);
+	fp.padding = fp.PADDING_NONE;
 
 	uint32_t type = 1048585;
 	fp.serialize(type);
@@ -835,16 +848,10 @@ std::vector<short> MultiTrackResourceDescriptor::decode(int i) {
 	uint32_t totalBlocks;
 	fp.serialize(totalBlocks);
 
-	struct infoPart {
-		uint8_t unk[3];
-		void read(IBinaryArchive &fp) {
-			fp.serialize(unk[0]);
-			fp.serialize(unk[1]);
-			fp.serialize(unk[2]);
-		}
-	};
-	Vector<infoPart> infoTable;
-	fp.serializeNdVectorExternal(infoTable);
+	Vector<uint8_t> infoTable;
+	fp.serializeNdVectorExternal_pod(infoTable);
+	//TODO: Figure this out
+	SDL_RWseek(fp.fp, 64 - numLayers * 4, RW_SEEK_CUR);
 
 	Vector<uint32_t> headerSizes(numLayers);
 	for (uint32_t i = 0; i < numLayers; ++i)
@@ -857,7 +864,45 @@ std::vector<short> MultiTrackResourceDescriptor::decode(int i) {
 		fp.memBlock(data[i].data(), 1, headerSizes[i]);
 	}
 
-	return std::vector<short>();
+	//Read Blocks
+	for (uint32_t i = 0; i < totalBlocks; ++i) {
+		uint32_t blockID;
+		fp.serialize(blockID);
+
+		uint32_t unk;
+		fp.serialize(unk);
+
+		Vector<uint32_t> blockSizes(numLayers);
+		for (uint32_t j = 0; j < numLayers; ++j)
+			fp.serialize(blockSizes[j]);
+
+		for (uint32_t j = 0; j < numLayers; ++j) {
+			Vector<uint8_t> blockData(blockSizes[j]);
+			fp.memBlock(blockData.data(), 1, blockSizes[j]);
+			data[j].insert(data[j].end(), blockData.begin(), blockData.end());
+		}
+	}
+
+	return decodeSoundData(m_tracks[layer].CompressionFormat, data[layer], m_tracks[layer].ulNbChannels, m_tracks[layer].ulFreq);
+}
+
+void MultiTrackResourceDescriptor::play(int layer) {
+	std::vector<short> decoded = decode(layer);
+	Audio::instance().addSound(m_tracks[layer].ulFreq, m_tracks[layer].ulNbChannels, decoded.data(), decoded.size() * sizeof(short), false);
+}
+
+void MultiTrackResourceDescriptor::saveDecoded(const char* file, int layer) {
+	std::vector<short> decoded = decode(layer);
+
+	drwav_data_format format;
+	format.container = drwav_container_riff;
+	format.format = DR_WAVE_FORMAT_PCM;
+	format.channels = m_tracks[layer].ulNbChannels;
+	format.sampleRate = m_tracks[layer].ulFreq;
+	format.bitsPerSample = 16;
+	drwav* pWav = drwav_open_file_write(file, &format);
+	drwav_uint64 samplesWritten = drwav_write(pWav, decoded.size(), decoded.data());
+	drwav_close(pWav);
 }
 
 void MultiTrackResourceDescriptor::read(IBinaryArchive & fp) {
@@ -1141,96 +1186,12 @@ std::vector<short> GranularResourceDescriptor::decode() {
 		sndData = *source.sndData;
 	}
 
-	std::vector<short> decoded;
-	switch (m_compression) {
-	case 1: {//PCM
-		decoded.resize(sndData.rawData.size() / sizeof(short));
-		memcpy(decoded.data(), sndData.rawData.data(), sndData.rawData.size());
-		break;
-	}
-	case 2: {//ADPCM
-		decoded.resize(sndData.rawData.size() * 16);//This should be a good enough buffer for decoding
+	return decodeSoundData(m_compression, sndData.rawData, m_numChannels, m_freq);
+}
 
-		//Header size is 0x20
-
-		if (m_numChannels == 2) {
-			SAdpcmStereoParam param;
-			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + 32;
-			param.InputLength = sndData.rawData.size() - 32;
-			param.OutputBuffer = decoded.data();
-			int written = 0;
-			bool ret = DecompressStereoAdpcm(&param, written);
-			SDL_assert_release(ret);
-			decoded.resize(written);
-		}
-		else if (m_numChannels == 1) {
-			SAdpcmMonoParam param;
-			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + 32;
-			param.InputLength = sndData.rawData.size() - 32;
-			param.OutputBuffer = decoded.data();
-			int written = 0;
-			bool ret = DecompressMonoAdpcm(&param, written);
-			SDL_assert_release(ret);
-			decoded.resize(written);
-		}
-		else {
-			SDL_assert_release(false);
-		}
-
-		break;
-	}
-	case 3: {//SeekableADPCM
-		decoded.resize(sndData.rawData.size() * 16);//This should be a good enough buffer for decoding
-		SDL_assert_release(false);
-		
-
-		if (m_numChannels == 2) {
-			SAdpcmStereoParam param;
-			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + 32;
-			param.InputLength = sndData.rawData.size() - 32;
-			param.OutputBuffer = decoded.data();
-			int written = 0;
-			bool ret = DecompressStereoAdpcm(&param, written);
-			SDL_assert_release(ret);
-			decoded.resize(written);
-		}
-		else if (m_numChannels == 1) {
-			SAdpcmMonoParam param;
-			memset(&param, 0, sizeof(param));
-			param.InputBuffer = sndData.rawData.data() + 32;
-			param.InputLength = sndData.rawData.size() - 32;
-			param.OutputBuffer = decoded.data();
-			int written = 0;
-			bool ret = DecompressMonoAdpcm(&param, written);
-			SDL_assert_release(ret);
-			decoded.resize(written);
-		}
-		else {
-			SDL_assert_release(false);
-		}
-
-		break;
-	}
-	case 4: {//OGG
-		int channels, sampleRate;
-		short* output;
-		int ret = stb_vorbis_decode_memory(sndData.rawData.data(), sndData.rawData.size(), &channels, &sampleRate, &output);
-		SDL_assert_release(channels == m_numChannels);
-		SDL_assert_release(sampleRate == m_freq);
-
-		decoded.resize(ret * channels);
-		memcpy(decoded.data(), output, ret * channels * sizeof(short));
-		free(output);
-
-		break;
-	}
-	default:
-		SDL_assert_release(false);
-	}
-	return decoded;
+void GranularResourceDescriptor::play() {
+	std::vector<short> decoded = decode();
+	Audio::instance().addSound(m_freq, m_numChannels, decoded.data(), decoded.size() * sizeof(short), false);
 }
 
 void GranularResourceDescriptor::saveDecoded(const char* file) {

@@ -98,6 +98,18 @@ void displayImGui(ResourceDescriptor& obj) {
 	} else if (obj.pResourceDesc.multiTrackResourceDescriptor) {
 		MultiTrackResourceDescriptor& mtrd = *obj.pResourceDesc.multiTrackResourceDescriptor;
 
+		ImGui::Text("Layers: %u", mtrd.m_tracks.size());
+		for (uint32_t i = 0; i < mtrd.ulNbTrack; ++i) {
+			ImGui::PushID(i);
+			if (ImGui::Button("Save"))
+				mtrd.saveDecoded("r.wav", i);
+			if (ImGui::Button("Play")) {
+				Audio::instance().stopAll();
+				mtrd.play(i);
+			}
+			ImGui::PopID();
+
+		}
 
 		/*ImGui::PushID(&mtrd);
 		if (ImGui::Button("Save recording.wav"))

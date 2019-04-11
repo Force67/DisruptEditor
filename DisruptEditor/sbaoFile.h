@@ -370,9 +370,9 @@ struct MultiTrackResourceDescriptor {
 	DynamicIndexedPropertyContainer platformSpecificProperties;
 	uint32_t currentResourceID;
 
-	std::vector<short> decode(int i);
-	void play(int i);
-	void saveDecoded(const char* file, int i);
+	std::vector<short> decode(int layer);
+	void play(int layer);
+	void saveDecoded(const char* file, int layer);
 
 	void read(IBinaryArchive &fp);
 	void registerMembers(MemberStructure &ms) {
@@ -1248,8 +1248,6 @@ struct SwitchEventDescriptor {
 
 class sbaoFile {
 public:
-	sbaoFile();
-	~sbaoFile();
 	void open(IBinaryArchive &fp, size_t size);
 	void registerMembers(MemberStructure &ms);
 
